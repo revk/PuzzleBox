@@ -7,6 +7,10 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <math.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 #define 	PI	3.1415926
 
@@ -14,7 +18,7 @@ int
 main (int argc, const char *argv[])
 {
   double baseheight = 5;
-  double corediameter = 5;
+  double corediameter = 10;
   double coreheight = 50;
   double wallthickness = 2;
   double mazethickness = 1;
@@ -25,6 +29,7 @@ main (int argc, const char *argv[])
   int wall = 0;
   int outside = 0;
   int flat = 0;
+  int single = 0;
 
   {				// POPT
     poptContext optCon;		// context for parsing command-line options
@@ -33,6 +38,7 @@ main (int argc, const char *argv[])
       {"wall", 'n', POPT_ARG_INT, &wall, 0, "Wall", "N"},
       {"outside", 'o', POPT_ARG_NONE, &outside, 0, "Maze on outside (easy)"},
       {"flat", 'f', POPT_ARG_NONE, &flat, 0, "Flat (non helical)"},
+      {"single", 'S', POPT_ARG_NONE, &single, 0, "Single pip"},
       {"base-height", 'b', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &baseheight, 0, "Base height", "mm"},
       {"core-diameter", 'c', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &corediameter, 0, "Core diameter", "mm"},
       {"core-height", 'h', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &coreheight, 0, "Core height", "mm"},
@@ -88,6 +94,9 @@ main (int argc, const char *argv[])
 	    case 'f':
 	      flat = 1;
 	      break;
+	    case 'S':
+	      single = 1;
+	      break;
 	    case 'm':
 	      walls = (int) value;
 	      break;
@@ -121,7 +130,7 @@ main (int argc, const char *argv[])
 	    }
 	}
     }
-  printf ("// Puzzlebox by RevK\n");
+  printf ("// Puzzlebox by RevK, @TheRealRevK www.me.uk\n");
   printf ("// Walls=%d\n", walls);
   if (wall)
     printf ("// Wall=%d\n", wall);
@@ -136,11 +145,13 @@ main (int argc, const char *argv[])
     printf ("// Maze outside\n");
   if (flat)
     printf ("// Non helical maze\n");
+  if (single)
+    printf ("// Single pip\n");
   if (fn)
     printf ("$fn=%d;\n", fn);
   // The nub
   //printf ("module nub(){rotate([%d,0,0])hull(){translate([0,0,%f])cylinder(d=%f,h=%f,$fn=8);cylinder(d1=%f,d2=%f,h=%f,$fn=8);}}\n", outside ? 90 : -90, -mazethickness, mazestep * 2 / 3, mazethickness / 2, mazestep * 2 / 3, mazestep / 3, mazethickness);
-  printf ("module nub(){rotate([90,0,0])translate([0,0,%f])cylinder(d1=%f,d2=%f,h=%f,$fn=4);}\n", -mazethickness, mazestep, mazestep / 3, mazethickness * 2);
+  printf ("module nub(){rotate([90,0,0])translate([0,0,%f])cylinder(d1=%f,d2=%f,h=%f,$fn=8);}\n", -mazethickness, mazestep, mazestep / 3, mazethickness * 2);
   double x = 0;
   void box (int wall)
   {				// Make the box - wall 1 in inside
@@ -149,7 +160,7 @@ main (int argc, const char *argv[])
     double r0 = r1 - wallthickness;
     double r2 = r1;
     if (wall < walls)
-      r2 += wallthickness + mazethickness + clearance;
+      r2 += wallthickness + clearance;
     if (outside && wall < walls)
       {				// Allow for maze on outside
 	r1 += mazethickness;
@@ -169,7 +180,7 @@ main (int argc, const char *argv[])
     double y = (outside ? baseheight : wallthickness);
     double h = height - y;
     double w = r * 2 * PI;
-    int H = (int) (h / mazestep) + 1;
+    int H = (int) ((h + mazestep * .9) / mazestep);
     int W = (int) (w / mazestep) / 2 * 2;
     double a = 0, dy = 0;
     if (!flat)
@@ -193,19 +204,136 @@ main (int argc, const char *argv[])
     printf ("translate([0,0,%f])cylinder(r=%f,h=%f);\n", wallthickness, r0, height);
     if ((outside && wall < walls) || (!outside && wall > 1))
       {				// Maze cut out
+#define	L 1
+#define R 2
+#define U 4
+#define D 8
 	// Make maze
-	char maze[W][H];
-	memset (maze, 0, W * H);
-	// components
-	// Cut maze
+	int f = open ("/dev/urandom", O_RDONLY);
+	if (f < 0)
+	  err (1, "Open /dev/random");
 	int X, Y;
+	unsigned char maze[W][H];
+	memset (maze, 0, W * H);
+	int x[W * H], y[W * H], p = 0;
+	for (X = 0; X < W; X++)
+	  {
+	    maze[X][0] = 0x80;
+	    maze[X][H - 1] = 0x80;
+	  }
+	x[0] = 0;
+	y[0] = 1;
+	p++;
+	int test (int x, int y)
+	{			// Test if in use...
+	  while (x < 0)
+	    {
+	      x += W;
+	      if (!flat)
+		y--;
+	    }
+	  while (x >= W)
+	    {
+	      x -= W;
+	      if (!flat)
+		y++;
+	    }
+	  if (y < 0 || y >= H)
+	    return 0x80;
+	  unsigned char v = maze[x][y];
+	  if (single)
+	    return v;
+	  x += W / 2;
+	  while (x >= W)
+	    {
+	      x -= W;
+	      if (!flat)
+		y++;
+	    }
+	  if (y < 0 || y >= H)
+	    return 0x80;
+	  return v | maze[x][y];
+	}
+	while (p)
+	  {
+	    X = x[p - 1];
+	    Y = y[p - 1];
+	    unsigned int v, n = 0;
+	    if (read (f, &v, sizeof (v)) != sizeof (v))
+	      err (1, "Read /dev/random");
+	    if (!test (X + 1, Y))
+	      n++;
+	    if (!test (X - 1, Y))
+	      n++;
+	    if (!test (X, Y + 1))
+	      n++;
+	    if (!test (X, Y - 1))
+	      n++;
+	    if (!n)
+	      {
+		p--;
+		continue;
+	      }
+	    v %= n;
+	    if (!test (X + 1, Y) && !v--)
+	      {
+		maze[X][Y] |= R;
+		X++;
+		if (X >= W)
+		  {
+		    X -= W;
+		    if (!flat)
+		      Y++;
+		  }
+		maze[X][Y] |= L;
+	      }
+	    else if (!test (X - 1, Y) && !v--)
+	      {
+		maze[X][Y] |= L;
+		X--;
+		if (X < 0)
+		  {
+		    X += W;
+		    if (!flat)
+		      Y--;
+		  }
+		maze[X][Y] |= R;
+	      }
+	    else if (!test (X, Y + 1) && !v--)
+	      {
+		maze[X][Y] |= U;
+		Y++;
+		maze[X][Y] |= D;
+	      }
+	    else if (!test (X, Y - 1) && !v--)
+	      {
+		maze[X][Y] |= D;
+		Y--;
+		maze[X][Y] |= U;
+	      }
+	    else
+	      errx (1, "WTF");
+	    if (p == W * H)
+	      errx (1, "WTF");
+	    x[p] = X;
+	    y[p] = Y;
+	    p++;
+	  }
+	close (f);
+	maze[0][0] |= U;
+	maze[W / 4][H - 1] |= U;
+	maze[W / 4][H - 2] |= U;
+	// Cut maze
 	for (Y = 0; Y < H; Y++)
 	  {
 	    printf ("render(){\n");
 	    for (X = 0; X < W; X++)
 	      {
-		nub (X, Y, "x");
-		nub (X, Y, "y");
+		unsigned char v = test (X, Y);
+		if (v & R)
+		  nub (X, Y, "x");
+		if (v & U)
+		  nub (X, Y, "y");
 	      }
 	    printf ("}\n");
 	  }
@@ -214,7 +342,9 @@ main (int argc, const char *argv[])
     if ((outside && wall > 1) || (!outside && wall < walls))
       {
 	double rn = (outside ? r0 : r2);
-	printf ("translate([0,%f,%f])nub();rotate([0,0,180])translate([0,%f,%f])nub();\n", rn, height - mazestep, rn, height - mazestep - (flat ? 0 : mazestep / 2));
+	printf ("translate([0,%f,%f])nub();\n", rn, height - mazestep / 2);
+	if (!single)
+	  printf ("rotate([0,0,180])translate([0,%f,%f])nub();\n", rn, height - mazestep / 2 - (flat ? 0 : mazestep / 2));
       }
     printf ("}\n");
     x += r2 * 2 + 10;
