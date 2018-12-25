@@ -20,16 +20,17 @@ main (int argc, const char *argv[])
   double baseheight = 5;
   double corediameter = 10;
   double coreheight = 50;
-  double wallthickness = 1.6;
-  double mazethickness = 1;
+  double wallthickness = 2.5;
+  double mazethickness = 1.25;
   double mazestep = 3;
-  double clearance = 0.2;
+  double clearance = 0.25;
   int fn = 100;
   int walls = 4;
   int wall = 0;
   int outside = 0;
   int flat = 0;
   int single = 0;
+  int sides = 0;
 
   {				// POPT
     poptContext optCon;		// context for parsing command-line options
@@ -37,6 +38,7 @@ main (int argc, const char *argv[])
       {"walls", 'm', POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT, &walls, 0, "Walls", "N"},
       {"wall", 'n', POPT_ARG_INT, &wall, 0, "Wall", "N"},
       {"outside", 'o', POPT_ARG_NONE, &outside, 0, "Maze on outside (easy)"},
+      {"sides", 'x', POPT_ARG_INT, &sides, 0, "Outer sides", "N"},
       {"flat", 'f', POPT_ARG_NONE, &flat, 0, "Flat (non helical)"},
       {"single", 'S', POPT_ARG_NONE, &single, 0, "Single pip"},
       {"base-height", 'b', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &baseheight, 0, "Base height", "mm"},
@@ -67,6 +69,12 @@ main (int argc, const char *argv[])
 
   if (getenv ("HTTP_HOST"))
     printf ("Content-Type: application/scad\r\nContent-Disposition: Attachment; filename=maze.scad\r\n\r\n");	// Used from apache
+  printf ("// Puzzlebox by RevK, @TheRealRevK www.me.uk\n");
+  if (!flat && !single)
+    {
+      printf ("// Helical and double pip cannot work, making single pip.\n");
+      single = 1;
+    }
   char *path = getenv ("PATH_INFO");
   if (path)
     {				// Look for settings in path used from apache
@@ -127,10 +135,12 @@ main (int argc, const char *argv[])
 	    case 'a':
 	      fn = (int) value;
 	      break;
+	    case 'x':
+	      sides = (int) value;
+	      break;
 	    }
 	}
     }
-  printf ("// Puzzlebox by RevK, @TheRealRevK www.me.uk\n");
   printf ("// Walls=%d\n", walls);
   if (wall)
     printf ("// Wall=%d\n", wall);
@@ -169,6 +179,12 @@ main (int argc, const char *argv[])
       {				// Allow for maze on inside
 	r0 -= mazethickness;
       }
+    if (sides && wall + 1 >= walls)
+      {
+	r2 /= cos ((double) PI / sides);
+	if (wall == walls)
+	  r1 = r2;
+      }
     double height = coreheight + wallthickness * wall;
     if (wall > 1)
       height -= baseheight;
@@ -179,7 +195,7 @@ main (int argc, const char *argv[])
     double y = (outside ? baseheight : wallthickness);
     double h = height - y;
     double w = r * 2 * PI;
-    int H = (int) (h / mazestep) + 1;
+    int H = (int) ((h + mazestep / 2) / mazestep);
     int W = (int) (w / mazestep) / 2 * 2;
     double a = 0, dy = 0;
     if (!flat)
@@ -197,9 +213,9 @@ main (int argc, const char *argv[])
     printf ("translate([%f,0,0]){\n", x + r2);
     printf ("difference(){\n");
     if (r2 > r1)
-      printf ("union(){cylinder(r=%f,h=%f);cylinder(r=%f,h=%f);}\n", r2, baseheight, r1, height);
+      printf ("union(){translate([0,0,%f])rotate([0,180,0])cylinder(r=%f,h=%f,$fn=%d);cylinder(r=%f,h=%f);}\n", baseheight, r2, baseheight, (sides && wall + 1 >= walls ? sides : fn), r1, height);
     else
-      printf ("cylinder(r=%f,h=%f);\n", r1, height);
+      printf ("cylinder(r=%f,h=%f,$fn=%d);\n", r1, height, (sides && wall + 1 >= walls ? sides : fn));
     printf ("translate([0,0,%f])cylinder(r=%f,h=%f);\n", wallthickness, r0, height);
     if ((outside && wall < walls) || (!outside && wall > 1))
       {				// Maze cut out
@@ -248,7 +264,7 @@ main (int argc, const char *argv[])
 	    {
 	      x -= W;
 	      if (!flat)
-		y++;
+		y++;		// Cant be !flat and !single
 	    }
 	  if (y < 0 || y >= H)
 	    return 0x80;
@@ -340,9 +356,11 @@ main (int argc, const char *argv[])
 	    printf ("}\n");
 	  }
       }
-    if (outside && wall < walls)
+    if (outside && wall + 1 < walls)
       {
-	// TODO outside notches
+	printf ("rotate([0,0,-90])translate([0,%f,%f])hull(){nub();translate([0,0,%f])nub();}\n", r2, -mazestep, baseheight + mazestep);
+	if (!single)
+	  printf ("rotate([0,0,-270])translate([0,%f,%f])hull(){nub();translate([0,0,%f])nub();}\n", r2, -mazestep, baseheight + mazestep);
       }
     printf ("}\n");
     if ((outside && wall > 1) || (!outside && wall < walls))
