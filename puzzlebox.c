@@ -20,10 +20,11 @@ main (int argc, const char *argv[])
   double baseheight = 5;
   double corediameter = 10;
   double coreheight = 50;
-  double wallthickness = 2.5;
-  double mazethickness = 1.25;
+  double wallthickness = 1.875;
+  double mazethickness = 1.875;
   double mazestep = 3;
   double clearance = 0.25;
+  double coregap = 0;
   int fn = 100;
   int walls = 4;
   int wall = 0;
@@ -44,6 +45,7 @@ main (int argc, const char *argv[])
       {"base-height", 'b', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &baseheight, 0, "Base height", "mm"},
       {"core-diameter", 'c', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &corediameter, 0, "Core diameter", "mm"},
       {"core-height", 'h', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &coreheight, 0, "Core height", "mm"},
+      {"core-gap", 'C', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &coregap, 0, "Core gap", "mm"},
       {"wall-thickness", 'w', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &wallthickness, 0, "Wall thickness", "mm"},
       {"maze-thickness", 'd', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &mazethickness, 0, "Maze thickness", "mm"},
       {"maze-step", 's', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &mazestep, 0, "Maze step", "mm"},
@@ -82,6 +84,8 @@ main (int argc, const char *argv[])
       printf ("b%d", (int) (100 * baseheight));
       printf ("c%d", (int) (100 * corediameter));
       printf ("h%d", (int) (100 * coreheight));
+      if (coregap)
+	printf ("C%d", (int) (100 * coregap));
       printf ("w%d", (int) (100 * wallthickness));
       printf ("d%d", (int) (100 * mazethickness));
       printf ("s%d", (int) (100 * mazestep));
@@ -144,6 +148,9 @@ main (int argc, const char *argv[])
 	    case 'h':
 	      coreheight = value;
 	      break;
+	    case 'C':
+	      coregap = value;
+	      break;
 	    case 'w':
 	      wallthickness = value;
 	      break;
@@ -173,6 +180,8 @@ main (int argc, const char *argv[])
   printf ("// Base-Height=%f\n", baseheight);
   printf ("// Core-Diameter=%f\n", corediameter);
   printf ("// Core-Height=%f\n", coreheight);
+  if (coregap)
+    printf ("// Core-Gap=%f\n", coregap);
   printf ("// Wall-Thickness=%f\n", wallthickness);
   printf ("// Maze-Thickness=%f\n", mazethickness);
   printf ("// Maze-Step=%f\n", mazestep);
@@ -195,11 +204,15 @@ main (int argc, const char *argv[])
     double r0 = r1 - wallthickness;
     double r2 = r1;
     if (wall < walls)
-      r2 += wallthickness + clearance;
-    if (outside && wall < walls)
-      {				// Allow for maze on outside
-	r1 += mazethickness;
-	r2 += mazethickness;
+      r2 += wallthickness + mazethickness + clearance;
+    if (outside)
+      {
+	if (wall < walls)
+	  {			// Allow for maze on outside
+	    r1 += mazethickness;
+	    if (wall + 1 < walls)
+	      r2 += mazethickness;
+	  }
       }
     if (!outside && wall > 1)
       {				// Allow for maze on inside
@@ -212,6 +225,8 @@ main (int argc, const char *argv[])
 	  r1 = r2;
       }
     double height = coreheight + wallthickness * wall;
+    if (wall == 1)
+      height -= coregap;
     if (wall > 1)
       height -= baseheight;
     // Output
