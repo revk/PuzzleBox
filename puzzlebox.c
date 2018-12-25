@@ -20,7 +20,7 @@ main (int argc, const char *argv[])
   double baseheight = 5;
   double corediameter = 10;
   double coreheight = 50;
-  double wallthickness = 2;
+  double wallthickness = 1.6;
   double mazethickness = 1;
   double mazestep = 3;
   double clearance = 0.2;
@@ -261,13 +261,14 @@ main (int argc, const char *argv[])
 	    unsigned int v, n = 0;
 	    if (read (f, &v, sizeof (v)) != sizeof (v))
 	      err (1, "Read /dev/random");
+	    // Some bias for direction
 	    if (!test (X + 1, Y))
-	      n++;
+	      n += 3;
 	    if (!test (X - 1, Y))
-	      n++;
-	    if (!test (X, Y + 1))
-	      n++;
+	      n += 3;
 	    if (!test (X, Y - 1))
+	      n += 2;
+	    if (!test (X, Y + 1))
 	      n++;
 	    if (!n)
 	      {
@@ -275,7 +276,7 @@ main (int argc, const char *argv[])
 		continue;
 	      }
 	    v %= n;
-	    if (!test (X + 1, Y) && !v--)
+	    if (!test (X + 1, Y) && (!v-- || !v-- || !v--))
 	      {
 		maze[X][Y] |= R;
 		X++;
@@ -287,7 +288,7 @@ main (int argc, const char *argv[])
 		  }
 		maze[X][Y] |= L;
 	      }
-	    else if (!test (X - 1, Y) && !v--)
+	    else if (!test (X - 1, Y) && (!v-- || !v-- || !v--))
 	      {
 		maze[X][Y] |= L;
 		X--;
@@ -299,17 +300,17 @@ main (int argc, const char *argv[])
 		  }
 		maze[X][Y] |= R;
 	      }
+	    else if (!test (X, Y - 1) && (!v-- || !v--))
+	      {
+		maze[X][Y] |= D;
+		Y--;
+		maze[X][Y] |= U;
+	      }
 	    else if (!test (X, Y + 1) && !v--)
 	      {
 		maze[X][Y] |= U;
 		Y++;
 		maze[X][Y] |= D;
-	      }
-	    else if (!test (X, Y - 1) && !v--)
-	      {
-		maze[X][Y] |= D;
-		Y--;
-		maze[X][Y] |= U;
 	      }
 	    else
 	      errx (1, "WTF");
@@ -338,6 +339,10 @@ main (int argc, const char *argv[])
 	      }
 	    printf ("}\n");
 	  }
+      }
+    if (outside && wall < walls)
+      {
+	// TODO outside notches
       }
     printf ("}\n");
     if ((outside && wall > 1) || (!outside && wall < walls))
