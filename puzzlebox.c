@@ -145,6 +145,8 @@ main (int argc, const char *argv[])
   printf ("// Walls=%d\n", walls);
   if (wall)
     printf ("// Wall=%d\n", wall);
+  if (sides)
+    printf ("// Sides=%d\n", sides);
   printf ("// Base-Height=%f\n", baseheight);
   printf ("// Core-Diameter=%f\n", corediameter);
   printf ("// Core-Height=%f\n", coreheight);
