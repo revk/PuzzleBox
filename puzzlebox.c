@@ -30,7 +30,7 @@ main (int argc, const char *argv[])
   int outside = 0;
   int flat = 0;
   int single = 0;
-  int sides = 0;
+  int sides = 7;
 
   {				// POPT
     poptContext optCon;		// context for parsing command-line options
@@ -72,6 +72,7 @@ main (int argc, const char *argv[])
   printf ("// Puzzlebox by RevK, @TheRealRevK www.me.uk\n");
   if (!flat && !single)
     {
+      // TODO we should have double helix for this case, I suspect that will work...
       printf ("// Helical and double pip cannot work, making single pip.\n");
       single = 1;
     }
