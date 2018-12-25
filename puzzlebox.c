@@ -68,7 +68,30 @@ main (int argc, const char *argv[])
   }
 
   if (getenv ("HTTP_HOST"))
-    printf ("Content-Type: application/scad\r\nContent-Disposition: Attachment; filename=maze.scad\r\n\r\n");	// Used from apache
+    {
+      printf ("Content-Type: application/scad\r\nContent-Disposition: Attachment; filename=maze-");
+      if (wall)
+	printf ("%d-", wall);
+      printf ("%d", walls);
+      if (outside)
+	printf ("o");
+      if (flat)
+	printf ("f");
+      if (single || !flat)
+	printf ("S");
+      printf ("b%d", (int) (100 * baseheight));
+      printf ("c%d", (int) (100 * corediameter));
+      printf ("h%d", (int) (100 * coreheight));
+      printf ("w%d", (int) (100 * wallthickness));
+      printf ("d%d", (int) (100 * mazethickness));
+      printf ("s%d", (int) (100 * mazestep));
+      printf ("c%d", (int) (100 * clearance));
+      if (fn)
+	printf ("a%d", fn);
+      if (sides)
+	printf ("x%d", sides);
+      printf (".scad\r\n\r\n");	// Used from apache
+    }
   printf ("// Puzzlebox by RevK, @TheRealRevK www.me.uk\n");
   if (!flat && !single)
     {
