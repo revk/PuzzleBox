@@ -150,8 +150,7 @@ main (int argc, const char *argv[])
   if (fn)
     printf ("$fn=%d;\n", fn);
   // The nub
-  //printf ("module nub(){rotate([%d,0,0])hull(){translate([0,0,%f])cylinder(d=%f,h=%f,$fn=8);cylinder(d1=%f,d2=%f,h=%f,$fn=8);}}\n", outside ? 90 : -90, -mazethickness, mazestep * 2 / 3, mazethickness / 2, mazestep * 2 / 3, mazestep / 3, mazethickness);
-  printf ("module nub(){rotate([90,0,0])translate([0,0,%f])cylinder(d1=%f,d2=%f,h=%f,$fn=8);}\n", -mazethickness, mazestep, mazestep / 3, mazethickness * 2);
+  printf ("module nub(){rotate([%d,0,0])translate([0,0,%f])cylinder(d1=%f,d2=%f,h=%f,$fn=8);}\n", outside ? 90 : -90, -mazethickness, mazestep, mazestep / 3, mazethickness * 2);
   double x = 0;
   void box (int wall)
   {				// Make the box - wall 1 in inside
@@ -180,7 +179,7 @@ main (int argc, const char *argv[])
     double y = (outside ? baseheight : wallthickness);
     double h = height - y;
     double w = r * 2 * PI;
-    int H = (int) ((h + mazestep * .9) / mazestep);
+    int H = (int) (h / mazestep) + 1;
     int W = (int) (w / mazestep) / 2 * 2;
     double a = 0, dy = 0;
     if (!flat)
@@ -219,7 +218,8 @@ main (int argc, const char *argv[])
 	for (X = 0; X < W; X++)
 	  {
 	    maze[X][0] = 0x80;
-	    maze[X][H - 1] = 0x80;
+	    if (!flat)
+	      maze[X][H - 1] = 0x80;
 	  }
 	x[0] = 0;
 	y[0] = 1;
@@ -322,7 +322,8 @@ main (int argc, const char *argv[])
 	close (f);
 	maze[0][0] |= U;
 	maze[W / 4][H - 1] |= U;
-	maze[W / 4][H - 2] |= U;
+	if (!flat)
+	  maze[W / 4][H - 2] |= U;
 	// Cut maze
 	for (Y = 0; Y < H; Y++)
 	  {
@@ -341,7 +342,7 @@ main (int argc, const char *argv[])
     printf ("}\n");
     if ((outside && wall > 1) || (!outside && wall < walls))
       {
-	double rn = (outside ? r0 : r2);
+	double rn = (outside ? r0 : r1);
 	printf ("translate([0,%f,%f])nub();\n", rn, height - mazestep / 2);
 	if (!single)
 	  printf ("rotate([0,0,180])translate([0,%f,%f])nub();\n", rn, height - mazestep / 2 - (flat ? 0 : mazestep / 2));
