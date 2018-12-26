@@ -39,9 +39,9 @@ main (int argc, const char *argv[])
   int mime = (getenv ("HTTP_HOST") ? 1 : 0);
 
   const struct poptOption optionsTable[] = {
-    {"walls", 'm', POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT, &walls, 0, "Walls", "N"},
-    {"wall", 'n', POPT_ARG_INT, &wall, 0, "Wall", "N"},
     {"outside", 'o', POPT_ARG_NONE, &outside, 0, "Maze on outside (easy)"},
+    {"wall", 'n', POPT_ARG_INT, &wall, 0, "Wall", "N"},
+    {"walls", 'm', POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT, &walls, 0, "Walls", "N"},
     {"sides", 'x', POPT_ARG_INT | (sides ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &sides, 0, "Outer sides", "N"},
     {"nubs", 'N', POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT, &nubs, 0, "Nubs", "N"},
     {"helix", 'H', POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT, &helix, 0, "Helix", "N"},
