@@ -1,0 +1,19 @@
+#!/bin/csh 
+foreach w (1 2)
+	./puzzlebox --walls=2 --core-height=15 --core-diameter=5 --sides=3 --wall=$w > /tmp/small-test-part-$w.scad
+	openscad -o /tmp/small-test-part-$w.stl /tmp/small-test-part-$w.scad&
+end
+foreach w (1 2)
+	./puzzlebox --walls=2 --core-height=85 --core-gap=20 --core-diameter=5 --sides=4 --wall=$w > /tmp/lottery-ticket-holder-part-$w.scad
+	openscad -o /tmp/lottery-ticket-holder-part-$w.stl /tmp/lottery-ticket-holder-part-$w.scad&
+end
+foreach s (20 50 75)
+foreach w (1 2 3 4)
+	./puzzlebox --walls=4 --core-height=${s} --wall=$w > /tmp/box-${s}mm-part-$w.scad
+	openscad -o /tmp/box-${s}mm-part-$w.stl /tmp/box-${s}mm-part-$w.scad&
+end
+foreach w (1 2 3 4)
+	./puzzlebox --walls=4 --core-height=${s} --inside --wall=$w > /tmp/box-inside-${s}mm-part-$w.scad
+	openscad -o /tmp/box-inside-${s}mm-part-$w.stl /tmp/box-inside-${s}mm-part-$w.scad&
+end
+end
