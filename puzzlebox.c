@@ -182,7 +182,7 @@ main (int argc, const char *argv[])
   if (curvesteps)
     printf ("$fn=%d;\n", curvesteps);
   // The nub
-  printf ("module nub(){rotate([%d,0,0])translate([0,0,%f])cylinder(d1=%f,d2=%f,h=%f,$fn=%d);}\n", inside ? -90 : 90, -mazethickness / 4, mazestep * 3 / 4, mazestep / 3, mazethickness * 5 / 4, nubdetail);
+  printf ("module nub(){rotate([%d,0,0])translate([0,0,%f])cylinder(d1=%f,d2=%f,h=%f,$fn=%d);}\n", inside ? -90 : 90, -mazethickness / 4, mazestep * 4 / 5, mazestep / 3, mazethickness * 5 / 4, nubdetail);
   // The base
   printf ("module outer(h,r){e=%f;minkowski(){cylinder(r1=0,r2=e,h=e);cylinder(h=h-e,r=r-e,$fn=%d);}}\n", outerround, sides ? : curvesteps ? : 100);
   double x = 0;
