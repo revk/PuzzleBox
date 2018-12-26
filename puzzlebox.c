@@ -22,8 +22,8 @@ main (int argc, const char *argv[])
   double baseheight = 5;
   double corediameter = 10;
   double coreheight = 50;
-  double wallthickness = 1.875;
-  double mazethickness = 1.875;
+  double wallthickness = 1.6;
+  double mazethickness = 1.8;
   double mazestep = 3;
   double clearance = 0.25;
   double coregap = 0;
