@@ -210,7 +210,7 @@ main (int argc, const char *argv[])
 	if (wall == walls)
 	  r1 = r2;
       }
-    double height = coreheight + wallthickness * wall;
+    double height = coreheight + wallthickness * wall - clearance;
     if (wall == 1)
       height -= coregap;
     if (wall > 1)
@@ -290,16 +290,16 @@ main (int argc, const char *argv[])
     if (wall + 1 >= walls)
       {
 	if (r2 > r1)
-	  printf ("mirror([1,0,0])outer(%f,%f);\ntranslate([0,0,%f])cylinder(r=%f,h=%f);\n", baseheight, r2, outerround, r1, height - outerround - clearance);
+	  printf ("mirror([1,0,0])outer(%f,%f);\ntranslate([0,0,%f])cylinder(r=%f,h=%f);\n", baseheight, r2, outerround, r1, height - outerround);
 	else
-	  printf ("outer(%f,%f);\n", height - clearance, r2);
+	  printf ("outer(%f,%f);\n", height, r2);
       }
     else
       {
 	if (r2 > r1)
-	  printf ("translate([0,0,%f])rotate([0,180,0])cylinder(r=%f,h=%f);\ncylinder(r=%f,h=%f);\n", baseheight, r2, baseheight, r1, height - clearance);
+	  printf ("translate([0,0,%f])rotate([0,180,0])cylinder(r=%f,h=%f);\ncylinder(r=%f,h=%f);\n", baseheight, r2, baseheight, r1, height);
 	else
-	  printf ("cylinder(r=%f,h=%f);\n", r1, height - clearance);
+	  printf ("cylinder(r=%f,h=%f);\n", r1, height);
       }
     printf ("}\n");
     printf ("translate([0,0,%f])cylinder(r=%f,h=%f);\n", wallthickness, r0, height);
