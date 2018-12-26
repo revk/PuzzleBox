@@ -151,7 +151,9 @@ main (int argc, const char *argv[])
       printf (".scad\r\n\r\n");	// Used from apache
     }
 
-  printf ("// Puzzlebox by RevK, @TheRealRevK www.me.uk https://www.thingiverse.com/thing:2410748\n");
+  printf ("// Puzzlebox by RevK, @TheRealRevK www.me.uk\n");
+  printf ("// Thingiverse examples and instructions https://www.thingiverse.com/thing:2410748\n");
+  printf ("// GitHub source https://github.com/revk/PuzzleBox\n");
   {				// Document args
     time_t now = time (0);
     struct tm t;
