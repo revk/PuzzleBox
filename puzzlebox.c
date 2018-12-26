@@ -211,6 +211,7 @@ main (int argc, const char *argv[])
       height -= coregap;
     if (wall > 1)
       height -= baseheight;
+    height -= clearance;
     // Output
     // Maze dimensions
     double r = (inside ? r0 : r1);
