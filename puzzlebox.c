@@ -224,7 +224,7 @@ main (int argc, const char *argv[])
     double h = height - base;
     double w = r * 2 * PI;
     int H = (int) (h / mazestep);
-    int W = (int) (w / mazestep) / nubs * nubs;
+    int W = ((int) (w / mazestep)) / (nubs * 2) * (nubs * 2);
     y0 += (h - (mazestep * (H - 1))) / 2;	// Centre
     double a = 0, dy = 0;
     if (helix)
