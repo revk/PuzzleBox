@@ -443,9 +443,9 @@ main (int argc, const char *argv[])
 	double rn = (inside ? r1 : r0);
 	int N;
 	for (N = 0; N < nubs; N++)
-	  printf ("rotate([0,0,%f])translate([0,%f,%f])nub();\n", (double) N * 360 / nubs, rn, height - mazestep / 2);
+	  printf ("rotate([0,0,%f])translate([0,%f,%f])nub();\n", (double) N * 360 / nubs, rn, height - mazestep / 2 + clearance);
 	printf ("}\n");
-	printf ("translate([0,0,%f])cylinder(r=%f,h=%f);", height - clearance, r2 + 1, mazestep + clearance);
+	printf ("translate([0,0,%f])cylinder(r=%f,h=%f);", height, r2 + 1, mazestep + clearance);
 	printf ("}\n");
       }
     printf ("}\n");
