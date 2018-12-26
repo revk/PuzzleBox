@@ -27,8 +27,7 @@ main (int argc, const char *argv[])
   double mazestep = 3;
   double clearance = 0.5;
   double coregap = 0;
-  double outeredge = 2;
-  double outerround = 1;
+  double outerround = 2;
   int curvesteps = 100;
   int walls = 4;
   int wall = 0;
@@ -57,8 +56,7 @@ main (int argc, const char *argv[])
     {"maze-step", 's', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &mazestep, 0, "Maze step", "mm"},
     {"clearance", 'g', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &clearance, 0, "Clearance", "mm"},
     {"curve-steps", 'a', POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT, &curvesteps, 0, "Curve steps", "N"},
-    {"outer-edge", 'e', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &outeredge, 0, "Outer edge", "mm"},
-    {"outer-round", 'r', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &outerround, 0, "Outer round", "mm"},
+    {"outer-round", 'r', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &outerround, 0, "Outer rounding", "mm"},
     {"mime", 0, POPT_ARG_NONE | (mime ? POPT_ARGFLAG_DOC_HIDDEN : 0), &mime, 0, "MIME Header"},
     {"path", 0, POPT_ARG_STRING | (path ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &path, 0, "Path header", "{/x=var}"},
     POPT_AUTOHELP {}
@@ -186,8 +184,7 @@ main (int argc, const char *argv[])
   // The nub
   printf ("module nub(){rotate([%d,0,0])translate([0,0,%f])cylinder(d1=%f,d2=%f,h=%f,$fn=%d);}\n", inside ? -90 : 90, -mazethickness / 4, mazestep * 3 / 4, mazestep / 3, mazethickness * 5 / 4, nubdetail);
   // The base
-  printf ("module outer(h,d){u=%f;i=%f;\ndifference(){minkowski(){sphere(u,$fn=%d);hull(){translate([0,0,u])cylinder(h=h,d=d-u*2-i*2,$fn=%d);translate([0,0,u+i])cylinder(h=h-i,d=d-u*2,$fn=%d);}}translate([0,0,h])cylinder(h=u*2,d=d+u*2,$fn=%d);}}\n", outerround, outeredge, curvesteps ? : 100, sides,
-	  sides, sides);
+  printf ("module outer(h,r){e=%f;minkowski(){cylinder(r1=0,r2=e,h=e);cylinder(h=h-e,r=r-e,$fn=%d);}}\n", outerround, sides ? : curvesteps ? : 100);
   double x = 0;
   void box (int wall)
   {				// Make the box - wall 1 in inside
@@ -293,16 +290,16 @@ main (int argc, const char *argv[])
     if (wall + 1 >= walls)
       {
 	if (r2 > r1)
-	  printf ("mirror([1,0,0])outer(%f,%f);\ntranslate([0,0,%f])cylinder(r=%f,h=%f);\n", baseheight, r2 * 2, outeredge, r1, height - outeredge);
+	  printf ("mirror([1,0,0])outer(%f,%f);\ntranslate([0,0,%f])cylinder(r=%f,h=%f);\n", baseheight, r2, outerround, r1, height - outerround - clearance);
 	else
-	  printf ("outer(%f,%f);\n", height, r2 * 2);
+	  printf ("outer(%f,%f);\n", height - clearance, r2);
       }
     else
       {
 	if (r2 > r1)
-	  printf ("translate([0,0,%f])rotate([0,180,0])cylinder(r=%f,h=%f);\ncylinder(r=%f,h=%f);\n", baseheight, r2, baseheight, r1, height);
+	  printf ("translate([0,0,%f])rotate([0,180,0])cylinder(r=%f,h=%f);\ncylinder(r=%f,h=%f);\n", baseheight, r2, baseheight, r1, height - clearance);
 	else
-	  printf ("cylinder(r=%f,h=%f);\n", r1, height);
+	  printf ("cylinder(r=%f,h=%f);\n", r1, height - clearance);
       }
     printf ("}\n");
     printf ("translate([0,0,%f])cylinder(r=%f,h=%f);\n", wallthickness, r0, height);
@@ -439,7 +436,6 @@ main (int argc, const char *argv[])
 	for (N = 0; N < nubs; N++)
 	  printf ("rotate([0,0,%f])translate([0,%f,%f])hull(){nub();translate([0,0,%f])nub();}\n", -(double) (N + 0.5) * 360 / nubs, r2, -mazestep, baseheight + mazestep);
       }
-    printf ("translate([0,0,%f])cylinder(r=%f,h=%f);", height - clearance, r2 + 1, mazestep + clearance);
     printf ("}\n");
     if ((!inside && wall > 1) || (inside && wall < walls))
       {				// Nubs
