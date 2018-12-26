@@ -294,10 +294,6 @@ main (int argc, const char *argv[])
 	      for (X = 0; X < W; X++)
 		if (mazestep * Y + y0 + dy * X < base + mazestep / 2 || mazestep * Y + y0 + dy * X > height - mazestep / 2)
 		  maze[X][Y] = 0x80;	// To high or low
-	    for (Y = 0; Y < H; Y++)
-	      for (X = 0; X < W; X++)
-		if (!maze[X][Y] && test (X, Y))
-		  maze[X][Y] |= R;	// dummy (not sure this makes sense)
 	  }
 	if (testmaze)
 	  {			// Simple test pattern
