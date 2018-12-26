@@ -211,7 +211,6 @@ main (int argc, const char *argv[])
       height -= coregap;
     if (wall > 1)
       height -= baseheight;
-    height -= clearance;
     // Output
     // Maze dimensions
     double r = (inside ? r0 : r1);
@@ -284,9 +283,9 @@ main (int argc, const char *argv[])
     printf ("translate([%f,0,0]){\n", x + r2);
     printf ("difference(){\n");
     if (r2 > r1)
-      printf ("union(){translate([0,0,%f])rotate([0,180,0])cylinder(r=%f,h=%f,$fn=%d);cylinder(r=%f,h=%f);}\n", baseheight, r2, baseheight, (sides && wall + 1 >= walls ? sides : curvesteps), r1, height);
+      printf ("union(){translate([0,0,%f])rotate([0,180,0])cylinder(r=%f,h=%f,$fn=%d);cylinder(r=%f,h=%f);}\n", baseheight, r2, baseheight, (sides && wall + 1 >= walls ? sides : curvesteps), r1, height - clearance);
     else
-      printf ("cylinder(r=%f,h=%f,$fn=%d);\n", r1, height, (sides && wall + 1 >= walls ? sides : curvesteps));
+      printf ("cylinder(r=%f,h=%f,$fn=%d);\n", r1, height - clearance, (sides && wall + 1 >= walls ? sides : curvesteps));
     printf ("translate([0,0,%f])cylinder(r=%f,h=%f);\n", wallthickness, r0, height);
     if ((!inside && wall < walls) || (inside && wall > 1))
       {				// Maze cut out
