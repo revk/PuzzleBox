@@ -22,8 +22,8 @@ main (int argc, const char *argv[])
   double baseheight = 5;
   double corediameter = 10;
   double coreheight = 50;
-  double wallthickness = 1.6;
-  double mazethickness = 1.8;
+  double wallthickness = 2;
+  double mazethickness = 2;
   double mazestep = 3;
   double clearance = 0.25;
   double coregap = 0;
@@ -229,7 +229,7 @@ main (int argc, const char *argv[])
     double a = 0, dy = 0;
     if (helix)
       {
-	a = atan (mazestep * helix / w);
+	a = atan (mazestep * helix / w) * 180 / PI;
 	dy = mazestep * helix / W;
       }
     printf ("// Wall %d (%d/%d)\n", wall, W, H);
@@ -275,11 +275,14 @@ main (int argc, const char *argv[])
     }
     void nub (int X, int Y, char *t)
     {
-      printf ("rotate([0,0,%f])translate([0,0,%f])nub%d%s();\n", (double) X * 360 / W, mazestep * Y + y0 + dy * X, wall, t);
+      printf ("nub%d%s(%f,%f);\n", wall, t, (double) X * 360 / W, mazestep * Y + y0 + dy * X);
     }
     printf ("module nub%d(){rotate([0,%f,0])translate([0,%f,0])nub();}\n", wall, a, r + clearance / 2);
-    printf ("module nub%dx(){hull(){nub%d();rotate([0,0,%f])translate([0,0,%f])nub%d();}hull(){rotate([0,0,%f])translate([0,0,%f])nub%d();rotate([0,0,%f])translate([0,0,%f])nub%d();}}\n", wall, wall, (double) 360 / W / 2, dy / 2, wall, (double) 360 / W / 2, dy / 2, wall, (double) 360 / W, dy, wall);
-    printf ("module nub%dy(){hull(){nub%d();translate([0,0,%f])nub%d();}}\n", wall, wall, mazestep, wall);
+    printf ("module nub%dxa(a){render()rotate([0,0,a]){hull(){nub%d();rotate([0,0,%f])translate([0,0,%f])nub%d();}hull(){rotate([0,0,%f])translate([0,0,%f])nub%d();rotate([0,0,%f])translate([0,0,%f])nub%d();}}}\n", wall, wall, (double) 360 / W / 2, dy / 2, wall, (double) 360 / W / 2, dy / 2, wall,
+	    (double) 360 / W, dy, wall);
+    printf ("module nub%dx(a,h){translate([0,0,h])nub%dxa(a);}\n", wall, wall);
+    printf ("module nub%dya(a,h){render()rotate([0,0,a])hull(){nub%d();translate([0,0,%f])nub%d();}}\n", wall, wall, mazestep, wall);
+    printf ("module nub%dy(a,h){translate([0,0,h])nub%dya(a);}\n", wall, wall);
     printf ("translate([%f,0,0]){\n", x + r2);
     printf ("difference(){\n");
     if (r2 > r1)
