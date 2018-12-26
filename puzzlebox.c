@@ -17,6 +17,7 @@
 int
 main (int argc, const char *argv[])
 {
+  char *path = getenv ("PATH_INFO");
   double baseheight = 5;
   double corediameter = 10;
   double coreheight = 50;
@@ -25,34 +26,41 @@ main (int argc, const char *argv[])
   double mazestep = 3;
   double clearance = 0.25;
   double coregap = 0;
-  int fn = 100;
+  int curvesteps = 100;
   int walls = 4;
   int wall = 0;
   int outside = 0;
-  int flat = 0;
-  int single = 0;
   int sides = 7;
+  int testmaze = 0;
+  int helix = 2;
+  int nubs = 2;
+  int nubdetail = 8;
+  int mime = (getenv ("HTTP_HOST") ? 1 : 0);
+
+  const struct poptOption optionsTable[] = {
+    {"walls", 'm', POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT, &walls, 0, "Walls", "N"},
+    {"wall", 'n', POPT_ARG_INT, &wall, 0, "Wall", "N"},
+    {"outside", 'o', POPT_ARG_NONE, &outside, 0, "Maze on outside (easy)"},
+    {"sides", 'x', POPT_ARG_INT | (sides ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &sides, 0, "Outer sides", "N"},
+    {"nubs", 'N', POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT, &nubs, 0, "Nubs", "N"},
+    {"helix", 'H', POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT, &helix, 0, "Helix", "N"},
+    {"test", 't', POPT_ARG_NONE, &testmaze, 0, "Test pattern instead of maze"},
+    {"base-height", 'b', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &baseheight, 0, "Base height", "mm"},
+    {"core-diameter", 'c', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &corediameter, 0, "Core diameter", "mm"},
+    {"core-height", 'h', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &coreheight, 0, "Core height", "mm"},
+    {"core-gap", 'C', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &coregap, 0, "Core gap", "mm"},
+    {"wall-thickness", 'w', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &wallthickness, 0, "Wall thickness", "mm"},
+    {"maze-thickness", 'd', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &mazethickness, 0, "Maze thickness", "mm"},
+    {"maze-step", 's', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &mazestep, 0, "Maze step", "mm"},
+    {"clearance", 'g', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &clearance, 0, "Clearance", "mm"},
+    {"curve-steps", 'a', POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT, &curvesteps, 0, "Curve steps", "N"},
+    {"mime", 0, POPT_ARG_NONE | (mime ? POPT_ARGFLAG_DOC_HIDDEN : 0), &mime, 0, "MIME Header"},
+    {"path", 0, POPT_ARG_STRING | (path ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &path, 0, "Path header", "{/x=var}"},
+    POPT_AUTOHELP {}
+  };
 
   {				// POPT
     poptContext optCon;		// context for parsing command-line options
-    const struct poptOption optionsTable[] = {
-      {"walls", 'm', POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT, &walls, 0, "Walls", "N"},
-      {"wall", 'n', POPT_ARG_INT, &wall, 0, "Wall", "N"},
-      {"outside", 'o', POPT_ARG_NONE, &outside, 0, "Maze on outside (easy)"},
-      {"sides", 'x', POPT_ARG_INT, &sides, 0, "Outer sides", "N"},
-      {"flat", 'f', POPT_ARG_NONE, &flat, 0, "Flat (non helical)"},
-      {"single", 'S', POPT_ARG_NONE, &single, 0, "Single pip"},
-      {"base-height", 'b', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &baseheight, 0, "Base height", "mm"},
-      {"core-diameter", 'c', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &corediameter, 0, "Core diameter", "mm"},
-      {"core-height", 'h', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &coreheight, 0, "Core height", "mm"},
-      {"core-gap", 'C', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &coregap, 0, "Core gap", "mm"},
-      {"wall-thickness", 'w', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &wallthickness, 0, "Wall thickness", "mm"},
-      {"maze-thickness", 'd', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &mazethickness, 0, "Maze thickness", "mm"},
-      {"maze-step", 's', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &mazestep, 0, "Maze step", "mm"},
-      {"clearance", 'g', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &clearance, 0, "Clearance", "mm"},
-      {"fn", 'a', POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT, &fn, 0, "$fn", "N"},
-      POPT_AUTOHELP {}
-    };
 
     optCon = poptGetContext (NULL, argc, argv, optionsTable, 0);
     //poptSetOtherOptionHelp (optCon, "");
@@ -69,43 +77,9 @@ main (int argc, const char *argv[])
     poptFreeContext (optCon);
   }
 
-  if (getenv ("HTTP_HOST"))
-    {
-      printf ("Content-Type: application/scad\r\nContent-Disposition: Attachment; filename=maze-");
-      if (wall)
-	printf ("%d-", wall);
-      printf ("%d", walls);
-      if (outside)
-	printf ("o");
-      if (flat)
-	printf ("f");
-      if (single || !flat)
-	printf ("S");
-      printf ("b%d", (int) (100 * baseheight));
-      printf ("c%d", (int) (100 * corediameter));
-      printf ("h%d", (int) (100 * coreheight));
-      if (coregap)
-	printf ("C%d", (int) (100 * coregap));
-      printf ("w%d", (int) (100 * wallthickness));
-      printf ("d%d", (int) (100 * mazethickness));
-      printf ("s%d", (int) (100 * mazestep));
-      printf ("c%d", (int) (100 * clearance));
-      if (fn)
-	printf ("a%d", fn);
-      if (sides)
-	printf ("x%d", sides);
-      printf (".scad\r\n\r\n");	// Used from apache
-    }
-  printf ("// Puzzlebox by RevK, @TheRealRevK www.me.uk\n");
-  if (!flat && !single)
-    {
-      // TODO we should have double helix for this case, I suspect that will work...
-      printf ("// Helical and double pip cannot work, making single pip.\n");
-      single = 1;
-    }
-  char *path = getenv ("PATH_INFO");
+  char *error = NULL;
   if (path)
-    {				// Look for settings in path used from apache
+    {				// Settings from PATH_INFO
       while (*path)
 	{
 	  if (*path == '/')
@@ -114,88 +88,92 @@ main (int argc, const char *argv[])
 	      continue;
 	    }
 	  if (!isalpha (*path))
-	    errx (1, "Path should be X=value pairs separated by /");
-	  char arg = *path++;
-	  double value = 1;
-	  if (*path == '=')
 	    {
-	      path++;
-	      value = strtod (path, &path);
+	      asprintf (&error, "Path error [%s]\n", path);
+	      return 1;
 	    }
-	  switch (arg)
+	  char arg = *path++;
+	  int o;
+	  for (o = 0; optionsTable[o].longName && optionsTable[o].shortName != arg; o++);
+	  if (!optionsTable[o].shortName)
 	    {
-	    case 'o':
-	      outside = 1;
-	      break;
-	    case 'f':
-	      flat = 1;
-	      break;
-	    case 'S':
-	      single = 1;
-	      break;
-	    case 'm':
-	      walls = (int) value;
-	      break;
-	    case 'n':
-	      wall = (int) value;
-	      break;
-	    case 'b':
-	      baseheight = value;
-	      break;
-	    case 'c':
-	      corediameter = value;
-	      break;
-	    case 'h':
-	      coreheight = value;
-	      break;
-	    case 'C':
-	      coregap = value;
-	      break;
-	    case 'w':
-	      wallthickness = value;
-	      break;
-	    case 'd':
-	      mazethickness = value;
-	      break;
-	    case 's':
-	      mazestep = value;
-	      break;
-	    case 'g':
-	      clearance = value;
-	      break;
-	    case 'a':
-	      fn = (int) value;
-	      break;
-	    case 'x':
-	      sides = (int) value;
-	      break;
+	      asprintf (&error, "Unknown arg [%c]", arg);
+	      return 1;
+	    }
+	  if (optionsTable[o].arg)
+	    {
+	      if ((optionsTable[o].argInfo & POPT_ARG_MASK) == POPT_ARG_INT && *path == '=')
+		*(int *) optionsTable[o].arg = strtod (path + 1, &path);
+	      else if ((optionsTable[o].argInfo & POPT_ARG_MASK) == POPT_ARG_DOUBLE && *path == '=')
+		*(double *) optionsTable[o].arg = strtod (path + 1, &path);
+	      else if ((optionsTable[o].argInfo & POPT_ARG_MASK) == POPT_ARG_NONE)
+		*(int *) optionsTable[o].arg = 1;
 	    }
 	}
     }
-  printf ("// Walls=%d\n", walls);
-  if (wall)
-    printf ("// Wall=%d\n", wall);
-  if (sides)
-    printf ("// Sides=%d\n", sides);
-  printf ("// Base-Height=%f\n", baseheight);
-  printf ("// Core-Diameter=%f\n", corediameter);
-  printf ("// Core-Height=%f\n", coreheight);
-  if (coregap)
-    printf ("// Core-Gap=%f\n", coregap);
-  printf ("// Wall-Thickness=%f\n", wallthickness);
-  printf ("// Maze-Thickness=%f\n", mazethickness);
-  printf ("// Maze-Step=%f\n", mazestep);
-  printf ("// Clearance=%f\n", clearance);
-  if (outside)
-    printf ("// Maze outside\n");
-  if (flat)
-    printf ("// Non helical maze\n");
-  if (single)
-    printf ("// Single pip\n");
-  if (fn)
-    printf ("$fn=%d;\n", fn);
+
+  // Sanity checks
+  if (testmaze)
+    {
+      curvesteps = 20;
+      nubdetail = 4;
+    }
+  if (helix && nubs && nubs < helix)
+    nubs = helix / (helix / nubs);
+  if (helix && nubs > helix)
+    nubs = helix;
+
+  if (mime)
+    {
+      printf ("Content-Type: application/scad\r\nContent-Disposition: Attachment; filename=puzzlebox");
+      int o;
+      for (o = 0; optionsTable[o].longName; o++)
+	if (optionsTable[o].shortName && optionsTable[o].arg)
+	  {
+	    if ((optionsTable[o].argInfo & POPT_ARG_MASK) == POPT_ARG_NONE && *(int *) optionsTable[o].arg)
+	      printf ("-%c", optionsTable[o].shortName);
+	    else if ((optionsTable[o].argInfo & POPT_ARG_MASK) == POPT_ARG_INT && *(int *) optionsTable[o].arg)
+	      printf ("-%d%c", *(int *) optionsTable[o].arg, optionsTable[o].shortName);
+	    else if ((optionsTable[o].argInfo & POPT_ARG_MASK) == POPT_ARG_DOUBLE && *(double *) optionsTable[o].arg)
+	      {
+		char temp[50], *p;
+		sprintf (temp, "%f", *(double *) optionsTable[o].arg);
+		p = temp + strlen (temp) - 1;
+		while (*p == '0')
+		  *p-- = 0;
+		p = strchr (temp, '.');
+		if (*p)
+		  *p++ = 0;
+		printf ("-%s%c%s", temp, optionsTable[o].shortName, p);
+	      }
+	  }
+      printf (".scad\r\n\r\n");	// Used from apache
+    }
+
+  printf ("// Puzzlebox by RevK, @TheRealRevK www.me.uk https://www.thingiverse.com/thing:2410748\n");
+  {				// Document args
+    int o;
+    for (o = 0; optionsTable[o].longName; o++)
+      if (optionsTable[o].shortName && optionsTable[o].arg)
+	{
+	  if ((optionsTable[o].argInfo & POPT_ARG_MASK) == POPT_ARG_NONE && *(int *) optionsTable[o].arg)
+	    printf ("// %s\n", optionsTable[o].descrip);
+	  else if ((optionsTable[o].argInfo & POPT_ARG_MASK) == POPT_ARG_INT && *(int *) optionsTable[o].arg)
+	    printf ("// %s=%d\n", optionsTable[o].descrip, *(int *) optionsTable[o].arg);
+	  else if ((optionsTable[o].argInfo & POPT_ARG_MASK) == POPT_ARG_DOUBLE && *(double *) optionsTable[o].arg)
+	    printf ("// %s=%f\n", optionsTable[o].descrip, *(double *) optionsTable[o].arg);
+	}
+  }
+  if (error)
+    {				// Problem
+      printf ("// ** %s **\n", error);
+      return 1;
+    }
+
+  if (curvesteps)
+    printf ("$fn=%d;\n", curvesteps);
   // The nub
-  printf ("module nub(){rotate([%d,0,0])translate([0,0,%f])cylinder(d1=%f,d2=%f,h=%f,$fn=8);}\n", outside ? 90 : -90, -mazethickness, mazestep, mazestep / 3, mazethickness * 2);
+  printf ("module nub(){rotate([%d,0,0])translate([0,0,%f])cylinder(d1=%f,d2=%f,h=%f,$fn=%d);}\n", outside ? 90 : -90, -mazethickness, mazestep, mazestep / 3, mazethickness * 2, nubdetail);
   double x = 0;
   void box (int wall)
   {				// Make the box - wall 1 in inside
@@ -230,23 +208,65 @@ main (int argc, const char *argv[])
     if (wall > 1)
       height -= baseheight;
     // Output
-    printf ("// Wall %d\n", wall);
     // Maze dimensions
     double r = (outside ? r1 : r0);
-    double y = (outside ? baseheight : wallthickness);
-    double h = height - y;
+    double base = (outside ? baseheight : wallthickness);
+    double y0 = base;
+    double h = height - base;
     double w = r * 2 * PI;
-    int H = (int) ((h + mazestep / 2) / mazestep);
-    int W = (int) (w / mazestep) / 2 * 2;
+    int H = (int) (h / mazestep);
+    int W = (int) (w / mazestep) / nubs * nubs;
+    y0 += (h - (mazestep * (H - 1))) / 2;	// Centre
     double a = 0, dy = 0;
-    if (!flat)
+    if (helix)
       {
-	a = atan (mazestep / w);
-	dy = mazestep / W;
+	a = atan (mazestep * helix / w);
+	dy = mazestep * helix / W;
       }
+    printf ("// Wall %d (%d/%d)\n", wall, W, H);
+    if (helix)
+      {				// Adjust edges below and above?
+	H += (helix + 1);	// Extra base layers
+	y0 -= mazestep * helix;
+      }
+    int X, Y, N;
+    unsigned char maze[W][H];
+    memset (maze, 0, W * H);
+    int test (int x, int y)
+    {				// Test if in use...
+      while (x < 0)
+	{
+	  x += W;
+	  y -= helix;
+	}
+      while (x >= W)
+	{
+	  x -= W;
+	  y += helix;
+	}
+      int n = nubs;
+      unsigned char v = 0;
+      while (n--)
+	{
+	  if (y < 0 || y >= H)
+	    return 0x80;
+	  v |= maze[x][y];
+	  if (!n)
+	    break;
+	  x += W / nubs;
+	  while (x >= W)
+	    {
+	      x -= W;
+	      y += helix;
+	    }
+	  if (helix == nubs)
+	    y--;
+	}
+      return v;
+    }
     void nub (int X, int Y, char *t)
     {
-      printf ("rotate([0,0,%f])translate([0,0,%f])nub%d%s();\n", (double) X * 360 / W, Y * mazestep + y + dy * X, wall, t);
+      printf ("rotate([0,0,%f])translate([0,0,%f])nub%d%s();\n", (double) X * 360 / W, mazestep * Y + y0 + dy * X, wall, t);
     }
     printf ("module nub%d(){rotate([0,%f,0])translate([0,%f,0])nub();}\n", wall, a, r + clearance / 2);
     printf ("module nub%dx(){hull(){nub%d();rotate([0,0,%f])translate([0,0,%f])nub%d();}hull(){rotate([0,0,%f])translate([0,0,%f])nub%d();rotate([0,0,%f])translate([0,0,%f])nub%d();}}\n", wall, wall, (double) 360 / W / 2, dy / 2, wall, (double) 360 / W / 2, dy / 2, wall, (double) 360 / W, dy, wall);
@@ -254,9 +274,9 @@ main (int argc, const char *argv[])
     printf ("translate([%f,0,0]){\n", x + r2);
     printf ("difference(){\n");
     if (r2 > r1)
-      printf ("union(){translate([0,0,%f])rotate([0,180,0])cylinder(r=%f,h=%f,$fn=%d);cylinder(r=%f,h=%f);}\n", baseheight, r2, baseheight, (sides && wall + 1 >= walls ? sides : fn), r1, height);
+      printf ("union(){translate([0,0,%f])rotate([0,180,0])cylinder(r=%f,h=%f,$fn=%d);cylinder(r=%f,h=%f);}\n", baseheight, r2, baseheight, (sides && wall + 1 >= walls ? sides : curvesteps), r1, height);
     else
-      printf ("cylinder(r=%f,h=%f,$fn=%d);\n", r1, height, (sides && wall + 1 >= walls ? sides : fn));
+      printf ("cylinder(r=%f,h=%f,$fn=%d);\n", r1, height, (sides && wall + 1 >= walls ? sides : curvesteps));
     printf ("translate([0,0,%f])cylinder(r=%f,h=%f);\n", wallthickness, r0, height);
     if ((outside && wall < walls) || (!outside && wall > 1))
       {				// Maze cut out
@@ -268,148 +288,140 @@ main (int argc, const char *argv[])
 	int f = open ("/dev/urandom", O_RDONLY);
 	if (f < 0)
 	  err (1, "Open /dev/random");
-	int X, Y;
-	unsigned char maze[W][H];
-	memset (maze, 0, W * H);
-	int x[W * H], y[W * H], p = 0;
-	for (X = 0; X < W; X++)
-	  {
-	    maze[X][0] = 0x80;
-	    if (!flat)
-	      maze[X][H - 1] = 0x80;
+	if (helix)
+	  {			// Block any out of scope
+	    for (Y = 0; Y < H; Y++)
+	      for (X = 0; X < W; X++)
+		if (mazestep * Y + y0 + dy * X < base + mazestep / 2 || mazestep * Y + y0 + dy * X > height - mazestep / 2)
+		  maze[X][Y] = 0x80;	// To high or low
+	    for (Y = 0; Y < H; Y++)
+	      for (X = 0; X < W; X++)
+		if (!maze[X][Y] && test (X, Y))
+		  maze[X][Y] |= R;	// dummy (not sure this makes sense)
 	  }
-	x[0] = 0;
-	y[0] = 1;
-	p++;
-	int test (int x, int y)
-	{			// Test if in use...
-	  while (x < 0)
-	    {
-	      x += W;
-	      if (!flat)
-		y--;
-	    }
-	  while (x >= W)
-	    {
-	      x -= W;
-	      if (!flat)
-		y++;
-	    }
-	  if (y < 0 || y >= H)
-	    return 0x80;
-	  unsigned char v = maze[x][y];
-	  if (single)
-	    return v;
-	  x += W / 2;
-	  while (x >= W)
-	    {
-	      x -= W;
-	      if (!flat)
-		y++;		// Cant be !flat and !single
-	    }
-	  if (y < 0 || y >= H)
-	    return 0x80;
-	  return v | maze[x][y];
-	}
-	while (p)
+	if (testmaze)
+	  {			// Simple test pattern
+	    for (Y = 0; Y < H; Y++)
+	      for (X = 0; X < W; X++)
+		if (!(test (X, Y) & 0x80) && !(test (X + 1, Y) & 0x80))
+		  maze[X][Y] |= R;
+	  }
+	else
 	  {
-	    X = x[p - 1];
-	    Y = y[p - 1];
-	    unsigned int v, n = 0;
-	    if (read (f, &v, sizeof (v)) != sizeof (v))
-	      err (1, "Read /dev/random");
-	    // Some bias for direction
-	    if (!test (X + 1, Y))
-	      n += 3;
-	    if (!test (X - 1, Y))
-	      n += 3;
-	    if (!test (X, Y - 1))
-	      n += 2;
-	    if (!test (X, Y + 1))
-	      n++;
-	    if (!n)
-	      {
-		p--;
-		continue;
-	      }
-	    v %= n;
-	    if (!test (X + 1, Y) && (!v-- || !v-- || !v--))
-	      {
-		maze[X][Y] |= R;
-		X++;
-		if (X >= W)
-		  {
-		    X -= W;
-		    if (!flat)
-		      Y++;
-		  }
-		maze[X][Y] |= L;
-	      }
-	    else if (!test (X - 1, Y) && (!v-- || !v-- || !v--))
-	      {
-		maze[X][Y] |= L;
-		X--;
-		if (X < 0)
-		  {
-		    X += W;
-		    if (!flat)
-		      Y--;
-		  }
-		maze[X][Y] |= R;
-	      }
-	    else if (!test (X, Y - 1) && (!v-- || !v--))
-	      {
-		maze[X][Y] |= D;
-		Y--;
-		maze[X][Y] |= U;
-	      }
-	    else if (!test (X, Y + 1) && !v--)
-	      {
-		maze[X][Y] |= U;
-		Y++;
-		maze[X][Y] |= D;
-	      }
-	    else
-	      errx (1, "WTF");
-	    if (p == W * H)
-	      errx (1, "WTF");
-	    x[p] = X;
-	    y[p] = Y;
+	    int x[W * H], y[W * H], p = 0;
+	    x[0] = W / nubs / 2;
+	    y[0] = H / 2;
 	    p++;
+	    while (p)
+	      {
+		X = x[p - 1];
+		Y = y[p - 1];
+		unsigned int v, n = 0;
+		if (read (f, &v, sizeof (v)) != sizeof (v))
+		  err (1, "Read /dev/random");
+		// Some bias for direction
+		if (!test (X + 1, Y))
+		  n += 3;
+		if (!test (X - 1, Y))
+		  n += 3;
+		if (!test (X, Y - 1))
+		  n += 2;
+		if (!test (X, Y + 1))
+		  n++;
+		if (!n)
+		  {
+		    p--;
+		    continue;
+		  }
+		v %= n;
+		if (!test (X + 1, Y) && (!v-- || !v-- || !v--))
+		  {
+		    maze[X][Y] |= R;
+		    X++;
+		    if (X >= W)
+		      {
+			X -= W;
+			Y += helix;
+		      }
+		    maze[X][Y] |= L;
+		  }
+		else if (!test (X - 1, Y) && (!v-- || !v-- || !v--))
+		  {
+		    maze[X][Y] |= L;
+		    X--;
+		    if (X < 0)
+		      {
+			X += W;
+			Y -= helix;
+		      }
+		    maze[X][Y] |= R;
+		  }
+		else if (!test (X, Y - 1) && (!v-- || !v--))
+		  {
+		    maze[X][Y] |= D;
+		    Y--;
+		    maze[X][Y] |= U;
+		  }
+		else if (!test (X, Y + 1) && !v--)
+		  {
+		    maze[X][Y] |= U;
+		    Y++;
+		    maze[X][Y] |= D;
+		  }
+		else
+		  errx (1, "WTF");
+		if (p == W * H)
+		  errx (1, "WTF");
+		x[p] = X;
+		y[p] = Y;
+		p++;
+	      }
+	    close (f);
 	  }
-	close (f);
-	maze[0][0] |= U;
-	maze[W / 4][H - 1] |= U;
-	if (!flat)
-	  maze[W / 4][H - 2] |= U;
 	// Cut maze
 	for (Y = 0; Y < H; Y++)
 	  {
-	    printf ("render(){\n");
+	    int render = 0;
 	    for (X = 0; X < W; X++)
 	      {
 		unsigned char v = test (X, Y);
+		if (v & 0x80)
+		  continue;
+		if (!render++)
+		  printf ("%srender(){ // Row %d\n", testmaze ? "#" : "", Y + 1);
 		if (v & R)
 		  nub (X, Y, "x");
 		if (v & U)
 		  nub (X, Y, "y");
 	      }
-	    printf ("}\n");
+	    if (render)
+	      printf ("}\n");
+	  }
+	// End points of maze
+	for (N = 0; N < nubs; N++)
+	  {
+	    double dy = 0;
+	    if (helix > nubs)
+	      dy = mazestep * (N % (helix / nubs)) / (helix / nubs);
+	    printf ("rotate([0,0,%f])translate([0,%f,%f])hull(){nub();translate([0,0,%f])nub();}\n", (double) N * 360 / nubs, r + clearance / 2, base + mazestep / 2, y0 + dy + mazestep * helix - (base + mazestep / 2));
+	    if (helix)
+	      dy += mazestep * helix / nubs / 2;
+	    printf ("rotate([0,0,%f])translate([0,%f,%f])hull(){nub();translate([0,0,%f])nub();}\n", (double) (N + 0.5) * 360 / nubs, r + clearance / 2, y0 + mazestep * (H - 1 - (helix ? 2 : 0)) + dy, height - (y0 + mazestep * (H - 1 - (helix ? 2 : 0)) + dy));
 	  }
       }
     if (outside && wall + 1 < walls)
-      {
-	printf ("rotate([0,0,-90])translate([0,%f,%f])hull(){nub();translate([0,0,%f])nub();}\n", r2, -mazestep, baseheight + mazestep);
-	if (!single)
-	  printf ("rotate([0,0,-270])translate([0,%f,%f])hull(){nub();translate([0,0,%f])nub();}\n", r2, -mazestep, baseheight + mazestep);
+      {				// Connect endpoints over base
+	int N;
+	for (N = 0; N < nubs; N++)
+	  printf ("rotate([0,0,%f])translate([0,%f,%f])hull(){nub();translate([0,0,%f])nub();}\n", -(double) (N + 0.5) * 360 / nubs, r2, -mazestep, baseheight + mazestep);
       }
     printf ("}\n");
     if ((outside && wall > 1) || (!outside && wall < walls))
-      {
+      {				// Nubs
 	double rn = (outside ? r0 : r1);
-	printf ("translate([0,%f,%f])nub();\n", rn, height - mazestep / 2);
-	if (!single)
-	  printf ("rotate([0,0,180])translate([0,%f,%f])nub();\n", rn, height - mazestep / 2 - (flat ? 0 : mazestep / 2));
+	int N;
+	for (N = 0; N < nubs; N++)
+	  printf ("rotate([0,0,%f])translate([0,%f,%f])nub();\n", (double) N * 360 / nubs, rn, height - mazestep / 2);
       }
     printf ("}\n");
     x += r2 * 2 + 10;
