@@ -25,7 +25,7 @@ main (int argc, const char *argv[])
   double wallthickness = 1.75;
   double mazethickness = 1.75;
   double mazestep = 3;
-  double clearance = 0.5;
+  double clearance = 0.3;
   double coregap = 0;
   double outerround = 2;
   int curvesteps = 100;
@@ -182,7 +182,7 @@ main (int argc, const char *argv[])
   if (curvesteps)
     printf ("$fn=%d;\n", curvesteps);
   // The nub
-  printf ("module nub(){rotate([%d,0,0])translate([0,0,%f])cylinder(d1=%f,d2=%f,h=%f,$fn=%d);}\n", inside ? -90 : 90, -mazethickness / 4, mazestep * 4 / 5, mazestep / 3, mazethickness * 5 / 4, nubdetail);
+  printf ("module nub(){rotate([%d,0,0])translate([0,0,%f])cylinder(d1=%f,d2=%f,h=%f,$fn=%d);}\n", inside ? -90 : 90, -mazethickness / 4, mazestep, mazestep / 3, mazethickness * 5 / 4, nubdetail);
   // The base
   printf ("module outer(h,r){e=%f;minkowski(){cylinder(r1=0,r2=e,h=e);cylinder(h=h-e,r=r-e,$fn=%d);}}\n", outerround, sides ? : curvesteps ? : 100);
   double x = 0;
@@ -278,7 +278,7 @@ main (int argc, const char *argv[])
     {
       printf ("nub%d%s(%f,%f);\n", wall, t, (double) X * 360 / W, mazestep * Y + y0 + dy * X);
     }
-    printf ("module nub%d(){rotate([0,%f,0])translate([0,%f,0])nub();}\n", wall, a, r + clearance / 2);
+    printf ("module nub%d(){rotate([0,%f,0])translate([0,%f,0])nub();}\n", wall, a, r);
     printf ("module nub%dxa(a){render()rotate([0,0,a]){hull(){nub%d();rotate([0,0,%f])translate([0,0,%f])nub%d();}hull(){rotate([0,0,%f])translate([0,0,%f])nub%d();rotate([0,0,%f])translate([0,0,%f])nub%d();}}}\n", wall, wall, (double) 360 / W / 2, dy / 2, wall, (double) 360 / W / 2, dy / 2, wall,
 	    (double) 360 / W, dy, wall);
     printf ("module nub%dx(a,h){translate([0,0,h])nub%dxa(a);}\n", wall, wall);
@@ -424,10 +424,10 @@ main (int argc, const char *argv[])
 	    double dy = 0;
 	    if (helix > nubs)
 	      dy = mazestep * (N % (helix / nubs)) / (helix / nubs);
-	    printf ("rotate([0,0,%f])translate([0,%f,%f])hull(){nub();translate([0,0,%f])nub();}\n", (double) N * 360 / nubs, r + clearance / 2, base + mazestep / 2, y0 + dy + mazestep * helix - (base + mazestep / 2));
+	    printf ("rotate([0,0,%f])translate([0,%f,%f])hull(){nub();translate([0,0,%f])nub();}\n", (double) N * 360 / nubs, r, base + mazestep / 2, y0 + dy + mazestep * helix - (base + mazestep / 2));
 	    if (helix)
 	      dy += mazestep * helix / nubs / 2;
-	    printf ("rotate([0,0,%f])translate([0,%f,%f])hull(){nub();translate([0,0,%f])nub();}\n", (double) (N + 0.5) * 360 / nubs, r + clearance / 2, y0 + mazestep * (H - 1 - (helix ? 2 : 0)) + dy, height - (y0 + mazestep * (H - 1 - (helix ? 2 : 0)) + dy));
+	    printf ("rotate([0,0,%f])translate([0,%f,%f])hull(){nub();translate([0,0,%f])nub();}\n", (double) (N + 0.5) * 360 / nubs, r, y0 + mazestep * (H - 1 - (helix ? 2 : 0)) + dy, height - (y0 + mazestep * (H - 1 - (helix ? 2 : 0)) + dy));
 	  }
       }
     if (!inside && wall + 1 < walls)
