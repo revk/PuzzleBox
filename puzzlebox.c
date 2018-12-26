@@ -91,7 +91,7 @@ main (int argc, const char *argv[])
 	  if (!isalpha (*path))
 	    {
 	      asprintf (&error, "Path error [%s]\n", path);
-	      return 1;
+	      break;
 	    }
 	  char arg = *path++;
 	  int o;
@@ -99,7 +99,7 @@ main (int argc, const char *argv[])
 	  if (!optionsTable[o].shortName)
 	    {
 	      asprintf (&error, "Unknown arg [%c]", arg);
-	      return 1;
+	      break;
 	    }
 	  if (optionsTable[o].arg)
 	    {
