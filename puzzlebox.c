@@ -30,7 +30,7 @@ main (int argc, const char *argv[])
   int curvesteps = 100;
   int walls = 4;
   int wall = 0;
-  int outside = 0;
+  int inside = 0;
   int sides = 7;
   int testmaze = 0;
   int helix = 2;
@@ -39,7 +39,7 @@ main (int argc, const char *argv[])
   int mime = (getenv ("HTTP_HOST") ? 1 : 0);
 
   const struct poptOption optionsTable[] = {
-    {"outside", 'o', POPT_ARG_NONE, &outside, 0, "Maze on outside (easy)"},
+    {"inside", 'i', POPT_ARG_NONE, &inside, 0, "Maze on inside (hard)"},
     {"wall", 'n', POPT_ARG_INT, &wall, 0, "Wall", "N"},
     {"walls", 'm', POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT, &walls, 0, "Walls", "N"},
     {"sides", 'x', POPT_ARG_INT | (sides ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &sides, 0, "Outer sides", "N"},
@@ -180,7 +180,7 @@ main (int argc, const char *argv[])
   if (curvesteps)
     printf ("$fn=%d;\n", curvesteps);
   // The nub
-  printf ("module nub(){rotate([%d,0,0])translate([0,0,%f])cylinder(d1=%f,d2=%f,h=%f,$fn=%d);}\n", outside ? 90 : -90, -mazethickness, mazestep, mazestep / 3, mazethickness * 2, nubdetail);
+  printf ("module nub(){rotate([%d,0,0])translate([0,0,%f])cylinder(d1=%f,d2=%f,h=%f,$fn=%d);}\n", inside ? -90 : 90, -mazethickness, mazestep, mazestep / 3, mazethickness * 2, nubdetail);
   double x = 0;
   void box (int wall)
   {				// Make the box - wall 1 in inside
@@ -190,16 +190,13 @@ main (int argc, const char *argv[])
     double r2 = r1;
     if (wall < walls)
       r2 += wallthickness + mazethickness + clearance;
-    if (outside)
-      {
-	if (wall < walls)
-	  {			// Allow for maze on outside
-	    r1 += mazethickness;
-	    if (wall + 1 < walls)
-	      r2 += mazethickness;
-	  }
+    if (!inside && wall < walls)
+      {				// Allow for maze on outside
+	r1 += mazethickness;
+	if (wall + 1 < walls)
+	  r2 += mazethickness;
       }
-    if (!outside && wall > 1)
+    if (inside && wall > 1)
       {				// Allow for maze on inside
 	r0 -= mazethickness;
       }
@@ -216,9 +213,9 @@ main (int argc, const char *argv[])
       height -= baseheight;
     // Output
     // Maze dimensions
-    double r = (outside ? r1 : r0);
-    double base = (outside ? baseheight : wallthickness);
-    if (!outside && wall > 1)
+    double r = (inside ? r0 : r1);
+    double base = (inside ? wallthickness : baseheight);
+    if (inside && wall > 1)
       base += baseheight;	// Nubs don't go all the way to the end
     double y0 = base;
     double h = height - base;
@@ -290,7 +287,7 @@ main (int argc, const char *argv[])
     else
       printf ("cylinder(r=%f,h=%f,$fn=%d);\n", r1, height, (sides && wall + 1 >= walls ? sides : curvesteps));
     printf ("translate([0,0,%f])cylinder(r=%f,h=%f);\n", wallthickness, r0, height);
-    if ((outside && wall < walls) || (!outside && wall > 1))
+    if ((!inside && wall < walls) || (inside && wall > 1))
       {				// Maze cut out
 #define	L 1
 #define R 2
@@ -417,16 +414,16 @@ main (int argc, const char *argv[])
 	    printf ("rotate([0,0,%f])translate([0,%f,%f])hull(){nub();translate([0,0,%f])nub();}\n", (double) (N + 0.5) * 360 / nubs, r + clearance / 2, y0 + mazestep * (H - 1 - (helix ? 2 : 0)) + dy, height - (y0 + mazestep * (H - 1 - (helix ? 2 : 0)) + dy));
 	  }
       }
-    if (outside && wall + 1 < walls)
+    if (!inside && wall + 1 < walls)
       {				// Connect endpoints over base
 	int N;
 	for (N = 0; N < nubs; N++)
 	  printf ("rotate([0,0,%f])translate([0,%f,%f])hull(){nub();translate([0,0,%f])nub();}\n", -(double) (N + 0.5) * 360 / nubs, r2, -mazestep, baseheight + mazestep);
       }
     printf ("}\n");
-    if ((outside && wall > 1) || (!outside && wall < walls))
+    if ((!inside && wall > 1) || (inside && wall < walls))
       {				// Nubs
-	double rn = (outside ? r0 : r1);
+	double rn = (inside ? r1 : r0);
 	int N;
 	for (N = 0; N < nubs; N++)
 	  printf ("rotate([0,0,%f])translate([0,%f,%f])nub();\n", (double) N * 360 / nubs, rn, height - mazestep / 2);
