@@ -218,6 +218,8 @@ main (int argc, const char *argv[])
     // Maze dimensions
     double r = (outside ? r1 : r0);
     double base = (outside ? baseheight : wallthickness);
+    if (!outside && wall > 1)
+      base += baseheight;	// Nubs don't go all the way to the end
     double y0 = base;
     double h = height - base;
     double w = r * 2 * PI;
