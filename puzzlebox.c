@@ -267,10 +267,12 @@ main (int argc, const char *argv[])
     if (inside && wall > 2)
       base += baseheight;	// Nubs don't go all the way to the end
     double y0 = base + mazestep / 2;
-    double h = height - base;
+    double h = height - base - mazestep / 4;
     double w = r * 2 * PI;
     int H = (int) (h / mazestep);
     int W = ((int) (w / mazestep)) / (nubs * 2) * (nubs * 2);
+    if (W < 3 || H < 1)
+      errx (1, "Too small");
     y0 += (h - (mazestep * H));	// Align to top
     double a = 0, dy = 0;
     if (helix)
@@ -285,7 +287,7 @@ main (int argc, const char *argv[])
 	y0 -= mazestep * helix;
       }
     if ((!inside && wall < walls) || (inside && wall > 1))
-      printf ("// Wall %d (%d/%d) %f\n", wall, W, H, y0);
+      printf ("// Wall %d (%d/%d)\n", wall, W, H);
     else
       printf ("// Wall %d\n", wall);
     int X, Y, N;
@@ -367,10 +369,10 @@ main (int argc, const char *argv[])
 		maze[1][N] |= R;
 	      }
 	  }
-	else if (W > 2)
+	if (H > helix + 1)
 	  {
-	    maze[1][0] |= R;
-	    maze[W - 2][0] |= R;
+	    maze[1][helix] |= R;
+	    maze[W - 2][helix] |= R;
 	  }
 	// Clear too high/low
 	if (helix)
@@ -488,7 +490,7 @@ main (int argc, const char *argv[])
 	    printf ("rotate([0,0,%f])translate([0,%f,%f])hull(){rotate([0,%f,0])nub();translate([0,0,%f])rotate([0,%f,0])nub();}\n", (double) N * 360 / nubs, r, base + mazestep / 2, a, y0 + dy + mazestep * helix - (base + mazestep / 2), a);
 	    if (helix)
 	      dy += mazestep * helix / nubs / 2;
-	    printf ("rotate([0,0,%f])translate([0,%f,%f])hull(){rotate([0,%f,0])nub();translate([0,0,%f])rotate([0,%f,0])nub();}\n", (double) (N + 0.5) * 360 / nubs, r, y0 + mazestep * (H - 1 - (helix ? 1 : 0)) + dy, a, height - (y0 + mazestep * (H - 1 - (helix ? 1 : 0)) + dy), a);
+	    printf ("rotate([0,0,%f])translate([0,%f,%f])hull(){rotate([0,%f,0])nub();translate([0,0,%f])rotate([0,%f,0])nub();}\n", (double) (N + 0.5) * 360 / nubs, r, y0 + mazestep * (H - 1 - (helix ? 2 : 0)) + dy, a, height - (y0 + mazestep * (H - 1 - (helix ? 2 : 0)) + dy), a);
 	  }
       }
     if (!inside && wall + 1 < walls)
