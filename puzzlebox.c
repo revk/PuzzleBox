@@ -221,6 +221,7 @@ main (int argc, const char *argv[])
     double r2 = r1;
     if (wall < walls)
       r2 += wallthickness + mazethickness + clearance;
+    double r3 = r2;
     if (!inside && wall < walls)
       {				// Allow for maze on outside
 	r1 += mazethickness;
@@ -464,13 +465,14 @@ main (int argc, const char *argv[])
 	  printf ("rotate([0,0,%f])translate([0,%f,%f])hull(){nub();translate([0,0,%f])nub();}\n", -(double) (N + 0.5) * 360 / nubs, r2, -mazestep, baseheight + mazestep);
       }
     if (outerinitial && wall + 1 >= walls)
-      printf ("linear_extrude(height=%f,center=true)mirror([1,0,0])text(\"%s\",valign=\"center\",halign=\"center\",size=%f);\n", wallthickness, outerinitial, r2 - outerround);
+      printf ("linear_extrude(height=%f,center=true)mirror([1,0,0])text(\"%s\",valign=\"center\",halign=\"center\",size=%f);\n", wallthickness, outerinitial, r3 - outerround);
     printf ("}\n");
-    {				// Park
-      int N;
-      for (N = 0; N < nubs; N++)
-	printf ("rotate([0,0,%f])translate([0,%f,%f])park();\n", (double) N * 360 / nubs, r, base + mazestep / 2);
-    }
+    if ((!inside && wall < walls) || (inside && wall > 1))
+      {				// Park
+	int N;
+	for (N = 0; N < nubs; N++)
+	  printf ("rotate([0,0,%f])translate([0,%f,%f])park();\n", (double) N * 360 / nubs, r, base + mazestep / 2);
+      }
     if ((!inside && wall > 1) || (inside && wall < walls))
       {				// Nubs
 	printf ("difference(){\nunion(){\n");
