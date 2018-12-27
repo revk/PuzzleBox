@@ -209,7 +209,7 @@ main (int argc, const char *argv[])
   // The nub
   printf ("module nub(){rotate([%d,0,0])translate([0,0,%f])cylinder(d1=%f,d2=%f,h=%f,$fn=%d);}\n", inside ? -90 : 90, -mazethickness / 4, mazestep, mazestep / 3, mazethickness * 5 / 4, nubdetail);
   {				// Park
-    double parkdepth = mazethickness / 3 + clearance;
+    double parkdepth = mazethickness / 2 + clearance;
     if (parkdepth < clearance * 2)
       parkdepth = clearance * 2;
     printf ("module park(){rotate([%d,0,0])translate([0,0,%f])difference(){cylinder(d1=%f,d2=%f,h=%f,$fn=%d);translate([0,0,-0.01])cylinder(d1=%f,d2=%f,h=%f,$fn=%d);}}\n", inside ? -90 : 90, mazethickness - parkdepth + 0.01, mazestep * 2 / 3, mazestep, parkdepth, nubdetail, mazestep * 2 / 3,
