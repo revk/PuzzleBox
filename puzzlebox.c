@@ -33,7 +33,7 @@ main (int argc, const char *argv[])
   int walls = 4;
   int wall = 0;
   int inside = 0;
-  int sides = 7;
+  int outersides = 7;
   int testmaze = 0;
   int helix = 2;
   int nubs = 2;
@@ -44,7 +44,6 @@ main (int argc, const char *argv[])
     {"inside", 'i', POPT_ARG_NONE, &inside, 0, "Maze on inside (hard)"},
     {"wall", 'n', POPT_ARG_INT, &wall, 0, "Wall", "N"},
     {"walls", 'm', POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT, &walls, 0, "Walls", "N"},
-    {"sides", 'x', POPT_ARG_INT | (sides ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &sides, 0, "Outer sides", "N"},
     {"nubs", 'N', POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT, &nubs, 0, "Nubs", "N"},
     {"helix", 'H', POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT, &helix, 0, "Helix", "N"},
     {"test", 't', POPT_ARG_NONE, &testmaze, 0, "Test pattern instead of maze"},
@@ -57,6 +56,7 @@ main (int argc, const char *argv[])
     {"maze-step", 's', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &mazestep, 0, "Maze step", "mm"},
     {"clearance", 'g', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &clearance, 0, "Clearance", "mm"},
     {"curve-steps", 'a', POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT, &curvesteps, 0, "Curve steps", "N"},
+    {"outer-sides", 'x', POPT_ARG_INT | (outersides ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &outersides, 0, "Outer sides", "N"},
     {"outer-round", 'r', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &outerround, 0, "Outer rounding", "mm"},
     {"initial", 'T', POPT_ARG_STRING | (initial ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &initial, 0, "Initial", "X"},
     {"mime", 0, POPT_ARG_NONE | (mime ? POPT_ARGFLAG_DOC_HIDDEN : 0), &mime, 0, "MIME Header"},
@@ -134,6 +134,8 @@ main (int argc, const char *argv[])
     }
 
   // Sanity checks
+  if (initial && !*initial)
+    initial = NULL;
   if (testmaze)
     {
       curvesteps = 20;
@@ -209,7 +211,7 @@ main (int argc, const char *argv[])
   printf ("module park(){rotate([%d,0,0])translate([0,0,%f])difference(){cylinder(d1=%f,d2=%f,h=%f,$fn=%d);translate([0,0,-0.01])cylinder(d1=%f,d2=%f,h=%f,$fn=%d);}}\n", inside ? -90 : 90, mazethickness - clearance * 2 + 0.01, mazestep * 2 / 3, mazestep, clearance * 2, nubdetail, mazestep * 2 / 3,
 	  mazestep / 3, clearance * 2, nubdetail);
   // The base
-  printf ("module outer(h,r){e=%f;minkowski(){cylinder(r1=0,r2=e,h=e);cylinder(h=h-e,r=r-e,$fn=%d);}}\n", outerround, sides ? : curvesteps ? : 100);
+  printf ("module outer(h,r){e=%f;minkowski(){cylinder(r1=0,r2=e,h=e);cylinder(h=h-e,r=r-e,$fn=%d);}}\n", outerround, outersides ? : curvesteps ? : 100);
   double x = 0;
   void box (int wall)
   {				// Make the box - wall 1 in inside
@@ -229,9 +231,9 @@ main (int argc, const char *argv[])
       {				// Allow for maze on inside
 	r0 -= mazethickness;
       }
-    if (sides && wall + 1 >= walls)
+    if (outersides && wall + 1 >= walls)
       {
-	r2 /= cos ((double) PI / sides);
+	r2 /= cos ((double) PI / outersides);
 	if (wall == walls)
 	  r1 = r2;
       }
