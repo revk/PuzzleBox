@@ -14,6 +14,10 @@
 #include <time.h>
 
 #define 	PI	3.1415926
+#define	L 1
+#define R 2
+#define U 4
+#define D 8
 
 int
 main (int argc, const char *argv[])
@@ -262,12 +266,12 @@ main (int argc, const char *argv[])
     double base = (inside ? wallthickness : baseheight);
     if (inside && wall > 2)
       base += baseheight;	// Nubs don't go all the way to the end
-    double y0 = base;
+    double y0 = base + mazestep / 2;
     double h = height - base;
     double w = r * 2 * PI;
-    int H = (int) (h / mazestep);
+    int H = (int) ((h - mazestep / 2) / mazestep);
     int W = ((int) (w / mazestep)) / (nubs * 2) * (nubs * 2);
-    y0 += (h - (mazestep * (H - 1)));	// Align to top
+    y0 += (h - (mazestep * H));	// Align to top
     double a = 0, dy = 0;
     if (helix)
       {
@@ -275,15 +279,15 @@ main (int argc, const char *argv[])
 	dy = mazestep * helix / W;
       }
     a += 180 / nubsteps - 90;	// Flat top
-    if ((!inside && wall < walls) || (inside && wall > 1))
-      printf ("// Wall %d (%d/%d) %f\n", wall, W, H, height);
-    else
-      printf ("// Wall %d\n", wall);
     if (helix)
       {				// Adjust edges below and above?
 	H += (helix + 1);	// Extra base layers
 	y0 -= mazestep * helix;
       }
+    if ((!inside && wall < walls) || (inside && wall > 1))
+      printf ("// Wall %d (%d/%d) %f\n", wall, W, H, y0);
+    else
+      printf ("// Wall %d\n", wall);
     int X, Y, N;
     unsigned char maze[W][H];
     memset (maze, 0, W * H);
@@ -350,14 +354,22 @@ main (int argc, const char *argv[])
     printf ("translate([0,0,%f])cylinder(r=%f,h=%f);\n", wallthickness, r0, height);
     if ((!inside && wall < walls) || (inside && wall > 1))
       {				// Maze cut out
-#define	L 1
-#define R 2
-#define U 4
-#define D 8
 	// Make maze
 	int f = open ("/dev/urandom", O_RDONLY);
 	if (f < 0)
 	  err (1, "Open /dev/random");
+	// Clear by exit
+	if (helix)
+	  {
+	    for (N = 0; N < helix - 1; N++)
+	      maze[1][N] |= R;
+	  }
+	else if (W > 2)
+	  {
+	    maze[1][0] |= R;
+	    maze[W - 2][0] |= R;
+	  }
+	// Clear too high/low
 	if (helix)
 	  {			// Block any out of scope
 	    for (Y = 0; Y < H; Y++)
@@ -365,6 +377,7 @@ main (int argc, const char *argv[])
 		if (mazestep * Y + y0 + dy * X < base + mazestep / 2 || mazestep * Y + y0 + dy * X > height - mazestep / 2)
 		  maze[X][Y] = 0x80;	// To high or low
 	  }
+	// Make maze
 	if (testmaze)
 	  {			// Simple test pattern
 	    for (Y = 0; Y < H; Y++)
@@ -373,7 +386,7 @@ main (int argc, const char *argv[])
 		  maze[X][Y] |= R;
 	  }
 	else
-	  {
+	  {			// Actual maze
 	    int x[W * H], y[W * H], p = 0;
 	    x[0] = W / nubs / 2;
 	    y[0] = H / 2;
@@ -472,7 +485,7 @@ main (int argc, const char *argv[])
 	    printf ("rotate([0,0,%f])translate([0,%f,%f])hull(){rotate([0,%f,0])nub();translate([0,0,%f])rotate([0,%f,0])nub();}\n", (double) N * 360 / nubs, r, base + mazestep / 2, a, y0 + dy + mazestep * helix - (base + mazestep / 2), a);
 	    if (helix)
 	      dy += mazestep * helix / nubs / 2;
-	    printf ("rotate([0,0,%f])translate([0,%f,%f])hull(){rotate([0,%f,0])nub();translate([0,0,%f])rotate([0,%f,0])nub();}\n", (double) (N + 0.5) * 360 / nubs, r, y0 + mazestep * (H - 1 - (helix ? 2 : 0)) + dy, a, height - (y0 + mazestep * (H - 1 - (helix ? 2 : 0)) + dy), a);
+	    printf ("rotate([0,0,%f])translate([0,%f,%f])hull(){rotate([0,%f,0])nub();translate([0,0,%f])rotate([0,%f,0])nub();}\n", (double) (N + 0.5) * 360 / nubs, r, y0 + mazestep * (H - 1 - (helix ? 1 : 0)) + dy, a, height - (y0 + mazestep * (H - 1 - (helix ? 1 : 0)) + dy), a);
 	  }
       }
     if (!inside && wall + 1 < walls)
