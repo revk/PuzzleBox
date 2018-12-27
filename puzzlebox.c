@@ -379,7 +379,7 @@ main (int argc, const char *argv[])
 	  {			// Block any out of scope
 	    for (Y = 0; Y < H; Y++)
 	      for (X = 0; X < W; X++)
-		if (mazestep * Y + y0 + dy * X < base + mazestep / 2 || mazestep * Y + y0 + dy * X > height - mazestep / 2)
+		if (mazestep * Y + y0 + dy * X < base + mazestep / 2 || mazestep * Y + y0 + dy * X > height - mazestep * 3 / 4)
 		  maze[X][Y] = 0x80;	// To high or low
 	  }
 	// Make maze
