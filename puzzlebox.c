@@ -209,7 +209,7 @@ main (int argc, const char *argv[])
   // The nub
   printf ("module nub(){rotate([%d,0,0])translate([0,0,%f])cylinder(d1=%f,d2=%f,h=%f,$fn=%d);}\n", inside ? -90 : 90, -mazethickness / 4, mazestep, mazestep / 3, mazethickness * 5 / 4, nubdetail);
   {				// Park
-    double parkdepth = mazethickness / 3;
+    double parkdepth = mazethickness / 3 + clearance;
     if (parkdepth < clearance * 2)
       parkdepth = clearance * 2;
     printf ("module park(){rotate([%d,0,0])translate([0,0,%f])difference(){cylinder(d1=%f,d2=%f,h=%f,$fn=%d);translate([0,0,-0.01])cylinder(d1=%f,d2=%f,h=%f,$fn=%d);}}\n", inside ? -90 : 90, mazethickness - parkdepth + 0.01, mazestep * 2 / 3, mazestep, parkdepth, nubdetail, mazestep * 2 / 3,
@@ -247,12 +247,12 @@ main (int argc, const char *argv[])
     if (wall == 1)
       height -= coregap;
     if (wall > 1)
-      height -= baseheight;
+      height -= baseheight;	// base from previous unit is added to this
     // Output
     // Maze dimensions
     double r = (inside ? r0 : r1);
     double base = (inside ? wallthickness : baseheight);
-    if (inside && wall > 1)
+    if (inside && wall > 2)
       base += baseheight;	// Nubs don't go all the way to the end
     double y0 = base;
     double h = height - base;
@@ -267,7 +267,10 @@ main (int argc, const char *argv[])
 	dy = mazestep * helix / W;
       }
     a += 180 / nubdetail;
-    printf ("// Wall %d (%d/%d)\n", wall, W, H);
+    if ((!inside && wall < walls) || (inside && wall > 1))
+      printf ("// Wall %d (%d/%d) %f\n", wall, W, H, height);
+    else
+      printf ("// Wall %d\n", wall);
     if (helix)
       {				// Adjust edges below and above?
 	H += (helix + 1);	// Extra base layers
