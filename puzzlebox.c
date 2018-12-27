@@ -18,7 +18,8 @@
 int
 main (int argc, const char *argv[])
 {
-  char *path = getenv ("PATH_INFO");
+  char *path = getenv ("PATH_INFO") ? : getenv ("QUERY_STRING");
+  char *initial = NULL;
   double baseheight = 5;
   double corediameter = 10;
   double coreheight = 50;
@@ -57,6 +58,7 @@ main (int argc, const char *argv[])
     {"clearance", 'g', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &clearance, 0, "Clearance", "mm"},
     {"curve-steps", 'a', POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT, &curvesteps, 0, "Curve steps", "N"},
     {"outer-round", 'r', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &outerround, 0, "Outer rounding", "mm"},
+    {"initial", 'T', POPT_ARG_STRING | (initial ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &initial, 0, "Initial", "X"},
     {"mime", 0, POPT_ARG_NONE | (mime ? POPT_ARGFLAG_DOC_HIDDEN : 0), &mime, 0, "MIME Header"},
     {"path", 0, POPT_ARG_STRING | (path ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &path, 0, "Path header", "{/x=var}"},
     POPT_AUTOHELP {}
@@ -83,11 +85,12 @@ main (int argc, const char *argv[])
   char *error = NULL;
   if (path)
     {				// Settings from PATH_INFO
+      path = strdupa (path);
       while (*path)
 	{
-	  if (*path == '/')
+	  if (*path == '/' || *path == '&')
 	    {
-	      path++;
+	      *path++ = 0;
 	      continue;
 	    }
 	  if (!isalpha (*path))
@@ -111,6 +114,13 @@ main (int argc, const char *argv[])
 		*(double *) optionsTable[o].arg = strtod (path + 1, &path);
 	      else if ((optionsTable[o].argInfo & POPT_ARG_MASK) == POPT_ARG_NONE)
 		*(int *) optionsTable[o].arg = 1;
+	      else if ((optionsTable[o].argInfo & POPT_ARG_MASK) == POPT_ARG_STRING && *path == '=')
+		{
+		  path++;
+		  *(char **) optionsTable[o].arg = path;
+		  while (*path && *path != '/' && *path != '&')
+		    path++;
+		}
 	    }
 	}
     }
@@ -149,6 +159,9 @@ main (int argc, const char *argv[])
 		  *p++ = 0;
 		printf ("-%s%c%s", temp, optionsTable[o].shortName, p);
 	      }
+	    else if ((optionsTable[o].argInfo & POPT_ARG_MASK) == POPT_ARG_STRING && *(int *) optionsTable[o].arg)
+	      printf ("-%c%s", optionsTable[o].shortName, *(char * *) optionsTable[o].arg);
+
 	  }
       printf (".scad\r\n\r\n");	// Used from apache
     }
@@ -171,6 +184,8 @@ main (int argc, const char *argv[])
 	    printf ("// %s=%d\n", optionsTable[o].descrip, *(int *) optionsTable[o].arg);
 	  else if ((optionsTable[o].argInfo & POPT_ARG_MASK) == POPT_ARG_DOUBLE && *(double *) optionsTable[o].arg)
 	    printf ("// %s=%f\n", optionsTable[o].descrip, *(double *) optionsTable[o].arg);
+	  else if ((optionsTable[o].argInfo & POPT_ARG_MASK) == POPT_ARG_STRING && *(int *) optionsTable[o].arg)
+	    printf ("// %s=%s\n", optionsTable[o].descrip, *(char * *) optionsTable[o].arg);
 	}
   }
   if (error)
@@ -183,6 +198,8 @@ main (int argc, const char *argv[])
     printf ("$fn=%d;\n", curvesteps);
   // The nub
   printf ("module nub(){rotate([%d,0,0])translate([0,0,%f])cylinder(d1=%f,d2=%f,h=%f,$fn=%d);}\n", inside ? -90 : 90, -mazethickness / 4, mazestep, mazestep / 3, mazethickness * 5 / 4, nubdetail);
+  printf ("module park(){rotate([%d,0,0])translate([0,0,%f])difference(){cylinder(d1=%f,d2=%f,h=%f,$fn=%d);translate([0,0,-0.01])cylinder(d1=%f,d2=%f,h=%f,$fn=%d);}}\n", inside ? -90 : 90, mazethickness - clearance * 2 + 0.01, mazestep * 2 / 3, mazestep, clearance * 2, nubdetail, mazestep * 2 / 3,
+	  mazestep / 3, clearance * 2, nubdetail);
   // The base
   printf ("module outer(h,r){e=%f;minkowski(){cylinder(r1=0,r2=e,h=e);cylinder(h=h-e,r=r-e,$fn=%d);}}\n", outerround, sides ? : curvesteps ? : 100);
   double x = 0;
@@ -436,7 +453,14 @@ main (int argc, const char *argv[])
 	for (N = 0; N < nubs; N++)
 	  printf ("rotate([0,0,%f])translate([0,%f,%f])hull(){nub();translate([0,0,%f])nub();}\n", -(double) (N + 0.5) * 360 / nubs, r2, -mazestep, baseheight + mazestep);
       }
+    if (initial && wall + 1 >= walls)
+      printf ("linear_extrude(height=%f,center=true)mirror([1,0,0])text(\"%s\",valign=\"center\",halign=\"center\",size=%f);\n", wallthickness, initial, r2 - outerround);
     printf ("}\n");
+    {				// Park
+      int N;
+      for (N = 0; N < nubs; N++)
+	printf ("rotate([0,0,%f])translate([0,%f,%f])park();\n", (double) N * 360 / nubs, r, base + mazestep / 2);
+    }
     if ((!inside && wall > 1) || (inside && wall < walls))
       {				// Nubs
 	printf ("difference(){\nunion(){\n");
