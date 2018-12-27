@@ -250,7 +250,7 @@ main (int argc, const char *argv[])
 	  r1 = r2;
       }
     double height = coreheight + (wallthickness + clearance) * wall;
-    if (wall < walls)
+    if (!inside && wall < walls)
       height -= clearance;
     if (wall == 1)
       height -= coregap;
