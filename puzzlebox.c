@@ -26,7 +26,7 @@ main (int argc, const char *argv[])
   double wallthickness = 1.75;
   double mazethickness = 1.75;
   double mazestep = 3;
-  double clearance = 0.25;
+  double clearance = 0.2;
   double coregap = 0;
   double outerround = 2;
   int curvesteps = 100;
@@ -37,7 +37,7 @@ main (int argc, const char *argv[])
   int testmaze = 0;
   int helix = 2;
   int nubs = 2;
-  int nubdetail = 8;
+  int nubsteps = 4;
   int mime = (getenv ("HTTP_HOST") ? 1 : 0);
 
   const struct poptOption optionsTable[] = {
@@ -59,6 +59,7 @@ main (int argc, const char *argv[])
     {"outer-sides", 'x', POPT_ARG_INT | (outersides ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &outersides, 0, "Outer sides", "N"},
     {"outer-round", 'r', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &outerround, 0, "Outer rounding", "mm"},
     {"outer-initial", 'T', POPT_ARG_STRING | (outerinitial ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &outerinitial, 0, "Outer Initial", "X"},
+    {"nub-steps", 'A', POPT_ARG_INT | (nubsteps ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &nubsteps, 0, "Nub steps", "N"},
     {"mime", 0, POPT_ARG_NONE | (mime ? POPT_ARGFLAG_DOC_HIDDEN : 0), &mime, 0, "MIME Header"},
     {"path", 0, POPT_ARG_STRING | (path ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &path, 0, "Path header", "{/x=var}"},
     POPT_AUTOHELP {}
@@ -139,7 +140,7 @@ main (int argc, const char *argv[])
   if (testmaze)
     {
       curvesteps = 20;
-      nubdetail = 4;
+      nubsteps = 4;
     }
   if (helix && nubs && nubs < helix)
     nubs = helix / (helix / nubs);
@@ -209,13 +210,13 @@ main (int argc, const char *argv[])
   if (curvesteps)
     printf ("$fn=%d;\n", curvesteps);
   // The nub
-  printf ("module nub(){rotate([%d,0,0])translate([0,0,%f])cylinder(d1=%f,d2=%f,h=%f,$fn=%d);}\n", inside ? -90 : 90, -mazethickness / 4, mazestep, mazestep / 3, mazethickness * 5 / 4, nubdetail);
+  printf ("module nub(){rotate([%d,0,0])translate([0,0,%f])cylinder(d1=%f,d2=%f,h=%f,$fn=%d);}\n", inside ? -90 : 90, -mazethickness / 4, mazestep, mazestep / 3, mazethickness * 5 / 4, nubsteps);
   {				// Park
-    double parkdepth = mazethickness / 2 + clearance;
+    double parkdepth = mazethickness * 2 / 3 + clearance;
     if (parkdepth < clearance * 2)
       parkdepth = clearance * 2;
-    printf ("module park(){rotate([%d,0,0])translate([0,0,%f])difference(){cylinder(d1=%f,d2=%f,h=%f,$fn=%d);translate([0,0,-0.01])cylinder(d1=%f,d2=%f,h=%f,$fn=%d);}}\n", inside ? -90 : 90, mazethickness - parkdepth + 0.01, mazestep * 2 / 3, mazestep, parkdepth, nubdetail, mazestep * 2 / 3,
-	    mazestep / 3, parkdepth, nubdetail);
+    printf ("module park(){rotate([%d,0,0])translate([0,0,%f])difference(){cylinder(d1=%f,d2=%f,h=%f,$fn=%d);translate([0,0,%f])cylinder(d1=%f,d2=%f,h=%f,$fn=%d);}}\n",
+	    inside ? -90 : 90, mazethickness - parkdepth, mazestep * 2 / 3, mazestep * 2, parkdepth + wallthickness, nubsteps, -mazethickness / 4, mazestep, mazestep / 3, mazethickness * 5 / 4, nubsteps);
   }
   // The base
   printf ("module outer(h,r){e=%f;minkowski(){cylinder(r1=0,r2=e,h=e);cylinder(h=h-e,r=r-e,$fn=%d);}}\n", outerround, outersides ? : curvesteps ? : 100);
@@ -268,7 +269,7 @@ main (int argc, const char *argv[])
 	a = atan (mazestep * helix / w) * 180 / PI;
 	dy = mazestep * helix / W;
       }
-    a += 180 / nubdetail;
+    a += 180 / nubsteps;
     if ((!inside && wall < walls) || (inside && wall > 1))
       printf ("// Wall %d (%d/%d) %f\n", wall, W, H, height);
     else
