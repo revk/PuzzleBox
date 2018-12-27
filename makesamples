@@ -1,6 +1,6 @@
 #!/bin/csh 
 foreach w (1 2)
-	./puzzlebox --walls=2 --core-height=15 --core-diameter=5 --sides=3 --wall=$w > /tmp/small-test-part-$w.scad
+	./puzzlebox --walls=2 --core-height=15 --core-diameter=5 --sides=3 --wall=$w --initial=K > /tmp/small-test-part-$w.scad
 	openscad -o /tmp/small-test-part-$w.stl /tmp/small-test-part-$w.scad&
 end
 foreach w (1 2)
