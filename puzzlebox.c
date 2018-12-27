@@ -37,7 +37,7 @@ main (int argc, const char *argv[])
   int testmaze = 0;
   int helix = 2;
   int nubs = 2;
-  int nubsteps = 4;
+  int nubsteps = 6;
   int mime = (getenv ("HTTP_HOST") ? 1 : 0);
 
   const struct poptOption optionsTable[] = {
@@ -212,11 +212,14 @@ main (int argc, const char *argv[])
   // The nub
   printf ("module nub(){rotate([%d,0,0])translate([0,0,%f])cylinder(d1=%f,d2=%f,h=%f,$fn=%d);}\n", inside ? -90 : 90, -mazethickness / 4, mazestep, mazestep / 3, mazethickness * 5 / 4, nubsteps);
   {				// Park
-    double parkdepth = mazethickness * 2 / 3 + clearance;
+    double parkdepth = mazethickness / 2;
     if (parkdepth < clearance * 2)
       parkdepth = clearance * 2;
-    printf ("module park(){rotate([%d,0,0])translate([0,0,%f])difference(){cylinder(d1=%f,d2=%f,h=%f,$fn=%d);translate([0,0,%f])cylinder(d1=%f,d2=%f,h=%f,$fn=%d);}}\n",
-	    inside ? -90 : 90, mazethickness - parkdepth, mazestep * 2 / 3, mazestep * 2, parkdepth + wallthickness, nubsteps, -mazethickness / 4, mazestep, mazestep / 3, mazethickness * 5 / 4, nubsteps);
+    printf ("module park(){rotate([%d,0,0])translate([0,0,%f])difference(){cylinder(d1=%f,d2=%f,h=%f,$fn=%d);translate([0,0,%f])cylinder(d1=%f,d2=%f,h=%f,$fn=%d);}}\n", inside ? -90 : 90,	// rotate
+	    mazethickness - parkdepth,	// translate
+	    mazestep * 3 / 4, mazestep * 3 / 2, parkdepth + wallthickness, nubsteps,	// cylinder
+	    parkdepth - mazethickness - mazethickness / 4, mazestep, mazestep / 3, mazethickness * 5 / 4, nubsteps	// standard nub imprint
+      );
   }
   // The base
   printf ("module outer(h,r){e=%f;minkowski(){cylinder(r1=0,r2=e,h=e);cylinder(h=h-e,r=r-e,$fn=%d);}}\n", outerround, outersides ? : curvesteps ? : 100);
@@ -269,7 +272,7 @@ main (int argc, const char *argv[])
 	a = atan (mazestep * helix / w) * 180 / PI;
 	dy = mazestep * helix / W;
       }
-    a += 180 / nubsteps;
+    a += 180 / nubsteps - 90;	// Flat top
     if ((!inside && wall < walls) || (inside && wall > 1))
       printf ("// Wall %d (%d/%d) %f\n", wall, W, H, height);
     else
