@@ -145,6 +145,8 @@ main (int argc, const char *argv[])
     nubs = helix / (helix / nubs);
   if (helix && nubs > helix)
     nubs = helix;
+  if (outersides)
+    outersides = (outersides + nubs - 1) / nubs * nubs;
 
   if (mime)
     {
