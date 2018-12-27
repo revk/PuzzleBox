@@ -249,7 +249,7 @@ main (int argc, const char *argv[])
 	if (wall == walls)
 	  r1 = r2;
       }
-    double height = coreheight + wallthickness * wall;
+    double height = coreheight + (wallthickness + clearance) * wall;
     if (wall < walls)
       height -= clearance;
     if (wall == 1)
