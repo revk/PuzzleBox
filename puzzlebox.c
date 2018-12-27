@@ -19,7 +19,7 @@ int
 main (int argc, const char *argv[])
 {
   char *path = getenv ("PATH_INFO") ? : getenv ("QUERY_STRING");
-  char *initial = NULL;
+  char *outerinitial = NULL;
   double baseheight = 5;
   double corediameter = 10;
   double coreheight = 50;
@@ -58,7 +58,7 @@ main (int argc, const char *argv[])
     {"curve-steps", 'a', POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT, &curvesteps, 0, "Curve steps", "N"},
     {"outer-sides", 'x', POPT_ARG_INT | (outersides ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &outersides, 0, "Outer sides", "N"},
     {"outer-round", 'r', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &outerround, 0, "Outer rounding", "mm"},
-    {"initial", 'T', POPT_ARG_STRING | (initial ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &initial, 0, "Initial", "X"},
+    {"outer-initial", 'T', POPT_ARG_STRING | (outerinitial ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &outerinitial, 0, "Outer Initial", "X"},
     {"mime", 0, POPT_ARG_NONE | (mime ? POPT_ARGFLAG_DOC_HIDDEN : 0), &mime, 0, "MIME Header"},
     {"path", 0, POPT_ARG_STRING | (path ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &path, 0, "Path header", "{/x=var}"},
     POPT_AUTOHELP {}
@@ -134,8 +134,8 @@ main (int argc, const char *argv[])
     }
 
   // Sanity checks
-  if (initial && !*initial)
-    initial = NULL;
+  if (outerinitial && !*outerinitial)
+    outerinitial = NULL;
   if (testmaze)
     {
       curvesteps = 20;
@@ -463,8 +463,8 @@ main (int argc, const char *argv[])
 	for (N = 0; N < nubs; N++)
 	  printf ("rotate([0,0,%f])translate([0,%f,%f])hull(){nub();translate([0,0,%f])nub();}\n", -(double) (N + 0.5) * 360 / nubs, r2, -mazestep, baseheight + mazestep);
       }
-    if (initial && wall + 1 >= walls)
-      printf ("linear_extrude(height=%f,center=true)mirror([1,0,0])text(\"%s\",valign=\"center\",halign=\"center\",size=%f);\n", wallthickness, initial, r2 - outerround);
+    if (outerinitial && wall + 1 >= walls)
+      printf ("linear_extrude(height=%f,center=true)mirror([1,0,0])text(\"%s\",valign=\"center\",halign=\"center\",size=%f);\n", wallthickness, outerinitial, r2 - outerround);
     printf ("}\n");
     {				// Park
       int N;
