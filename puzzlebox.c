@@ -118,7 +118,6 @@ main (int argc, const char *argv[])
 		  if (*path == '=')
 		    {		// Skip =on, etc.
 		      path++;
-		      *(char **) optionsTable[o].arg = path;
 		      while (*path && *path != '/' && *path != '&')
 			path++;
 		    }
