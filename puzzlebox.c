@@ -269,7 +269,7 @@ main (int argc, const char *argv[])
     double y0 = base + mazestep / 2;
     double h = height - base;
     double w = r * 2 * PI;
-    int H = (int) ((h - mazestep / 2) / mazestep);
+    int H = (int) (h / mazestep);
     int W = ((int) (w / mazestep)) / (nubs * 2) * (nubs * 2);
     y0 += (h - (mazestep * H));	// Align to top
     double a = 0, dy = 0;
@@ -362,7 +362,10 @@ main (int argc, const char *argv[])
 	if (helix)
 	  {
 	    for (N = 0; N < helix - 1; N++)
-	      maze[1][N] |= R;
+	      {
+		maze[0][N] = 0x80;
+		maze[1][N] |= R;
+	      }
 	  }
 	else if (W > 2)
 	  {
