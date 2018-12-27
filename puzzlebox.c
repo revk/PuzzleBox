@@ -113,7 +113,16 @@ main (int argc, const char *argv[])
 	      else if ((optionsTable[o].argInfo & POPT_ARG_MASK) == POPT_ARG_DOUBLE && *path == '=')
 		*(double *) optionsTable[o].arg = strtod (path + 1, &path);
 	      else if ((optionsTable[o].argInfo & POPT_ARG_MASK) == POPT_ARG_NONE)
-		*(int *) optionsTable[o].arg = 1;
+		{
+		  *(int *) optionsTable[o].arg = 1;
+		  if (*path == '=')
+		    {		// Skip =on, etc.
+		      path++;
+		      *(char **) optionsTable[o].arg = path;
+		      while (*path && *path != '/' && *path != '&')
+			path++;
+		    }
+		}
 	      else if ((optionsTable[o].argInfo & POPT_ARG_MASK) == POPT_ARG_STRING && *path == '=')
 		{
 		  path++;
