@@ -19,7 +19,7 @@ foreach w (0 1 2)
 	./puzzlebox --walls=2 --core-height=85 --core-gap=20 --core-diameter=10 --outer-sides=4 --wall=$w --outer-initial='£' > /tmp/lottery-ticket-holder-$P.scad
 	openscad -o /tmp/lottery-ticket-holder-$P.stl /tmp/lottery-ticket-holder-$P.scad&
 end
-foreach s (20 50 75)
+foreach s (25 50 75)
 foreach w (0 1 2 3 4)
 	setenv P part-$w
 	if(! $w) setenv P all
