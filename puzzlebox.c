@@ -205,8 +205,8 @@ main (int argc, const char *argv[])
     }
 
   // The nub and park point
-  printf ("module nub(){rotate([%d,0,0])rotate([0,0,45])translate([0,0,-0.01])cylinder(d1=%f,d2=%f,h=%f,$fn=4);}\n", inside ? -90 : 90, mazestep * 3 / 4, mazestep / 4, mazethickness);
-  printf ("module park(){rotate([%d,0,0])translate([0,0,%f])hull(){cube([%f,%f,0.01],center=true);translate([0,0,%f])cube([%f,%f,0.01],center=true);}}\n", inside ? -90 : 90, mazethickness / 3, mazestep, mazestep / 8, mazethickness * 2 / 3, mazestep / 2, mazestep / 2);
+  printf ("module nub(){rotate([%d,0,0])translate([0,0,-0.01])hull(){cube([%f,%f,0.01],center=true);translate([0,0,%f])cube([%f,%f,0.01],center=true);};}\n", inside ? -90 : 90, mazestep * 3 / 4, mazestep * 3 / 4, mazethickness, mazestep / 4, mazestep / 4);
+  printf ("module park(){rotate([%d,0,0])translate([0,0,%f])hull(){cube([%f,%f,0.01],center=true);translate([0,0,%f])cube([%f,%f,0.01],center=true);}}\n", inside ? -90 : 90, mazethickness / 3, mazestep, mazestep / 4, mazethickness * 2 / 3, mazestep, mazestep * 3 / 4);
   // The base
   printf ("module outer(h,r){e=%f;minkowski(){cylinder(r1=0,r2=e,h=e,$fn=100);cylinder(h=h-e,r=r-e,$fn=%d);}}\n", outerround, outersides ? : 100);
   double x = 0;
