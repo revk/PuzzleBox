@@ -267,7 +267,7 @@ main (int argc, const char *argv[])
       printf ("// Wall %d (%d/%d)\n", wall, W, H);
     else
       printf ("// Wall %d\n", wall);
-    int entry = (inside ? 0 : (W / nubs) / 2);
+    int entry = 0;		// Entry point and pips
     int X, Y, N, S;
     unsigned char maze[W][H];
     memset (maze, 0, sizeof (unsigned char) * W * H);
@@ -331,6 +331,12 @@ main (int argc, const char *argv[])
 	int f = open ("/dev/urandom", O_RDONLY);
 	if (f < 0)
 	  err (1, "Open /dev/random");
+	if (!inside || wall + 1 < walls)
+	  {
+	    if (read (f, &entry, sizeof (entry)) != sizeof (entry))
+	      err (1, "Read /dev/random");
+	    entry = 1 + (entry % (W / nubs - 1));	// Random entry point not matching exit
+	  }
 	// Clear too high/low
 	for (Y = 0; Y < H; Y++)
 	  for (X = 0; X < W; X++)
