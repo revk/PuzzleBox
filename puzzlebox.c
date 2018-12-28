@@ -428,10 +428,12 @@ main (int argc, const char *argv[])
 	    close (f);
 	  }
 	// Entry point for maze
-	for (N = 0; N < nubs; N++)
+	for (X = (W / nubs) / 2; X < W; X += W / nubs)
 	  {
-	    maze[N * (W / nubs)][H - 2] |= U;
-	    maze[N * (W / nubs)][H - 1] |= D + U;
+	    Y = H - 1;
+	    while (Y && (maze[X][Y] & 0x80))
+	      maze[X][Y--] |= U + D;
+	    maze[X][Y] += U;
 	  }
 	{			// Construct maze polyhedron
 	  // This makes the maze using vertical slices that are 4 per maze unit
