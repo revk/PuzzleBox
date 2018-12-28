@@ -636,7 +636,7 @@ main (int argc, const char *argv[])
       printf ("difference(){translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);}\n", wallthickness / 2, r1, height, W * 4, wallthickness, r0, height, W * 4);
     if ((!inside && wall < walls) || (inside && wall > 1))
       {				// Park ridge
-	for (X = entry; X < W; X += W / nubs)
+	for (X = 0; X < W; X += W / nubs)
 	  printf ("rotate([0,0,%f])translate([0,%f,%f])park();\n", (double) X * 360 / W, r, base + mazestep);
       }
     if ((!inside && wall > 1) || (inside && wall < walls))
