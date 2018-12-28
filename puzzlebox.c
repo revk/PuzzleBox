@@ -204,9 +204,11 @@ main (int argc, const char *argv[])
       return 1;
     }
 
-  // The nub and park point
-  printf ("module nub(){rotate([%d,0,0])translate([0,0,-0.1])hull(){cube([%f,%f,0.1],center=true);translate([0,0,%f])cube([%f,%f,0.1],center=true);};}\n", inside ? -90 : 90, mazestep * 3 / 4, mazestep * 3 / 4, mazethickness, mazestep / 4, mazestep / 4);
-  printf ("module park(){rotate([%d,0,0])translate([0,0,%f])hull(){cube([%f,%f,0.1],center=true);translate([0,0,%f])cube([%f,%f,0.1],center=true);}}\n", inside ? -90 : 90, mazethickness / 2, mazestep, mazestep / 4, mazethickness / 2, mazestep, mazestep * 3 / 4);
+  {				// The nub and park point
+    double parkdepth = mazethickness / 3;
+    printf ("module nub(){rotate([%d,0,0])translate([0,0,-0.1])hull(){cube([%f,%f,0.1],center=true);translate([0,0,%f])cube([%f,%f,0.1],center=true);};}\n", inside ? -90 : 90, mazestep * 3 / 4, mazestep * 3 / 4, mazethickness, mazestep / 4, mazestep / 4);
+    printf ("module park(){rotate([%d,0,0])translate([0,0,%f])hull(){cube([%f,%f,0.1],center=true);translate([0,0,%f])cube([%f,%f,0.1],center=true);}}\n", inside ? -90 : 90, mazethickness - parkdepth, mazestep, mazestep / 4, parkdepth, mazestep, mazestep * 3 / 4);
+  }
   // The base
   printf ("module outer(h,r){e=%f;minkowski(){cylinder(r1=0,r2=e,h=e,$fn=100);cylinder(h=h-e,r=r-e,$fn=%d);}}\n", outerround, outersides ? : 100);
   double x = 0;
