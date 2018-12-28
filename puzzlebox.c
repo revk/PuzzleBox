@@ -207,7 +207,7 @@ main (int argc, const char *argv[])
     }
 
   // The nub
-  printf ("module nub(){rotate([%d,0,0])translate([0,0,%f])cylinder(d1=%f,d2=%f,h=%f,$fn=%d);}\n", inside ? -90 : 90, -mazethickness / 4, mazestep, mazestep / 3, mazethickness * 5 / 4, 6);
+  printf ("module nub(){rotate([%d,0,0])rotate([0,0,45])cylinder(d1=%f,d2=%f,h=%f,$fn=4);}\n", inside ? -90 : 90, mazestep * 3 / 4, mazestep / 4, mazethickness);
 #ifndef	POLYHEDRON
   {				// Park
     double parkdepth = mazethickness * 2 / 3;
@@ -340,11 +340,11 @@ main (int argc, const char *argv[])
     else
       {
 	if (r2 > r1)
-	  printf ("translate([0,0,%f])rotate([0,180,0])cylinder(r=%f,h=%f,$fn=%d);\n", baseheight, r2, W * 4);
+	  printf ("translate([0,0,%f])rotate([0,180,0])cylinder(r=%f,h=%f,$fn=%d);\n", baseheight, r2, baseheight, W * 4);
 	else
 	  printf ("cylinder(r=%f,h=%f,$fn=%d);\n", r1, height, W * 4);
       }
-    //printf ("translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);\n", wallthickness + clearance, r0 + clearance, base, W * 4);      // Hole
+    printf ("translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);\n", wallthickness + clearance, r0 + clearance, height, W * 4);	// Hole
 #else
     printf ("union(){\n");
     if (wall + 1 >= walls)
@@ -368,7 +368,7 @@ main (int argc, const char *argv[])
       {				// Connect endpoints over base
 	int N;
 	for (N = 0; N < nubs; N++)
-	  printf ("rotate([0,0,%f])translate([0,%f,%f])hull(){rotate([0,%f,0])nub();translate([0,0,%f])rotate([0,%f,0])nub();}\n", -(double) N * 360 / nubs, r2, -mazestep, a, baseheight + mazestep, a);
+	  printf ("rotate([0,0,%f])translate([0,%f,%f])hull(){nub();translate([0,0,%f])nub();}\n", -(double) N * 360 / nubs, r2, -mazestep, baseheight + mazestep);
       }
     if (outerinitial && wall + 1 >= walls)
       printf ("linear_extrude(height=%f,center=true)mirror([1,0,0])text(\"%s\",valign=\"center\",halign=\"center\",size=%f);\n", wallthickness, outerinitial, r3 - outerround);
@@ -714,7 +714,7 @@ main (int argc, const char *argv[])
 	double rn = (inside ? r1 : r0);
 	int N;
 	for (N = 0; N < nubs; N++)
-	  printf ("rotate([0,0,%f])translate([0,%f,%f])rotate([0,%f,0])nub();\n", (double) N * 360 / nubs, rn, height - mazestep / 2 + clearance, a);
+	  printf ("rotate([0,0,%f])translate([0,%f,%f])nub();\n", (double) N * 360 / nubs, rn, height - mazestep / 2 + clearance);
 	printf ("}\n");
 	printf ("translate([0,0,%f])cylinder(r=%f,h=%f);", height, r2 + 1, mazestep + clearance);
 	printf ("}\n");
