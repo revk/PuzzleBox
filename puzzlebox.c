@@ -24,7 +24,7 @@ main (int argc, const char *argv[])
 {
   char *path = getenv ("PATH_INFO") ? : getenv ("QUERY_STRING");
   char *outerinitial = NULL;
-  double baseheight = 5;
+  double baseheight = 10;
   double corediameter = 10;
   double coreheight = 50;
   double wallthickness = 1.75;
@@ -34,7 +34,7 @@ main (int argc, const char *argv[])
   double coregap = 0;
   double outerround = 2;
   double mazemargin = 1;
-  double parkheight = 0;
+  double parkheight = 0.5;
   int walls = 4;
   int wall = 0;
   int inside = 0;
@@ -147,8 +147,6 @@ main (int argc, const char *argv[])
     nubs = helix;
   if (outersides)
     outersides = (outersides + nubs - 1) / nubs * nubs;
-  if (!parkheight)
-    parkheight = mazethickness / 3;
 
   if (mime)
     {
