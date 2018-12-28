@@ -204,8 +204,9 @@ main (int argc, const char *argv[])
       return 1;
     }
 
-  // The nub
+  // The nub and park point
   printf ("module nub(){rotate([%d,0,0])rotate([0,0,45])cylinder(d1=%f,d2=%f,h=%f,$fn=4);}\n", inside ? -90 : 90, mazestep * 3 / 4, mazestep / 4, mazethickness);
+  printf ("module park(){rotate([%d,0,0])translate([0,0,%f])hull(){cube([%f,%f,0.01],center=true);translate([0,0,%f])cube([%f,%f,0.01],center=true);}}\n", inside ? -90 : 90, mazethickness / 3, mazestep, mazestep / 8, mazethickness * 2 / 3, mazestep / 2, mazestep / 2);
   // The base
   printf ("module outer(h,r){e=%f;minkowski(){cylinder(r1=0,r2=e,h=e,$fn=100);cylinder(h=h-e,r=r-e,$fn=%d);}}\n", outerround, outersides ? : 100);
   double x = 0;
@@ -247,7 +248,7 @@ main (int argc, const char *argv[])
     double base = (inside ? wallthickness : baseheight);
     if (inside && wall > 2)
       base += baseheight;	// Nubs don't go all the way to the end
-    double h = height - base - mazemargin;
+    double h = height - base - mazemargin - mazestep / 8;
     double w = r * 2 * M_PIl;
     int H = (int) (h / mazestep);
     int W = ((int) (w / mazestep)) / nubs * nubs;
@@ -335,7 +336,7 @@ main (int argc, const char *argv[])
 	// Clear too high/low
 	for (Y = 0; Y < H; Y++)
 	  for (X = 0; X < W; X++)
-	    if (mazestep * Y + y0 + dy * X < base + mazestep / 2 || mazestep * Y + y0 + dy * X > height - mazestep / 2 - mazemargin)
+	    if (mazestep * Y + y0 + dy * X < base + mazestep / 2 + mazestep / 8 || mazestep * Y + y0 + dy * X > height - mazestep / 2 - mazemargin - mazestep / 8)
 	      maze[X][Y] |= 0x80;	// To high or low
 	// Final park point, up one, and down off bottom
 	for (N = 0; N < helix + 2; N++)
@@ -627,11 +628,9 @@ main (int argc, const char *argv[])
       printf ("}\n");		// end difference
     if ((!inside && wall < walls) || (inside && wall > 1))
       {				// Park ridge
-#if 0
 	int N;
 	for (N = 0; N < nubs; N++)
-	  printf ("rotate([0,0,%f])translate([0,%f,%f])rotate([0,%f,0])park();\n", (double) N * 360 / nubs, r, base + mazestep / 2, a);
-#endif
+	  printf ("rotate([0,0,%f])translate([0,%f,%f])park();\n", (double) N * 360 / nubs, r, base + mazestep);
       }
     if ((!inside && wall > 1) || (inside && wall < walls))
       {				// Nubs
