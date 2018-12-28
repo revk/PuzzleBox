@@ -34,6 +34,7 @@ main (int argc, const char *argv[])
   double coregap = 0;
   double outerround = 2;
   double mazemargin = 1;
+  double parkheight = 0;
   int walls = 4;
   int wall = 0;
   int inside = 0;
@@ -58,6 +59,7 @@ main (int argc, const char *argv[])
     {"maze-thickness", 'd', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &mazethickness, 0, "Maze thickness", "mm"},
     {"maze-step", 's', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &mazestep, 0, "Maze step", "mm"},
     {"maze-margin", 'M', POPT_ARG_DOUBLE | (mazemargin ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &mazemargin, 0, "Maze top margin", "mm"},
+    {"park-height", 'p', POPT_ARG_DOUBLE | (parkheight ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &parkheight, 0, "Height of park ridge", "mm"},
     {"clearance", 'g', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &clearance, 0, "Clearance", "mm"},
     {"outer-sides", 'x', POPT_ARG_INT | (outersides ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &outersides, 0, "Outer sides", "N"},
     {"outer-round", 'r', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &outerround, 0, "Outer rounding", "mm"},
@@ -145,6 +147,8 @@ main (int argc, const char *argv[])
     nubs = helix;
   if (outersides)
     outersides = (outersides + nubs - 1) / nubs * nubs;
+  if (!parkheight)
+    parkheight = mazethickness / 3;
 
   if (mime)
     {
@@ -205,9 +209,8 @@ main (int argc, const char *argv[])
     }
 
   {				// The nub and park point
-    double parkdepth = mazethickness / 3;
     printf ("module nub(){rotate([%d,0,0])translate([0,0,-0.1])hull(){cube([%f,%f,0.1],center=true);translate([0,0,%f])cube([%f,%f,0.1],center=true);};}\n", inside ? -90 : 90, mazestep * 3 / 4, mazestep * 3 / 4, mazethickness, mazestep / 4, mazestep / 4);
-    printf ("module park(){rotate([%d,0,0])translate([0,0,%f])hull(){cube([%f,%f,0.1],center=true);translate([0,0,%f])cube([%f,%f,0.1],center=true);}}\n", inside ? -90 : 90, mazethickness - parkdepth, mazestep, mazestep / 4, parkdepth, mazestep, mazestep * 3 / 4);
+    printf ("module park(){rotate([%d,0,0])translate([0,0,%f])hull(){cube([%f,%f,0.1],center=true);translate([0,0,%f])cube([%f,%f,0.1],center=true);}}\n", inside ? -90 : 90, mazethickness - parkheight, mazestep, mazestep / 4, parkheight, mazestep, mazestep * 3 / 4);
   }
   // The base
   printf ("module outer(h,r){e=%f;minkowski(){cylinder(r1=0,r2=e,h=e,$fn=100);cylinder(h=h-e,r=r-e,$fn=%d);}}\n", outerround, outersides ? : 100);
@@ -264,6 +267,7 @@ main (int argc, const char *argv[])
       printf ("// Wall %d (%d/%d)\n", wall, W, H);
     else
       printf ("// Wall %d\n", wall);
+    int entry = (inside ? 0 : (W / nubs) / 2);
     int X, Y, N, S;
     unsigned char maze[W][H];
     memset (maze, 0, sizeof (unsigned char) * W * H);
@@ -428,7 +432,7 @@ main (int argc, const char *argv[])
 	    close (f);
 	  }
 	// Entry point for maze
-	for (X = (W / nubs) / 2; X < W; X += W / nubs)
+	for (X = entry; X < W; X += W / nubs)
 	  {
 	    Y = H - 1;
 	    while (Y && (maze[X][Y] & 0x80))
@@ -626,16 +630,14 @@ main (int argc, const char *argv[])
       printf ("difference(){translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);}\n", wallthickness / 2, r1, height, W * 4, wallthickness, r0, height, W * 4);
     if ((!inside && wall < walls) || (inside && wall > 1))
       {				// Park ridge
-	int N;
-	for (N = 0; N < nubs; N++)
-	  printf ("rotate([0,0,%f])translate([0,%f,%f])park();\n", (double) N * 360 / nubs, r, base + mazestep);
+	for (X = entry; X < W; X += W / nubs)
+	  printf ("rotate([0,0,%f])translate([0,%f,%f])park();\n", (double) X * 360 / W, r, base + mazestep);
       }
     if ((!inside && wall > 1) || (inside && wall < walls))
       {				// Nubs
 	double rn = (inside ? r1 : r0);
-	int N;
-	for (N = 0; N < nubs; N++)
-	  printf ("rotate([0,0,%f])translate([0,%f,%f])nub();\n", (double) N * 360 / nubs, rn, height - mazestep / 2 + clearance);
+	for (X = entry; X < W; X += W / nubs)
+	  printf ("rotate([0,0,%f])translate([0,%f,%f])nub();\n", (double) X * 360 / W, rn, height - mazestep / 2 + clearance);
       }
     printf ("}\n");
     x += r2 * 2 + 10;
