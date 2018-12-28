@@ -314,7 +314,7 @@ main (int argc, const char *argv[])
 	for (N = 0; N < nubs; N++)
 	  printf ("rotate([0,0,%f])translate([0,%f,%f])hull(){nub();translate([0,0,%f])nub();}\n", -(double) N * 360 / nubs, r2, -mazestep, baseheight + mazestep);
       }
-    printf ("translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);\n", wallthickness, r0 + (wall > 1 && inside ? mazethickness + clearance : 0), height, W * 4);	// Hole
+    printf ("translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);\n", wallthickness, r0 + (wall > 1 && inside ? mazethickness + clearance : 0) + (!inside && wall < walls ? clearance : 0), height, W * 4);	// Hole
     if (outerinitial && wall + 1 >= walls)
       printf ("linear_extrude(height=%f,center=true)mirror([1,0,0])text(\"%s\",valign=\"center\",halign=\"center\",size=%f);\n", wallthickness, outerinitial, r3 - outerround);
     printf ("}\n");
