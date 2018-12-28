@@ -19,8 +19,6 @@
 #define D 8
 #define	A 15
 
-#define       POLYHEDRON
-
 int
 main (int argc, const char *argv[])
 {
@@ -208,18 +206,6 @@ main (int argc, const char *argv[])
 
   // The nub
   printf ("module nub(){rotate([%d,0,0])rotate([0,0,45])cylinder(d1=%f,d2=%f,h=%f,$fn=4);}\n", inside ? -90 : 90, mazestep * 3 / 4, mazestep / 4, mazethickness);
-#ifndef	POLYHEDRON
-  {				// Park
-    double parkdepth = mazethickness * 2 / 3;
-    if (parkdepth < clearance * 2)
-      parkdepth = clearance * 2;
-    printf ("module park(){rotate([%d,0,0])translate([0,0,%f])difference(){cylinder(d1=%f,d2=%f,h=%f,$fn=%d);translate([0,0,%f])cylinder(d1=%f,d2=%f,h=%f,$fn=%d);}}\n", inside ? -90 : 90,	// rotate
-	    mazethickness - parkdepth,	// translate
-	    mazestep * 3 / 4, mazestep * 3 / 2, parkdepth + wallthickness, 6,	// cylinder
-	    parkdepth - mazethickness - mazethickness / 4, mazestep, mazestep / 3, mazethickness * 5 / 4, 6	// standard nub imprint
-      );
-  }
-#endif
   // The base
   printf ("module outer(h,r){e=%f;minkowski(){cylinder(r1=0,r2=e,h=e,$fn=100);cylinder(h=h-e,r=r-e,$fn=%d);}}\n", outerround, outersides ? : 100);
   double x = 0;
@@ -315,21 +301,8 @@ main (int argc, const char *argv[])
 	}
       return v;
     }
-#ifndef	POLYHEDRON
-    void nub (int X, int Y, char *t)
-    {
-      printf ("nub%d%s(%f,%f);\n", wall, t, (double) X * 360 / W, mazestep * Y + y0 + dy * X);
-    }
-    printf ("module nub%d(){rotate([0,%f,0])translate([0,%f,0])nub();}\n", wall, a, r);
-    printf ("module nub%dxa(a){render()rotate([0,0,a]){hull(){nub%d();rotate([0,0,%f])translate([0,0,%f])nub%d();}hull(){rotate([0,0,%f])translate([0,0,%f])nub%d();rotate([0,0,%f])translate([0,0,%f])nub%d();}}}\n", wall, wall, (double) 360 / W / 2, dy / 2, wall, (double) 360 / W / 2, dy / 2, wall,
-	    (double) 360 / W, dy, wall);
-    printf ("module nub%dx(a,h){translate([0,0,h])nub%dxa(a);}\n", wall, wall);
-    printf ("module nub%dya(a,h){render()rotate([0,0,a])hull(){nub%d();translate([0,0,%f])nub%d();}}\n", wall, wall, mazestep, wall);
-    printf ("module nub%dy(a,h){translate([0,0,h])nub%dya(a);}\n", wall, wall);
-#endif
     printf ("translate([%f,0,0]){\n", x + r2);
     printf ("difference(){\n");
-#ifdef POLYHEDRON
     if (wall + 1 >= walls)
       {
 	if (r2 > r1)
@@ -345,25 +318,6 @@ main (int argc, const char *argv[])
 	  printf ("cylinder(r=%f,h=%f,$fn=%d);\n", r1, height, W * 4);
       }
     printf ("translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);\n", wallthickness + clearance, r0 + clearance, height, W * 4);	// Hole
-#else
-    printf ("union(){\n");
-    if (wall + 1 >= walls)
-      {
-	if (r2 > r1)
-	  printf ("mirror([1,0,0])outer(%f,%f);\ntranslate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);\n", baseheight, r2, outerround, r1, height - outerround, W * 4);
-	else
-	  printf ("outer(%f,%f);\n", height, r2);
-      }
-    else
-      {
-	if (r2 > r1)
-	  printf ("translate([0,0,%f])rotate([0,180,0])cylinder(r=%f,h=%f,$fn=%d);\ncylinder(r=%f,h=%f,$fn=%d);\n", baseheight, r2, baseheight, W * 4, r1, height, W * 4);
-	else
-	  printf ("cylinder(r=%f,h=%f,$fn=%d);\n", r1, height, W * 4);
-      }
-    printf ("}\n");
-    printf ("translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);\n", wallthickness, r0, height, W * 4);	// Hole
-#endif
     if (!inside && wall + 1 < walls)
       {				// Connect endpoints over base
 	int N;
@@ -484,7 +438,6 @@ main (int argc, const char *argv[])
 	    maze[N * (W / nubs)][H - 2] |= U;
 	    maze[N * (W / nubs)][H - 1] |= D + U;
 	  }
-#ifdef	POLYHEDRON
 	printf ("}\n");		// end difference
 	{			// Construct maze polyhedron
 	  // This makes the maze using vertical slices that are 4 per maze unit
@@ -669,45 +622,17 @@ main (int argc, const char *argv[])
 	  // Done
 	  printf (");\n");
 	}
-#else
-	// Cut maze (construct using openSCAD - slow)
-	printf ("intersection(){translate([0,0,%f])cylinder(r=%f,h=%f);union(){\n", base + clearance, r2, height - base);
-	for (Y = 0; Y < H; Y++)
-	  {
-	    int render = 0;
-	    for (X = 0; X < W; X++)
-	      {
-		unsigned char v = test (X, Y);
-		if (v & R)
-		  {
-		    if (!render++)
-		      printf ("%srender(4){\n", testmaze ? "#" : "");
-		    nub (X, Y, "x");
-		  }
-		if (v & U)
-		  {
-		    if (!render++)
-		      printf ("%srender(4){\n", testmaze ? "#" : "");
-		    nub (X, Y, "y");
-		  }
-	      }
-	    if (render)
-	      printf ("}\n");
-	  }
-	printf ("}}\n");
-	printf ("}\n");		// end difference
-#endif
       }
     else
       printf ("}\n");		// end difference
-#ifndef POLYHEDRON
     if ((!inside && wall < walls) || (inside && wall > 1))
-      {				// Park
+      {				// Park ridge
+#if 0
 	int N;
 	for (N = 0; N < nubs; N++)
 	  printf ("rotate([0,0,%f])translate([0,%f,%f])rotate([0,%f,0])park();\n", (double) N * 360 / nubs, r, base + mazestep / 2, a);
-      }
 #endif
+      }
     if ((!inside && wall > 1) || (inside && wall < walls))
       {				// Nubs
 	printf ("difference(){\nunion(){\n");
