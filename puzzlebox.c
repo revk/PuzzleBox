@@ -230,11 +230,7 @@ main (int argc, const char *argv[])
 	r0 -= mazethickness;
       }
     if (outersides && wall + 1 >= walls)
-      {
-	r2 /= cos ((double) M_PIl / outersides);
-	if (wall == walls)
-	  r1 = r2;
-      }
+      r2 /= cos ((double) M_PIl / outersides);
     double height = coreheight + (wallthickness + clearance) * wall;
     if (!inside && wall < walls)
       height -= clearance;
@@ -304,13 +300,10 @@ main (int argc, const char *argv[])
     }
     printf ("translate([%f,0,0]){\n", x + r2);
     printf ("difference(){\n");
-    if (wall + 1 >= walls)
-      {
-	if (r2 > r1)
-	  printf ("mirror([1,0,0])outer(%f,%f);\n", baseheight, r2);
-	else
-	  printf ("outer(%f,%f);\n", height, r2);
-      }
+    if (wall == walls)
+      printf ("outer(%f,%f);\n", height, r2);
+    else if (wall + 1 >= walls)
+      printf ("mirror([1,0,0])outer(%f,%f);\n", baseheight, r2);
     else
       {
 	if (r2 > r1)
@@ -318,7 +311,7 @@ main (int argc, const char *argv[])
 	else
 	  printf ("cylinder(r=%f,h=%f,$fn=%d);\n", r1, height, W * 4);
       }
-    printf ("translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);\n", wallthickness + clearance, r0 + clearance, height, W * 4);	// Hole
+    printf ("translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);\n", wallthickness + clearance, r0 + clearance + (inside ? mazethickness : 0), height, W * 4);	// Hole
     if (!inside && wall + 1 < walls)
       {				// Connect endpoints over base
 	int N;
@@ -327,6 +320,7 @@ main (int argc, const char *argv[])
       }
     if (outerinitial && wall + 1 >= walls)
       printf ("linear_extrude(height=%f,center=true)mirror([1,0,0])text(\"%s\",valign=\"center\",halign=\"center\",size=%f);\n", wallthickness, outerinitial, r3 - outerround);
+    printf ("}\n");
     if ((!inside && wall < walls) || (inside && wall > 1))
       {				// Maze
 	// Make maze
@@ -439,7 +433,6 @@ main (int argc, const char *argv[])
 	    maze[N * (W / nubs)][H - 2] |= U;
 	    maze[N * (W / nubs)][H - 1] |= D + U;
 	  }
-	printf ("}\n");		// end difference
 	{			// Construct maze polyhedron
 	  // This makes the maze using vertical slices that are 4 per maze unit
 	  struct
@@ -453,6 +446,9 @@ main (int argc, const char *argv[])
 	  int p[W][H];		// The point start for each usable maze location (0 for not set) - 16 points
 	  memset (*p, 0, sizeof (int) * W * H);
 	  // Work out pre-sets
+	  double r = r1;
+	  if (wall == walls)
+	    r = r0 + mazethickness + clearance;
 	  for (S = 0; S < W * 4; S++)
 	    {
 	      double a = M_PIl * 2 * (S - 1.5) / W / 4;
@@ -461,8 +457,8 @@ main (int argc, const char *argv[])
 	      double sa = sin (a), ca = cos (a);
 	      if (inside)
 		{
-		  s[S].x[0] = r1 * sa;
-		  s[S].y[0] = r1 * ca;
+		  s[S].x[0] = r * sa;
+		  s[S].y[0] = r * ca;
 		  s[S].x[1] = (r0 + mazethickness) * sa;
 		  s[S].y[1] = (r0 + mazethickness) * ca;
 		  s[S].x[2] = r0 * sa;
@@ -624,8 +620,10 @@ main (int argc, const char *argv[])
 	  printf (");\n");
 	}
       }
-    else
-      printf ("}\n");		// end difference
+    else if (wall < walls)
+      {				// Non maze
+	printf ("difference(){cylinder(r=%f,h=%f,$fn=%d);translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);}\n", r1, height, W * 8, wallthickness, r0, height, W * 8);
+      }
     if ((!inside && wall < walls) || (inside && wall > 1))
       {				// Park ridge
 	int N;
