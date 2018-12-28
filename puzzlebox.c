@@ -205,7 +205,7 @@ main (int argc, const char *argv[])
     }
 
   // The nub and park point
-  printf ("module nub(){rotate([%d,0,0])rotate([0,0,45])cylinder(d1=%f,d2=%f,h=%f,$fn=4);}\n", inside ? -90 : 90, mazestep * 3 / 4, mazestep / 4, mazethickness);
+  printf ("module nub(){rotate([%d,0,0])rotate([0,0,45])translate([0,0,-0.01])cylinder(d1=%f,d2=%f,h=%f,$fn=4);}\n", inside ? -90 : 90, mazestep * 3 / 4, mazestep / 4, mazethickness);
   printf ("module park(){rotate([%d,0,0])translate([0,0,%f])hull(){cube([%f,%f,0.01],center=true);translate([0,0,%f])cube([%f,%f,0.01],center=true);}}\n", inside ? -90 : 90, mazethickness / 3, mazestep, mazestep / 8, mazethickness * 2 / 3, mazestep / 2, mazestep / 2);
   // The base
   printf ("module outer(h,r){e=%f;minkowski(){cylinder(r1=0,r2=e,h=e,$fn=100);cylinder(h=h-e,r=r-e,$fn=%d);}}\n", outerround, outersides ? : 100);
@@ -311,7 +311,7 @@ main (int argc, const char *argv[])
 	else
 	  printf ("cylinder(r=%f,h=%f,$fn=%d);\n", r1, height, W * 4);
       }
-    printf ("translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);\n", wallthickness + clearance, r0 + clearance + (inside ? mazethickness : 0), height, W * 4);	// Hole
+    printf ("translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);\n", wallthickness, r0 + clearance + (wall > 1 && inside ? mazethickness : 0), height, W * 4);	// Hole
     if (!inside && wall + 1 < walls)
       {				// Connect endpoints over base
 	int N;
@@ -620,10 +620,8 @@ main (int argc, const char *argv[])
 	  printf (");\n");
 	}
       }
-    else if (wall < walls)
-      {				// Non maze
-	printf ("difference(){cylinder(r=%f,h=%f,$fn=%d);translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);}\n", r1, height, W * 8, wallthickness, r0, height, W * 8);
-      }
+    else if (wall < walls)	// Non maze
+      printf ("difference(){translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);}\n", wallthickness / 2, r1, height, W * 4, wallthickness, r0, height, W * 4);
     if ((!inside && wall < walls) || (inside && wall > 1))
       {				// Park ridge
 	int N;
@@ -632,14 +630,10 @@ main (int argc, const char *argv[])
       }
     if ((!inside && wall > 1) || (inside && wall < walls))
       {				// Nubs
-	printf ("difference(){\nunion(){\n");
 	double rn = (inside ? r1 : r0);
 	int N;
 	for (N = 0; N < nubs; N++)
 	  printf ("rotate([0,0,%f])translate([0,%f,%f])nub();\n", (double) N * 360 / nubs, rn, height - mazestep / 2 + clearance);
-	printf ("}\n");
-	printf ("translate([0,0,%f])cylinder(r=%f,h=%f);", height, r2 + 1, mazestep + clearance);
-	printf ("}\n");
       }
     printf ("}\n");
     x += r2 * 2 + 10;
