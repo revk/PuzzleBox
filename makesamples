@@ -23,13 +23,13 @@ foreach s (20 50 75)
 foreach w (0 1 2 3 4)
 	setenv P part-$w
 	if(! $w) setenv P all
-	./puzzlebox --walls=4 --core-height=${s} --wall=$w > /tmp/box-${s}mm-$P.scad
+	./puzzlebox --walls=4 --core-height=${s} --wall=$w --outer-initial=☺ > /tmp/box-${s}mm-$P.scad
 	openscad -o /tmp/box-${s}mm-$P.stl /tmp/box-${s}mm-$P.scad&
 end
 foreach w (0 1 2 3 4)
 	setenv P part-$w
 	if(! $w) setenv P all
-	./puzzlebox --walls=4 --core-height=${s} --inside --wall=$w > /tmp/box-inside-${s}mm-$P.scad
+	./puzzlebox --walls=4 --core-height=${s} --inside --wall=$w --outer-initial=☺ > /tmp/box-inside-${s}mm-$P.scad
 	openscad -o /tmp/box-inside-${s}mm-$P.stl /tmp/box-inside-${s}mm-$P.scad&
 end
 end

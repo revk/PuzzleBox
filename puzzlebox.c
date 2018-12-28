@@ -307,7 +307,7 @@ main (int argc, const char *argv[])
     else if (wall + 1 >= walls)
       printf ("mirror([1,0,0])outer(%f,%f);\n", baseheight, r2);
     else
-      printf ("hull(){cylinder(r=%f,h=%f,$fn=%d);translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);}\n", r2 - mazemargin, baseheight, W * 4, mazemargin, r2, baseheight - mazemargin, W * 4);
+      printf ("hull(){cylinder(r=%f,h=%f,$fn=%d);translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);}\n", r2 - mazethickness, baseheight, W * 4, mazemargin, r2, baseheight - mazemargin, W * 4);
     if (!inside && wall + 1 < walls)
       {				// Connect endpoints over base
 	int N;
