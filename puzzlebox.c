@@ -205,8 +205,8 @@ main (int argc, const char *argv[])
     }
 
   // The nub and park point
-  printf ("module nub(){rotate([%d,0,0])translate([0,0,-0.01])hull(){cube([%f,%f,0.01],center=true);translate([0,0,%f])cube([%f,%f,0.01],center=true);};}\n", inside ? -90 : 90, mazestep * 3 / 4, mazestep * 3 / 4, mazethickness, mazestep / 4, mazestep / 4);
-  printf ("module park(){rotate([%d,0,0])translate([0,0,%f])hull(){cube([%f,%f,0.01],center=true);translate([0,0,%f])cube([%f,%f,0.01],center=true);}}\n", inside ? -90 : 90, mazethickness / 3, mazestep, mazestep / 4, mazethickness * 2 / 3, mazestep, mazestep * 3 / 4);
+  printf ("module nub(){rotate([%d,0,0])translate([0,0,-0.1])hull(){cube([%f,%f,0.1],center=true);translate([0,0,%f])cube([%f,%f,0.1],center=true);};}\n", inside ? -90 : 90, mazestep * 3 / 4, mazestep * 3 / 4, mazethickness, mazestep / 4, mazestep / 4);
+  printf ("module park(){rotate([%d,0,0])translate([0,0,%f])hull(){cube([%f,%f,0.1],center=true);translate([0,0,%f])cube([%f,%f,0.1],center=true);}}\n", inside ? -90 : 90, mazethickness / 2, mazestep, mazestep / 4, mazethickness / 2, mazestep, mazestep * 3 / 4);
   // The base
   printf ("module outer(h,r){e=%f;minkowski(){cylinder(r1=0,r2=e,h=e,$fn=100);cylinder(h=h-e,r=r-e,$fn=%d);}}\n", outerround, outersides ? : 100);
   double x = 0;
@@ -305,24 +305,22 @@ main (int argc, const char *argv[])
     else if (wall + 1 >= walls)
       printf ("mirror([1,0,0])outer(%f,%f);\n", baseheight, r2);
     else
-      {
-	if (r2 > r1)
-	  printf ("translate([0,0,%f])rotate([0,180,0])cylinder(r=%f,h=%f,$fn=%d);\n", baseheight, r2, baseheight, W * 4);
-	else
-	  printf ("cylinder(r=%f,h=%f,$fn=%d);\n", r1, height, W * 4);
-      }
-    printf ("translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);\n", wallthickness, r0 + (wall > 1 && inside ? mazethickness + clearance : 0), height, W * 4);	// Hole
+      printf ("hull(){cylinder(r=%f,h=%f,$fn=%d);translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);}\n", r2 - mazemargin, baseheight, W * 4, mazemargin, r2, baseheight - mazemargin, W * 4);
     if (!inside && wall + 1 < walls)
       {				// Connect endpoints over base
 	int N;
 	for (N = 0; N < nubs; N++)
 	  printf ("rotate([0,0,%f])translate([0,%f,%f])hull(){nub();translate([0,0,%f])nub();}\n", -(double) N * 360 / nubs, r2, -mazestep, baseheight + mazestep);
       }
+    printf ("translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);\n", wallthickness, r0 + (wall > 1 && inside ? mazethickness + clearance : 0), height, W * 4);	// Hole
     if (outerinitial && wall + 1 >= walls)
       printf ("linear_extrude(height=%f,center=true)mirror([1,0,0])text(\"%s\",valign=\"center\",halign=\"center\",size=%f);\n", wallthickness, outerinitial, r3 - outerround);
     printf ("}\n");
     if ((!inside && wall < walls) || (inside && wall > 1))
       {				// Maze
+	double margin = mazemargin;
+	if (!inside && wall > 1)
+	  margin = 0;
 	// Make maze
 	int f = open ("/dev/urandom", O_RDONLY);
 	if (f < 0)
@@ -330,7 +328,7 @@ main (int argc, const char *argv[])
 	// Clear too high/low
 	for (Y = 0; Y < H; Y++)
 	  for (X = 0; X < W; X++)
-	    if (mazestep * Y + y0 + dy * X < base + mazestep / 2 + mazestep / 8 || mazestep * Y + y0 + dy * X > height - mazestep / 2 - mazemargin - mazestep / 8)
+	    if (mazestep * Y + y0 + dy * X < base + mazestep / 2 + mazestep / 8 || mazestep * Y + y0 + dy * X > height - mazestep / 2 - margin - mazestep / 8)
 	      maze[X][Y] |= 0x80;	// To high or low
 	// Final park point, up one, and down off bottom
 	for (N = 0; N < helix + 2; N++)
@@ -487,7 +485,7 @@ main (int argc, const char *argv[])
 	    for (S = 0; S < W * 4; S++)
 	      printf ("[%.2f,%.2f,%.2f],", s[S].x[N], s[S].y[N], height);
 	  for (S = 0; S < W * 4; S++)
-	    printf ("[%.2f,%.2f,%.2f],", s[S].x[N], s[S].y[N], height - mazemargin);
+	    printf ("[%.2f,%.2f,%.2f],", s[S].x[N], s[S].y[N], height - margin);
 	  {			// Points for each maze location
 	    int P = 6 * W * 4;	// Skip initial points
 	    double dy = mazestep * helix / W / 4;	// Step per S
@@ -496,7 +494,7 @@ main (int argc, const char *argv[])
 	    for (Y = 0; Y < H; Y++)
 	      for (X = 0; X < W; X++)
 		{
-		  double z, max = height - mazemargin, min = base;
+		  double z, max = height - margin, min = base;
 		  p[X][Y] = P;
 		  for (S = X * 4; S < X * 4 + 4; S++)
 		    printf ("[%.2f,%.2f,%.2f],", s[S].x[2], s[S].y[2], (z = y + Y * mazestep + dy * S + my * 3) < min ? min : z > max ? max : z);
