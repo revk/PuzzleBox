@@ -311,7 +311,7 @@ main (int argc, const char *argv[])
 	else
 	  printf ("cylinder(r=%f,h=%f,$fn=%d);\n", r1, height, W * 4);
       }
-    printf ("translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);\n", wallthickness, r0 + clearance + (wall > 1 && inside ? mazethickness : 0), height, W * 4);	// Hole
+    printf ("translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);\n", wallthickness, r0 + (wall > 1 && inside ? mazethickness + clearance : 0), height, W * 4);	// Hole
     if (!inside && wall + 1 < walls)
       {				// Connect endpoints over base
 	int N;
