@@ -7,10 +7,10 @@ foreach w (0 1 2)
 	openscad -o /tmp/small-test-helix-$h-$P.stl /tmp/small-test-helix-$h-$P.scad&
 end
 end
-foreach w (0 1 2)
+foreach w (0 1 2 3)
 	setenv P part-$w
 	if(! $w) setenv P all
-	./puzzlebox --walls=2 --core-height=25 --core-diameter=10 --outer-sides=5 --wall=$w --outer-initial=K --inside > /tmp/small-test-inside-$P.scad
+	./puzzlebox --walls=3 --core-height=25 --core-diameter=10 --outer-sides=5 --wall=$w --outer-initial=K --inside > /tmp/small-test-inside-$P.scad
 	openscad -o /tmp/small-test-inside-$P.stl /tmp/small-test-inside-$P.scad&
 end
 foreach w (0 1 2)
