@@ -207,13 +207,13 @@ main (int argc, const char *argv[])
       if (optionsTable[o].shortName && optionsTable[o].arg)
 	{
 	  if ((optionsTable[o].argInfo & POPT_ARG_MASK) == POPT_ARG_NONE && *(int *) optionsTable[o].arg)
-	    printf ("// %s\n", optionsTable[o].descrip);
+	    printf ("// %s: %c\n", optionsTable[o].descrip, optionsTable[o].shortName);
 	  else if ((optionsTable[o].argInfo & POPT_ARG_MASK) == POPT_ARG_INT && *(int *) optionsTable[o].arg)
-	    printf ("// %s=%d\n", optionsTable[o].descrip, *(int *) optionsTable[o].arg);
+	    printf ("// %s: %c=%d\n", optionsTable[o].descrip, optionsTable[o].shortName, *(int *) optionsTable[o].arg);
 	  else if ((optionsTable[o].argInfo & POPT_ARG_MASK) == POPT_ARG_DOUBLE && *(double *) optionsTable[o].arg)
-	    printf ("// %s=%f\n", optionsTable[o].descrip, *(double *) optionsTable[o].arg);
+	    printf ("// %s: %c=%f\n", optionsTable[o].descrip, optionsTable[o].shortName, *(double *) optionsTable[o].arg);
 	  else if ((optionsTable[o].argInfo & POPT_ARG_MASK) == POPT_ARG_STRING && *(int *) optionsTable[o].arg)
-	    printf ("// %s=%s\n", optionsTable[o].descrip, *(char * *) optionsTable[o].arg);
+	    printf ("// %s: %c=%s\n", optionsTable[o].descrip, optionsTable[o].shortName, *(char * *) optionsTable[o].arg);
 	}
   }
   if (error)
@@ -288,7 +288,6 @@ main (int argc, const char *argv[])
       printf ("// Wall %d (%d/%d)\n", wall, W, H);
     else
       printf ("// Wall %d\n", wall);
-    printf ("// Height=%f Prod=%f Hole=%f Inset=%f\n", height, height - baseheight, height - basethickness, height - base);
     int entry = 0;		// Entry point and pips
     int X, Y, N, S;
     unsigned char maze[W][H];
