@@ -329,12 +329,9 @@ main (int argc, const char *argv[])
 	int f = open ("/dev/urandom", O_RDONLY);
 	if (f < 0)
 	  err (1, "Open /dev/random");
-	if (!inside || wall + 1 < walls)
-	  {
-	    if (read (f, &entry, sizeof (entry)) != sizeof (entry))
-	      err (1, "Read /dev/random");
-	    entry = 1 + (entry % (W / nubs - 1));	// Random entry point not matching exit
-	  }
+	if (read (f, &entry, sizeof (entry)) != sizeof (entry))
+	  err (1, "Read /dev/random");
+	entry = 1 + (entry % (W / nubs - 1));	// Random entry point not matching exit
 	// Clear too high/low
 	for (Y = 0; Y < H; Y++)
 	  for (X = 0; X < W; X++)
@@ -637,6 +634,8 @@ main (int argc, const char *argv[])
 	for (X = 0; X < W; X += W / nubs)
 	  printf ("rotate([0,0,%f])translate([0,%f,%f])park();\n", (double) X * 360 / W, r, base + mazestep);
       }
+    if (inside && wall + 1 >= walls)
+      entry = 0;		// Nubs needs to align for outside to align when closed
     if ((!inside && wall > 1) || (inside && wall < walls))
       {				// Nubs
 	double rn = (inside ? r1 : r0);
