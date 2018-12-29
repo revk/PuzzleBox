@@ -67,7 +67,7 @@ main (int argc, const char *argv[])
     {"outer-round", 'r', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &outerround, 0, "Outer rounding", "mm"},
     {"text-end", 'E', POPT_ARG_STRING | (textend ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &textend, 0, "Text (initial) on end", "X"},
     {"text-font", 'F', POPT_ARG_STRING | (textfont ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &textfont, 0, "Text font", "Font"},
-    //{"text-side", 'S', POPT_ARG_STRING | (textside ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &textside, 0, "Text on sides", "Line1:Line2..."},
+    {"text-side", 'S', POPT_ARG_STRING | (textside ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &textside, 0, "Text on sides", "Line1:Line2..."},
     {"test", 'Q', POPT_ARG_NONE, &testmaze, 0, "Test pattern instead of maze"},
     {"mime", 0, POPT_ARG_NONE | (mime ? POPT_ARGFLAG_DOC_HIDDEN : 0), &mime, 0, "MIME Header"},
     {"path", 0, POPT_ARG_STRING | (path ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &path, 0, "Path header", "{/x=var}"},
@@ -137,7 +137,11 @@ main (int argc, const char *argv[])
 		  path++;
 		  *(char **) optionsTable[o].arg = path;
 		  while (*path && *path != '/' && *path != '&')
-		    path++;
+		    {
+		      if (*path == '+')
+			*path = ' ';	// Not full URl decode but close enough for now
+		      path++;
+		    }
 		}
 	    }
 	}
@@ -328,7 +332,19 @@ main (int argc, const char *argv[])
       printf ("linear_extrude(height=%f,center=true)mirror([1,0,0])text(\"%s\",font=\"%s\",valign=\"center\",halign=\"center\",size=%f);\n", textdepth * 2, textend, textfont ? : "Sans", r3 - outerround);
     if (textside && wall == walls && outersides)
       {
-	// TODO
+	double a = 180 / outersides;
+	double h = r2 * sin (M_PIl / outersides);
+	char *p = strdupa (textside);
+	while (p)
+	  {
+	    char *q = strchr (p, ':');
+	    if (q)
+	      *q++ = 0;
+	    if (*p)
+	      printf ("rotate([0,0,%f])translate([0,%f,%f])rotate([90,90,0])linear_extrude(height=%f,center=true)mirror([1,0,0])text(\"%s\",font=\"%s\",valign=\"center\",halign=\"center\",size=%f);\n", a, r3, outerround + (height - outerround) / 2, textdepth * 2, p, textfont ? : "Sans", h);
+	    a += 360 / outersides;
+	    p = q;
+	  }
       }
     printf ("}\n");
     if ((!inside && wall < walls) || (inside && wall > 1))
