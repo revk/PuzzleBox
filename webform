@@ -1,0 +1,26 @@
+<h1>Puzzle Box</h1>
+<img src='puzzlebox.jpg' style='float:right'>
+<p>See <a href='https://www.thingiverse.com/thing:2410748'>https://www.thingiverse.com/thing:2410748</a> for examples. Do click like.</p>
+<form method=get action='/puzzlebox.cgi'>
+	<table>
+		<tr><td>Wall</td><td><select name=n><option value=0>All<option value=1>1 (inner)<option>2<option>3<option>4<option>5<option>6</select></td></tr>
+		<tr><td>Walls</td><td><select name=m><option>2<option>3<option selected>4<option>5<option>6</select></td></tr>
+		<tr><td>Core height</td><td><input name=h value=50 size=4>mm</td></tr>
+		<tr><td>Core diameter</td><td><input name=c value=10 size=4>mm</td></tr>
+		<tr><td>Core gap</td><td><input name=C value=0 size=4>mm</td></tr>
+		<tr><td>Outer sides</td><td><input name=s value=7 size=4></td></tr>
+		<tr><td>Outer round</td><td><input name=r value=2 size=4>mm</td></tr>
+		<tr><td>Wall thickness</td><td><input name=w value=1.5 size=4>mm</td></tr>
+		<tr><td>Maze thickness</td><td><input name=t value=1.5 size=4>mm</td></tr>
+		<tr><td>Maze step</td><td><input name=z value=3 size=4>mm</td></tr>
+		<tr><td>Base height</td><td><input name=b value=5 size=4>mm</td></tr>
+		<tr><td>Nubs</td><td><select name=N><option>1<option selected>2<option>3</select></td></tr>
+		<tr><td>Helix</td><td><select name=H><option value=0>None<option>1<option selected>2<option>3</select></td></tr>
+		<tr><td>Clearance</td><td><input name=g value=0.25 size=4>mm</td></tr>
+		<tr><td>Inside maze</td><td><input name=i type=checkbox> (hard)</td></tr>
+		<tr><td>Text end initial</td><td><input name=E size=1></td></tr>
+		<tr><td>Test maze</td><td><input name=Q type=checkbox> (not a maze)</td></tr>
+	</table>
+	<input type=submit value='Get SCAD'>
+</form>
+<p>Source code at <a href='https://github.com/revk/PuzzleBox'>https://github.com/revk/PuzzleBox</a></p>
