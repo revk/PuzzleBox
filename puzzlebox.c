@@ -158,6 +158,8 @@ main (int argc, const char *argv[])
     }
 
   // Sanity checks
+  if (textfont && !*textfont)
+    textend = NULL;
   if (textend && !*textend)
     textend = NULL;
   if (textside && !*textside)
