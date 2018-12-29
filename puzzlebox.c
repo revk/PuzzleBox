@@ -50,6 +50,7 @@ main (int argc, const char *argv[])
   int nubs = 2;
   int textslow = 0;
   int mime = (getenv ("HTTP_HOST") ? 1 : 0);
+  int symmectriccut = 0;
 
   const struct poptOption optionsTable[] = {
     {"inside", 'i', POPT_ARG_NONE, &inside, 0, "Maze on inside (hard)"},
@@ -75,6 +76,7 @@ main (int argc, const char *argv[])
     {"text-font", 'F', POPT_ARG_STRING | (textfont ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &textfont, 0, "Text font", "Font"},
     {"text-side", 'S', POPT_ARG_STRING | (textside ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &textside, 0, "Text on sides", "Line1\\Line2..."},
     {"text-slow", 'Z', POPT_ARG_NONE, &textslow, 0, "Text with edges (slow)"},
+    {"symmetric-cut", 'V', POPT_ARG_NONE, &symmectriccut, 0, "Symmetric maze cut"},
     {"test", 'Q', POPT_ARG_NONE, &testmaze, 0, "Test pattern instead of maze"},
     {"mime", 0, POPT_ARG_NONE | (mime ? POPT_ARGFLAG_DOC_HIDDEN : 0), &mime, 0, "MIME Header"},
     {"path", 0, POPT_ARG_STRING | (path ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &path, 0, "Path header", "{/x=var}"},
@@ -225,8 +227,10 @@ main (int argc, const char *argv[])
     }
 
   {				// Modules
-    printf ("module nub(){rotate([%d,0,0])translate([0,0,-0.1])hull(){cube([%f,%f,0.1],center=true);translate([0,0,%f])cube([%f,%f,0.1],center=true);};}\n", inside ? -90 : 90, mazestep * 3 / 4, mazestep * 3 / 4, mazethickness - clearance / 2, mazestep / 4, mazestep / 4);
-    printf ("module park(){rotate([%d,0,0])translate([0,0,%f])hull(){cube([%f,%f,0.1],center=true);translate([0,0,%f])cube([%f,%f,0.1],center=true);}}\n", inside ? -90 : 90, mazethickness - parkheight, mazestep, mazestep / 4, parkheight, mazestep, mazestep * 3 / 4);
+    printf ("module nub(){rotate([%d,0,0])translate([0,0,-0.1])hull(){cube([%f,%f,0.1],center=true);translate([0,%f,%f])cube([%f,%f,0.1],center=true);};}\n", inside ? -90 : 90, mazestep * 3 / 4, mazestep * 3 / 4, symmectriccut ? 0 : mazestep / 4, mazethickness - clearance / 2, mazestep / 4,
+	    mazestep / 4);
+    printf ("module park(){rotate([%d,0,0])translate([0,%f,%f])hull(){cube([%f,%f,0.1],center=true);translate([0,0,%f])cube([%f,%f,0.1],center=true);}}\n", inside ? -90 : 90, symmectriccut ? 0 : -mazestep / 4, mazethickness - parkheight, mazestep, mazestep / 4, parkheight, mazestep,
+	    mazestep * 3 / 4);
     if (textslow)
       {
 	printf ("module cuttext(s,t){translate([0,0,-1])minkowski(){rotate([0,0,45])cylinder(h=%f,d1=%f,d2=0,$fn=4);linear_extrude(height=1,convexity=2)mirror([1,0,0])text(t,valign=\"center\",halign=\"center\",size=s", textdepth, textdepth);
@@ -573,9 +577,9 @@ main (int argc, const char *argv[])
 		  for (S = X * 4; S < X * 4 + 4; S++)
 		    addpoint (S, s[S].x[2], s[S].y[2], y + Y * mazestep + dy * S - my * 3);
 		  for (S = X * 4; S < X * 4 + 4; S++)
-		    addpointr (S, s[S].x[1], s[S].y[1], y + Y * mazestep + dy * S - my);
+		    addpointr (S, s[S].x[1], s[S].y[1], y + Y * mazestep + dy * S - my - (symmectriccut ? 0 : my * 2));
 		  for (S = X * 4; S < X * 4 + 4; S++)
-		    addpointr (S, s[S].x[1], s[S].y[1], y + Y * mazestep + dy * S + my);
+		    addpointr (S, s[S].x[1], s[S].y[1], y + Y * mazestep + dy * S + my - (symmectriccut ? 0 : my * 2));
 		  for (S = X * 4; S < X * 4 + 4; S++)
 		    addpoint (S, s[S].x[2], s[S].y[2], y + Y * mazestep + dy * S + my * 3);
 		}
