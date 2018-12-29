@@ -21,7 +21,7 @@ end
 foreach w (0 1 2)
 	setenv P part-$w
 	if(! $w) setenv P all
-	./puzzlebox --walls=2 --core-height=85 --core-gap=20 --core-diameter=10 --outer-sides=4 --wall=$w --text-end='£' --text-side="Prepare to\be amazed!\Good luck" --text-font="Mountains of Christmas" > /tmp/lottery-ticket-holder-$P.scad
+	./puzzlebox --walls=2 --core-height=85 --core-gap=20 --core-diameter=10 --outer-sides=4 --wall=$w --text-end='£' --text-side="Good luck\\Prepare to\be amazed!" --text-font="Freckle Face" > /tmp/lottery-ticket-holder-$P.scad
 	openscad -o /tmp/lottery-ticket-holder-$P.stl /tmp/lottery-ticket-holder-$P.scad&
 end
 foreach s (25 50 75)
