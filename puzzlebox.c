@@ -32,6 +32,7 @@ main (int argc, const char *argv[])
   double mazestep = 3;
   double clearance = 0.25;
   double coregap = 0;
+  double basegap = 0.5;
   double outerround = 2;
   double mazemargin = 1;
   double parkheight = 0.6;
@@ -58,6 +59,7 @@ main (int argc, const char *argv[])
     {"core-diameter", 'c', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &corediameter, 0, "Core diameter", "mm"},
     {"core-height", 'h', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &coreheight, 0, "Core height", "mm"},
     {"core-gap", 'C', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &coregap, 0, "Core gap", "mm"},
+    {"base-gap", 'G', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &basegap, 0, "Base gap", "mm"},
     {"wall-thickness", 'w', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &wallthickness, 0, "Wall thickness", "mm"},
     {"maze-thickness", 't', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &mazethickness, 0, "Maze thickness", "mm"},
     {"maze-step", 'z', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &mazestep, 0, "Maze step", "mm"},
@@ -251,7 +253,7 @@ main (int argc, const char *argv[])
     double r3 = r2;		// Base outer before adjust for sides
     if (outersides && wall + 1 >= walls)
       r2 /= cos ((double) M_PIl / outersides);
-    double height = coreheight + (wallthickness + clearance) * wall;
+    double height = coreheight + (wallthickness + clearance + basegap) * wall;
     if (wall == 1)
       height -= coregap;
     if (wall > 1)
@@ -265,7 +267,7 @@ main (int argc, const char *argv[])
     if (inside && wall == 2)
       base += coregap;		// First one is short...
     if (inside)
-      base += clearance;
+      base += clearance - basegap;
     double h = height - base - mazemargin - mazestep / 8;
     double w = r * 2 * M_PIl;
     int H = (int) (h / mazestep);
@@ -284,6 +286,7 @@ main (int argc, const char *argv[])
       printf ("// Wall %d (%d/%d)\n", wall, W, H);
     else
       printf ("// Wall %d\n", wall);
+    // printf ("// Height=%f Prod=%f Hole=%f\n", height, height - baseheight, height - wallthickness);
     int entry = 0;		// Entry point and pips
     int X, Y, N, S;
     unsigned char maze[W][H];
