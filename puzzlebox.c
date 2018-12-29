@@ -251,9 +251,7 @@ main (int argc, const char *argv[])
     double r3 = r2;		// Base outer before adjust for sides
     if (outersides && wall + 1 >= walls)
       r2 /= cos ((double) M_PIl / outersides);
-    double height = coreheight + (wallthickness + clearance * 2) * wall;
-    if (wall < walls)
-      height -= clearance;
+    double height = coreheight + (wallthickness + clearance) * wall;
     if (wall == 1)
       height -= coregap;
     if (wall > 1)
@@ -266,6 +264,8 @@ main (int argc, const char *argv[])
       base += baseheight;	// Nubs don't go all the way to the end
     if (inside && wall == 2)
       base += coregap;		// First one is short...
+    if (inside)
+      base += clearance;
     double h = height - base - mazemargin - mazestep / 8;
     double w = r * 2 * M_PIl;
     int H = (int) (h / mazestep);
@@ -742,7 +742,7 @@ main (int argc, const char *argv[])
       {				// Nubs
 	double rn = (inside ? r1 : r0);
 	for (X = entry; X < W; X += W / nubs)
-	  printf ("rotate([0,0,%f])translate([0,%f,%f])nub();\n", (double) X * 360 / W, rn, height - mazestep / 2 + clearance);
+	  printf ("rotate([0,0,%f])translate([0,%f,%f])nub();\n", (double) X * 360 / W, rn, height - mazestep / 2);
       }
     printf ("}\n");
     x += r2 * 2 + 10;
