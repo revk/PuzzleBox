@@ -218,12 +218,17 @@ main (int argc, const char *argv[])
       return 1;
     }
 
-  {				// The nub and park point
+  {				// Modules
     printf ("module nub(){rotate([%d,0,0])translate([0,0,-0.1])hull(){cube([%f,%f,0.1],center=true);translate([0,0,%f])cube([%f,%f,0.1],center=true);};}\n", inside ? -90 : 90, mazestep * 3 / 4, mazestep * 3 / 4, mazethickness - clearance / 2, mazestep / 4, mazestep / 4);
     printf ("module park(){rotate([%d,0,0])translate([0,0,%f])hull(){cube([%f,%f,0.1],center=true);translate([0,0,%f])cube([%f,%f,0.1],center=true);}}\n", inside ? -90 : 90, mazethickness - parkheight, mazestep, mazestep / 4, parkheight, mazestep, mazestep * 3 / 4);
+    printf ("module cuttext(s,t){translate([0,0,-1])minkowski(){rotate([0,0,45])cylinder(h=%f,d1=%f,d2=0,$fn=4);linear_extrude(height=1,convexity=2)mirror([1,0,0])text(t,valign=\"center\",halign=\"center\",size=s", textdepth, textdepth);
+    if (textfont)
+      printf (",font=\"%s\"", textfont);
+    printf (");}}\n");
+
   }
   // The base
-  printf ("module outer(h,r){e=%f;minkowski(){cylinder(r1=0,r2=e,h=e,$fn=100);cylinder(h=h-e,r=r-e,$fn=%d);}}\n", outerround, outersides ? : 100);
+  printf ("module outer(h,r){e=%f;minkowski(){cylinder(r1=0,r2=e,h=e,$fn=100);cylinder(h=h-e,r=r,$fn=%d);}}\n", outerround, outersides ? : 100);
   double x = 0;
   int box (int wall)
   {				// Make the box - wall 1 in inside
@@ -233,7 +238,6 @@ main (int argc, const char *argv[])
     double r2 = r1;		// Base outer
     if (wall < walls)
       r2 += wallthickness + mazethickness + clearance;
-    double r3 = r2;		// Base outer before adjust for sides
     if (!inside && wall < walls)
       {				// Allow for maze on outside
 	r1 += mazethickness;
@@ -244,6 +248,7 @@ main (int argc, const char *argv[])
       {				// Allow for maze on inside
 	r0 -= mazethickness;
       }
+    double r3 = r2;		// Base outer before adjust for sides
     if (outersides && wall + 1 >= walls)
       r2 /= cos ((double) M_PIl / outersides);
     double height = coreheight + (wallthickness + clearance) * wall;
@@ -317,9 +322,9 @@ main (int argc, const char *argv[])
     printf ("translate([%f,0,0]){\n", x + r2);
     printf ("difference(){\n");
     if (wall == walls)
-      printf ("outer(%f,%f);\n", height, r2);
+      printf ("outer(%f,%f);\n", height, (r3 - outerround) / cos ((double) M_PIl / outersides));
     else if (wall + 1 >= walls)
-      printf ("mirror([1,0,0])outer(%f,%f);\n", baseheight, r2);
+      printf ("mirror([1,0,0])outer(%f,%f);\n", baseheight, (r3 - outerround) / cos ((double) M_PIl / outersides));
     else
       printf ("hull(){cylinder(r=%f,h=%f,$fn=%d);translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);}\n", r2 - mazethickness, baseheight, W * 4, mazemargin, r2, baseheight - mazemargin, W * 4);
     if (!inside && wall + 1 < walls)
@@ -330,7 +335,7 @@ main (int argc, const char *argv[])
       }
     printf ("translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);\n", wallthickness, r0 + (wall > 1 && inside ? mazethickness + clearance : 0) + (!inside && wall < walls ? clearance : 0), height, W * 4);	// Hole
     if (textend && wall + 1 >= walls)
-      printf ("linear_extrude(height=%f,center=true,convexity=4)mirror([1,0,0])text(\"%s\",font=\"%s\",valign=\"center\",halign=\"center\",size=%f);\n", textdepth * 2, textend, textfont ? : "Sans", r3 - outerround);
+      printf ("cuttext(%f,\"%s\");\n", r3 - outerround, textend);
     if (textside && wall == walls && outersides)
       {
 	double a = 90 + 180 / outersides;
@@ -342,8 +347,7 @@ main (int argc, const char *argv[])
 	    if (q)
 	      *q++ = 0;
 	    if (*p)
-	      printf ("rotate([0,0,%f])translate([0,%f,%f])rotate([90,90,0])linear_extrude(height=%f,center=true,convexity=4)mirror([1,0,0])text(\"%s\",font=\"%s\",valign=\"center\",halign=\"center\",size=%f);\n", a, r3, outerround + (height - outerround) / 2, textdepth * 2, p, textfont ? : "Sans",
-		      h);
+	      printf ("rotate([0,0,%f])translate([0,%f,%f])rotate([90,90,0])cuttext(%f,\"%s\");", a, r3, outerround + (height - outerround) / 2, h, p);
 	    a += 360 / outersides;
 	    p = q;
 	  }
