@@ -28,11 +28,12 @@ main (int argc, const char *argv[])
   double corediameter = 10;
   double coreheight = 50;
   double wallthickness = 1.75;
+  double basethickness = 2;
   double mazethickness = 1.75;
   double mazestep = 3;
   double clearance = 0.25;
   double coregap = 0;
-  double basegap = 0.5;
+  double basegap = 1;
   double outerround = 2;
   double mazemargin = 1;
   double parkheight = 0.6;
@@ -59,6 +60,7 @@ main (int argc, const char *argv[])
     {"core-diameter", 'c', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &corediameter, 0, "Core diameter", "mm"},
     {"core-height", 'h', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &coreheight, 0, "Core height", "mm"},
     {"core-gap", 'C', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &coregap, 0, "Core gap", "mm"},
+    {"base-thickness", 'B', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &basethickness, 0, "Base thickness", "mm"},
     {"base-gap", 'G', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &basegap, 0, "Base gap", "mm"},
     {"wall-thickness", 'w', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &wallthickness, 0, "Wall thickness", "mm"},
     {"maze-thickness", 't', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &mazethickness, 0, "Maze thickness", "mm"},
@@ -253,7 +255,7 @@ main (int argc, const char *argv[])
     double r3 = r2;		// Base outer before adjust for sides
     if (outersides && wall + 1 >= walls)
       r2 /= cos ((double) M_PIl / outersides);
-    double height = coreheight + (wallthickness + clearance + basegap) * wall;
+    double height = coreheight + basethickness + (basethickness + basegap) * (wall - 1);
     if (wall == 1)
       height -= coregap;
     if (wall > 1)
@@ -261,13 +263,13 @@ main (int argc, const char *argv[])
     // Output
     // Maze dimensions
     double r = (inside ? r0 : r1);
-    double base = (inside ? wallthickness : baseheight);
+    double base = (inside ? basethickness : baseheight);
     if (inside && wall > 2)
       base += baseheight;	// Nubs don't go all the way to the end
     if (inside && wall == 2)
       base += coregap;		// First one is short...
     if (inside)
-      base += clearance - basegap;
+      base += basegap;
     double h = height - base - mazemargin - mazestep / 8;
     double w = r * 2 * M_PIl;
     int H = (int) (h / mazestep);
@@ -286,7 +288,7 @@ main (int argc, const char *argv[])
       printf ("// Wall %d (%d/%d)\n", wall, W, H);
     else
       printf ("// Wall %d\n", wall);
-    // printf ("// Height=%f Prod=%f Hole=%f\n", height, height - baseheight, height - wallthickness);
+    printf ("// Height=%f Prod=%f Hole=%f Inset=%f\n", height, height - baseheight, height - basethickness, height - base);
     int entry = 0;		// Entry point and pips
     int X, Y, N, S;
     unsigned char maze[W][H];
@@ -338,7 +340,7 @@ main (int argc, const char *argv[])
 	for (N = 0; N < nubs; N++)
 	  printf ("rotate([0,0,%f])translate([0,%f,%f])hull(){nub();translate([0,0,%f])nub();}\n", -(double) N * 360 / nubs, r2, -mazestep, baseheight + mazestep);
       }
-    printf ("translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);\n", wallthickness, r0 + (wall > 1 && inside ? mazethickness + clearance : 0) + (!inside && wall < walls ? clearance : 0), height, W * 4);	// Hole
+    printf ("translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);\n", basethickness, r0 + (wall > 1 && inside ? mazethickness + clearance : 0) + (!inside && wall < walls ? clearance : 0), height, W * 4);	// Hole
     if (textend && wall + 1 >= walls)
       printf ("cuttext(%f,\"%s\");\n", r3 - outerround, textend);
     if (textside && wall == walls && outersides)
@@ -543,11 +545,11 @@ main (int argc, const char *argv[])
 	  int bottom = P;
 	  // Base points
 	  for (S = 0; S < W * 4; S++)
-	    addpoint (S, s[S].x[0], s[S].y[0], wallthickness / 2);
+	    addpoint (S, s[S].x[0], s[S].y[0], basethickness / 2);
 	  for (S = 0; S < W * 4; S++)
-	    addpointr (S, s[S].x[1], s[S].y[1], wallthickness / 2);
+	    addpointr (S, s[S].x[1], s[S].y[1], basethickness / 2);
 	  for (S = 0; S < W * 4; S++)
-	    addpoint (S, s[S].x[2], s[S].y[2], wallthickness / 2);
+	    addpoint (S, s[S].x[2], s[S].y[2], basethickness / 2);
 	  {			// Points for each maze location
 	    double dy = mazestep * helix / W / 4;	// Step per S
 	    double my = mazestep / 8;	// Vertical steps
@@ -733,7 +735,7 @@ main (int argc, const char *argv[])
 	}
       }
     else if (wall < walls)	// Non maze
-      printf ("difference(){translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);}\n", wallthickness / 2, r1, height, W * 4, wallthickness, r0, height, W * 4);
+      printf ("difference(){translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);}\n", basethickness / 2, r1, height, W * 4, basethickness, r0, height, W * 4);
     if ((!inside && wall < walls) || (inside && wall > 1))
       {				// Park ridge
 	for (X = 0; X < W; X += W / nubs)
