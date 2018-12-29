@@ -1,4 +1,5 @@
 // Puzzle box maker
+// (c) 2018 Adrian Kennard www.me.uk @TheRealRevK
 
 #include <stdio.h>
 #include <string.h>
