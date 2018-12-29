@@ -35,7 +35,7 @@ main (int argc, const char *argv[])
   double outerround = 2;
   double mazemargin = 1;
   double parkheight = 0.5;
-  double textdepth = 1;
+  double textdepth = 0.5;
   char *textend = NULL;
   char *textside = NULL;
   char *textfont = NULL;

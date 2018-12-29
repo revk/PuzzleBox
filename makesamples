@@ -1,7 +1,7 @@
 #!/bin/csh
 rm -f /tmp/*.scad /tmp/*.stl
 # Version box
-./puzzlebox --walls=2 --core-height=85 --core-gap=20 --core-diameter=10 --outer-sides=8 --text-end='☺' --text-side="Build version date\`date --utc +%FT%TZ`\@TheRealRevK\GitHub revk/PuzzleBox\Thingiverse 2410748\www.me.uk\Test Box\www.me.uk" > /tmp/version.scad
+./puzzlebox --walls=2 --core-height=85 --core-gap=20 --core-diameter=10 --outer-sides=8 --text-end='☺' --text-side="Build version date\`date --utc +%FT%TZ`\@TheRealRevK\GitHub revk/PuzzleBox\Thingiverse 2410748\www.me.uk\Test Box\www.me.uk" --text-font=FiveByNineJTD > /tmp/version.scad
 openscad -o /tmp/version.stl /tmp/version.scad&
 # Other boxes
 foreach h (0 1 2)
@@ -21,7 +21,7 @@ end
 foreach w (0 1 2)
 	setenv P part-$w
 	if(! $w) setenv P all
-	./puzzlebox --walls=2 --core-height=85 --core-gap=20 --core-diameter=10 --outer-sides=4 --wall=$w --text-end='£' --text-side="Good\Luck" > /tmp/lottery-ticket-holder-$P.scad
+	./puzzlebox --walls=2 --core-height=85 --core-gap=20 --core-diameter=10 --outer-sides=4 --wall=$w --text-end='£' --text-side="Prepare to\be amazed!\Good luck" --text-font="Mountains of Christmas" > /tmp/lottery-ticket-holder-$P.scad
 	openscad -o /tmp/lottery-ticket-holder-$P.stl /tmp/lottery-ticket-holder-$P.scad&
 end
 foreach s (25 50 75)
