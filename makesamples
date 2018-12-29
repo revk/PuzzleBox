@@ -1,7 +1,7 @@
 #!/bin/csh
 rm -f /tmp/*.scad /tmp/*.stl
 # Version box
-./puzzlebox --walls=2 --core-height=85 --core-gap=20 --core-diameter=10 --outer-sides=8 --text-end='☺' --text-side="Build version date\`date --utc +%FT%TZ`\@TheRealRevK\GitHub revk/PuzzleBox\Thingiverse 2410748\www.me.uk\Test Box\www.me.uk" --text-font=FiveByNineJTD > /tmp/version.scad
+./puzzlebox --walls=2 --core-height=85 --core-gap=20 --core-diameter=10 --outer-sides=8 --text-end='AK' --text-side="Build version date\`date --utc +%FT%TZ`\@TheRealRevK\GitHub revk/PuzzleBox\Thingiverse 2410748\www.me.uk\Test Box\www.me.uk" --text-font=FiveByNineJTD > /tmp/version.scad
 openscad -o /tmp/version.stl /tmp/version.scad&
 # Other boxes
 foreach h (0 1 2)
