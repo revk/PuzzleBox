@@ -24,8 +24,8 @@ int
 main (int argc, const char *argv[])
 {
   char *path = getenv ("PATH_INFO") ? : getenv ("QUERY_STRING");
-  double basethickness = 1;
-  double basegap = 1;
+  double basethickness = 1.5;
+  double basegap = 0.5;
   double baseheight = 10;
   double corediameter = 10;
   double coreheight = 50;
@@ -734,7 +734,7 @@ main (int argc, const char *argv[])
 	}
       }
     else if (wall < walls)	// Non maze
-      printf ("difference(){translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);}\n", basethickness / 2, r1, height, W * 4, basethickness, r0, height, W * 4);
+      printf ("difference(){translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);}\n", basethickness / 2, r1, height - basethickness / 2, W * 4, basethickness, r0, height, W * 4);
     if ((!inside && wall < walls) || (inside && wall > 1))
       {				// Park ridge
 	for (X = 0; X < W; X += W / nubs)
