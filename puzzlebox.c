@@ -24,16 +24,16 @@ int
 main (int argc, const char *argv[])
 {
   char *path = getenv ("PATH_INFO") ? : getenv ("QUERY_STRING");
+  double basethickness = 1;
+  double basegap = 1;
   double baseheight = 10;
   double corediameter = 10;
   double coreheight = 50;
   double wallthickness = 1.75;
-  double basethickness = 2;
   double mazethickness = 1.75;
   double mazestep = 3;
   double clearance = 0.25;
   double coregap = 0;
-  double basegap = 1;
   double outerround = 2;
   double mazemargin = 1;
   double parkheight = 0.6;
