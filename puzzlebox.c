@@ -161,7 +161,7 @@ main (int argc, const char *argv[])
 		  while (*path && *path != pathsep)
 		    {
 		      if (pathsep == '&' && *path == '+')
-			*o++ = '+';
+			*o++ = ' ';
 		      else if (pathsep == '&' && *path == '%' && isxdigit (path[1]) && isxdigit (path[2]))
 			{
 			  *o++ = (((isalpha (path[1]) ? 9 : 0) + (path[1] & 0xF)) << 4) + ((isalpha (path[2]) ? 9 : 0) + (path[2] & 0xF));
