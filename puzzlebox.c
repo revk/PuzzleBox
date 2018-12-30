@@ -55,7 +55,7 @@ main (int argc, const char *argv[])
   char *path = getenv ("PATH_INFO");
   if (path)
     pathsep = '/';
-  else if ((path == getenv ("QUERY_STRING")))
+  else if ((path = getenv ("QUERY_STRING")))
     pathsep = '&';
 
   const struct poptOption optionsTable[] = {
