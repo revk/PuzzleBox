@@ -31,7 +31,7 @@ main (int argc, const char *argv[])
   double wallthickness = 1.75;
   double mazethickness = 1.75;
   double mazestep = 3;
-  double clearance = 0.25;
+  double clearance = 0.3;
   double coregap = 0;
   double outerround = 2;
   double mazemargin = 1;
