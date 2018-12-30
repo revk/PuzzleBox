@@ -410,7 +410,7 @@ main (int argc, const char *argv[])
     else
       printf ("hull(){cylinder(r=%f,h=%f,$fn=%d);translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);}\n", r2 - mazethickness, baseheight, W * 4, mazemargin, r2, baseheight - mazemargin, W * 4);
     if (ringdepth && wall + 1 < walls)
-      printf ("translate([0,0,%f])rotate_extrude(convexity=4,$fn=100)translate([%f,0,0])circle(r=%f,$fn=100);\n", mazemargin + (baseheight - mazemargin) / 2, r2, ringdepth);
+      printf ("translate([0,0,%f])rotate_extrude(convexity=4,$fn=%d)translate([%f,0,0])circle(r=%f,$fn=100);\n", mazemargin + (baseheight - mazemargin) / 2, W * 4, r2, ringdepth);
     else if (ringdepth && wall + 1 == walls)
       printf ("translate([0,0,%f])rotate_extrude(convexity=4,$fn=%d)translate([%f,0,0])circle(r=%f,$fn=100);\n", outerround + (baseheight - outerround) / 2, outersides ? : 100, r2, ringdepth);
     if (!inside && wall + 1 < walls)
