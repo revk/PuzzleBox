@@ -23,8 +23,8 @@
 int
 main (int argc, const char *argv[])
 {
-  double basethickness = 1.5;
-  double basegap = 0.5;
+  double basethickness = 2;
+  double basegap = 0.4;
   double baseheight = 10;
   double corediameter = 10;
   double coreheight = 50;
@@ -37,6 +37,7 @@ main (int argc, const char *argv[])
   double mazemargin = 1;
   double parkheight = 0.6;
   double textdepth = 0.5;
+  double logodepth = 0.6;
   char *textend = NULL;
   char *textside = NULL;
   char *textfont = NULL;
@@ -47,6 +48,7 @@ main (int argc, const char *argv[])
   int testmaze = 0;
   int helix = 2;
   int nubs = 2;
+  int logo = 0;
   int textslow = 0;
   int symmectriccut = 0;
   int mime = (getenv ("HTTP_HOST") ? 1 : 0);
@@ -84,6 +86,7 @@ main (int argc, const char *argv[])
     {"text-side", 'S', POPT_ARG_STRING | (textside ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &textside, 0, "Text on sides", "Line1\\Line2..."},
     {"text-slow", 'Z', POPT_ARG_NONE, &textslow, 0, "Text with edges (slow)"},
     {"symmetric-cut", 'V', POPT_ARG_NONE, &symmectriccut, 0, "Symmetric maze cut"},
+    {"logo", 0, POPT_ARG_NONE, &logo, 0, "Include A&A logo"},
     {"test", 'Q', POPT_ARG_NONE, &testmaze, 0, "Test pattern instead of maze"},
     {"mime", 0, POPT_ARG_NONE | (mime ? POPT_ARGFLAG_DOC_HIDDEN : 0), &mime, 0, "MIME Header"},
     POPT_AUTOHELP {}
@@ -285,6 +288,9 @@ main (int argc, const char *argv[])
 	printf (",font=\"%s\"", textfont);
 	printf (");}\n");
       }
+    if (logo)
+      printf
+	("module aa(w=100,white=0,$fn=100){scale(w/100){if(!white)difference(){circle(d=100.5);circle(d=99.5);}difference(){if(white)circle(d=100);difference(){circle(d=92);for(m=[0,1])mirror([m,0,0]){difference(){translate([24,0,0])circle(r=22.5);translate([24,0,0])circle(r=15);}polygon([[1.5,22],[9,22],[9,-18.5],[1.5,-22]]);}}}}} // A&A Logo is copyright (c) 2013 and trademark Andrews & Arnold Ltd\n");
   }
   // The base
   printf ("module outer(h,r){e=%f;minkowski(){cylinder(r1=0,r2=e,h=e,$fn=100);cylinder(h=h-e,r=r,$fn=%d);}}\n", outerround, outersides ? : 100);
@@ -413,6 +419,8 @@ main (int argc, const char *argv[])
 	    p = q;
 	  }
       }
+    if (logo)
+      printf ("translate([0,0,%f])linear_extrude(height=%f)aa(%f,white=true);\n", basethickness - logodepth, basethickness, r0 * 1.9);
     printf ("}\n");
     if ((!inside && wall < walls) || (inside && wall > 1))
       {				// Maze
