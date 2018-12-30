@@ -267,11 +267,11 @@ main (int argc, const char *argv[])
       return 1;
     }
 
-  double mazeskew = (symmectriccut ? 0 : mazestep / 8);	// Skew the shape of the cut
+  double nubskew = (symmectriccut ? 0 : mazestep / 8);	// Skew the shape of the cut
 
   {				// Modules
-    printf ("module nub(){rotate([%d,0,0])translate([0,0,-0.1])hull(){cube([%f,%f,0.1],center=true);translate([0,%f,%f])cube([%f,%f,0.1],center=true);};}\n", inside ? -90 : 90, mazestep * 3 / 4, mazestep * 3 / 4, mazeskew, mazethickness - clearance / 2, mazestep / 4, mazestep / 4);
-    printf ("module park(){rotate([%d,0,0])translate([0,%f,%f])hull(){cube([%f,%f,0.1],center=true);translate([0,0,%f])cube([%f,%f,0.1],center=true);}}\n", inside ? -90 : 90, -mazeskew, mazethickness - parkheight, mazestep, mazestep / 4, parkheight, mazestep, mazestep * 3 / 4);
+    printf ("module nub(){rotate([%d,0,0])translate([0,0,-0.1])hull(){cube([%f,%f,0.1],center=true);translate([0,%f,%f])cube([%f,%f,0.1],center=true);};}\n", inside ? -90 : 90, mazestep * 3 / 4, mazestep * 3 / 4, nubskew, mazethickness - clearance / 2, mazestep / 4, mazestep / 4);
+    printf ("module park(){rotate([%d,0,0])translate([0,%f,%f])hull(){cube([%f,%f,0.1],center=true);translate([0,0,%f])cube([%f,%f,0.1],center=true);}}\n", inside ? -90 : 90, -nubskew, mazethickness - parkheight, mazestep, mazestep / 4, parkheight, mazestep, mazestep * 3 / 4);
     if (textslow)
       {
 	printf ("module cuttext(s,t){translate([0,0,-1])minkowski(){rotate([0,0,45])cylinder(h=%f,d1=%f,d2=0,$fn=4);linear_extrude(height=1,convexity=2)mirror([1,0,0])text(t,valign=\"center\",halign=\"center\",size=s", textdepth, textdepth);
@@ -618,9 +618,9 @@ main (int argc, const char *argv[])
 		  for (S = X * 4; S < X * 4 + 4; S++)
 		    addpoint (S, s[S].x[2], s[S].y[2], y + Y * mazestep + dy * S - my * 3);
 		  for (S = X * 4; S < X * 4 + 4; S++)
-		    addpointr (S, s[S].x[1], s[S].y[1], y + Y * mazestep + dy * S - my - mazeskew);
+		    addpointr (S, s[S].x[1], s[S].y[1], y + Y * mazestep + dy * S - my - nubskew);
 		  for (S = X * 4; S < X * 4 + 4; S++)
-		    addpointr (S, s[S].x[1], s[S].y[1], y + Y * mazestep + dy * S + my - mazeskew);
+		    addpointr (S, s[S].x[1], s[S].y[1], y + Y * mazestep + dy * S + my - nubskew);
 		  for (S = X * 4; S < X * 4 + 4; S++)
 		    addpoint (S, s[S].x[2], s[S].y[2], y + Y * mazestep + dy * S + my * 3);
 		}
