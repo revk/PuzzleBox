@@ -23,7 +23,6 @@
 int
 main (int argc, const char *argv[])
 {
-  char *path = getenv ("PATH_INFO") ? : getenv ("QUERY_STRING");
   double basethickness = 1.5;
   double basegap = 0.5;
   double baseheight = 10;
@@ -51,6 +50,13 @@ main (int argc, const char *argv[])
   int textslow = 0;
   int mime = (getenv ("HTTP_HOST") ? 1 : 0);
   int symmectriccut = 0;
+
+  char pathsep = 0;
+  char *path = getenv ("PATH_INFO");
+  if (path)
+    pathsep = '/';
+  else if ((path == getenv ("QUERY_STRING")))
+    pathsep = '&';
 
   const struct poptOption optionsTable[] = {
     {"inside", 'i', POPT_ARG_NONE, &inside, 0, "Maze on inside (hard)"},
@@ -80,7 +86,6 @@ main (int argc, const char *argv[])
     {"symmetric-cut", 'V', POPT_ARG_NONE, &symmectriccut, 0, "Symmetric maze cut"},
     {"test", 'Q', POPT_ARG_NONE, &testmaze, 0, "Test pattern instead of maze"},
     {"mime", 0, POPT_ARG_NONE | (mime ? POPT_ARGFLAG_DOC_HIDDEN : 0), &mime, 0, "MIME Header"},
-    {"path", 0, POPT_ARG_STRING | (path ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &path, 0, "Path header", "{/x=var}"},
     POPT_AUTOHELP {}
   };
 
@@ -108,7 +113,7 @@ main (int argc, const char *argv[])
       path = strdupa (path);
       while (*path)
 	{
-	  if (*path == '/' || *path == '&')
+	  if (*path == pathsep)
 	    {
 	      *path++ = 0;
 	      continue;
@@ -138,7 +143,7 @@ main (int argc, const char *argv[])
 		  if (*path == '=')
 		    {		// Skip =on, etc.
 		      path++;
-		      while (*path && *path != '/' && *path != '&')
+		      while (*path && *path != pathsep)
 			path++;
 		    }
 		}
@@ -146,12 +151,22 @@ main (int argc, const char *argv[])
 		{
 		  path++;
 		  *(char **) optionsTable[o].arg = path;
-		  while (*path && *path != '/' && *path != '&')
+		  char *o = path;
+		  while (*path && *path != pathsep)
 		    {
-		      if (*path == '+')
-			*path = ' ';	// Not full URl decode but close enough for now
+		      if (pathsep == '&' && *path == '+')
+			*o++ = '+';
+		      else if (pathsep == '&' && *path == '%' && isxdigit (path[1]) && isxdigit (path[2]))
+			{
+			  *o++ = (((isalpha (path[1]) ? 9 : 0) + (path[1] & 0xF)) << 4) + ((isalpha (path[2]) ? 9 : 0) + (path[2] & 0xF));
+			  path += 2;
+			}
+		      else
+			*o++ = *path;
 		      path++;
 		    }
+		  if (o < path)
+		    *o = 0;
 		}
 	    }
 	}
