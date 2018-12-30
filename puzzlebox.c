@@ -38,6 +38,7 @@ main (int argc, const char *argv[])
   double parkheight = 0.6;
   double textdepth = 0.5;
   double logodepth = 0.6;
+  double ringdepth = 2;
   char *textend = NULL;
   char *textsides = NULL;
   char *textfont = NULL;
@@ -80,6 +81,7 @@ main (int argc, const char *argv[])
     {"clearance", 'g', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &clearance, 0, "Clearance", "mm"},
     {"outer-sides", 's', POPT_ARG_INT | (outersides ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &outersides, 0, "Outer sides", "N"},
     {"outer-round", 'r', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &outerround, 0, "Outer rounding", "mm"},
+    {"ring-depth", 'R', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &ringdepth, 0, "Grip ring depth", "mm"},
     {"text-depth", 'D', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &textdepth, 0, "Text depth", "mm"},
     {"text-end", 'E', POPT_ARG_STRING | (textend ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &textend, 0, "Text (initial) on end", "X"},
     {"text-font", 'F', POPT_ARG_STRING | (textfont ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &textfont, 0, "Text font", "Font"},
@@ -191,6 +193,8 @@ main (int argc, const char *argv[])
     nubs = helix;
   if (outersides)
     outersides = (outersides + nubs - 1) / nubs * nubs;
+  if (ringdepth > baseheight - outerround)
+    ringdepth = baseheight - outerround;
   if (textsides)
     {
       char *p;
@@ -405,6 +409,8 @@ main (int argc, const char *argv[])
       printf ("mirror([1,0,0])outer(%f,%f);\n", baseheight, (r3 - outerround) / cos ((double) M_PIl / outersides));
     else
       printf ("hull(){cylinder(r=%f,h=%f,$fn=%d);translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);}\n", r2 - mazethickness, baseheight, W * 4, mazemargin, r2, baseheight - mazemargin, W * 4);
+    if (ringdepth && wall + 1 == walls)
+      printf ("translate([0,0,%f])rotate_extrude(convexity=4,$fn=%d)translate([%f,0,0])circle(r=%f,$fn=100);\n", outerround + (baseheight - outerround) / 2, outersides ? : 100, r2, ringdepth);
     if (!inside && wall + 1 < walls)
       {				// Connect endpoints over base
 	int N;
