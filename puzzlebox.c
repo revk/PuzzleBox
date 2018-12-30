@@ -174,7 +174,7 @@ main (int argc, const char *argv[])
 
   // Sanity checks
   if (textfont && !*textfont)
-    textend = NULL;
+    textfont = NULL;
   if (textend && !*textend)
     textend = NULL;
   if (textside && !*textside)
@@ -198,8 +198,6 @@ main (int argc, const char *argv[])
       for (p = textend; *p; p++)
 	if (*p == '"')
 	  *p = '\'';
-	else if (*p == '\\')
-	  *p = '/';
     }
 
   // MIME header
