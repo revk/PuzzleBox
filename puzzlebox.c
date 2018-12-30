@@ -23,7 +23,7 @@
 int
 main (int argc, const char *argv[])
 {
-  double basethickness = 2;
+  double basethickness = 1.6;
   double basegap = 0.4;
   double baseheight = 10;
   double corediameter = 10;
@@ -39,7 +39,7 @@ main (int argc, const char *argv[])
   double textdepth = 0.5;
   double logodepth = 0.6;
   char *textend = NULL;
-  char *textside = NULL;
+  char *textsides = NULL;
   char *textfont = NULL;
   int walls = 4;
   int wall = 0;
@@ -83,10 +83,11 @@ main (int argc, const char *argv[])
     {"text-depth", 'D', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &textdepth, 0, "Text depth", "mm"},
     {"text-end", 'E', POPT_ARG_STRING | (textend ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &textend, 0, "Text (initial) on end", "X"},
     {"text-font", 'F', POPT_ARG_STRING | (textfont ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &textfont, 0, "Text font", "Font"},
-    {"text-side", 'S', POPT_ARG_STRING | (textside ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &textside, 0, "Text on sides", "Line1\\Line2..."},
+    {"text-side", 'S', POPT_ARG_STRING | (textsides ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &textsides, 0, "Text on sides", "Line1\\Line2..."},
     {"text-slow", 'Z', POPT_ARG_NONE, &textslow, 0, "Text with edges (slow)"},
     {"symmetric-cut", 'V', POPT_ARG_NONE, &symmectriccut, 0, "Symmetric maze cut"},
-    {"logo", 0, POPT_ARG_NONE, &logo, 0, "Include A&A logo"},
+    {"logo", 'A', POPT_ARG_NONE, &logo, 0, "Include A&A logo"},
+    {"text-depth", 'L', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &logodepth, 0, "Logo depth", "mm"},
     {"test", 'Q', POPT_ARG_NONE, &testmaze, 0, "Test pattern instead of maze"},
     {"mime", 0, POPT_ARG_NONE | (mime ? POPT_ARGFLAG_DOC_HIDDEN : 0), &mime, 0, "MIME Header"},
     POPT_AUTOHELP {}
@@ -175,23 +176,25 @@ main (int argc, const char *argv[])
 	}
     }
 
-  // Sanity checks
+  // Sanity checks and adjustments
+  if (!outersides)
+    textsides = NULL;
   if (textfont && !*textfont)
     textfont = NULL;
   if (textend && !*textend)
     textend = NULL;
-  if (textside && !*textside)
-    textside = NULL;
+  if (textsides && !*textsides)
+    textsides = NULL;
   if (helix && nubs && nubs < helix)
     nubs = helix / (helix / nubs);
   if (helix && nubs > helix)
     nubs = helix;
   if (outersides)
     outersides = (outersides + nubs - 1) / nubs * nubs;
-  if (textside)
+  if (textsides)
     {
       char *p;
-      for (p = textside; *p; p++)
+      for (p = textsides; *p; p++)
 	if (*p == '"')
 	  *p = '\'';
     }
@@ -204,6 +207,12 @@ main (int argc, const char *argv[])
 	else if (*p == '\\')
 	  *p = '/';
     }
+  if (!logo)
+    logodepth = 0;
+  if (!textsides && !textend)
+    textdepth = 0;
+  if (basethickness < logodepth + (textend ? textdepth : 0) + 0.4)
+    basethickness = logodepth + (textend ? textdepth : 0) + 0.4;
 
   // MIME header
   if (mime)
@@ -274,7 +283,8 @@ main (int argc, const char *argv[])
 
   {				// Modules
     printf ("module nub(){rotate([%d,0,0])translate([0,0,-0.1])hull(){cube([%f,%f,0.1],center=true);translate([0,%f,%f])cube([%f,%f,0.1],center=true);};}\n", inside ? -90 : 90, mazestep * 3 / 4, mazestep * 3 / 4, nubskew, mazethickness - clearance / 2, mazestep / 4, mazestep / 4);
-    printf ("module park(){rotate([%d,0,0])translate([0,%f,%f])hull(){cube([%f,%f,0.1],center=true);translate([0,0,%f])cube([%f,%f,0.1],center=true);}}\n", inside ? -90 : 90, -nubskew, mazethickness - parkheight, mazestep, mazestep / 4, parkheight, mazestep, mazestep * 3 / 4);
+    if (parkheight)
+      printf ("module park(){rotate([%d,0,0])translate([0,%f,%f])hull(){cube([%f,%f,0.1],center=true);translate([0,0,%f])cube([%f,%f,0.1],center=true);}}\n", inside ? -90 : 90, -nubskew, mazethickness - parkheight, mazestep, mazestep / 4, parkheight, mazestep, mazestep * 3 / 4);
     if (textslow)
       {
 	printf ("module cuttext(s,t){translate([0,0,-1])minkowski(){rotate([0,0,45])cylinder(h=%f,d1=%f,d2=0,$fn=4);linear_extrude(height=1,convexity=2)mirror([1,0,0])text(t,valign=\"center\",halign=\"center\",size=s", textdepth, textdepth);
@@ -403,11 +413,11 @@ main (int argc, const char *argv[])
     printf ("translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);\n", basethickness, r0 + (wall > 1 && inside ? mazethickness + clearance : 0) + (!inside && wall < walls ? clearance : 0), height, W * 4);	// Hole
     if (textend && wall + 1 >= walls)
       printf ("cuttext(%f,\"%s\");\n", r3 - outerround, textend);
-    if (textside && wall == walls && outersides)
+    if (textsides && wall == walls && outersides)
       {
 	double a = 90 + 180 / outersides;
 	double h = r2 * sin (M_PIl / outersides);
-	char *p = strdupa (textside);
+	char *p = strdupa (textsides);
 	while (p)
 	  {
 	    char *q = strchr (p, '\\');
@@ -419,8 +429,8 @@ main (int argc, const char *argv[])
 	    p = q;
 	  }
       }
-    if (logo)
-      printf ("translate([0,0,%f])linear_extrude(height=%f)aa(%f,white=true);\n", basethickness - logodepth, basethickness, r0 * 1.9);
+    if (logo && wall == walls)
+      printf ("translate([0,0,%f])linear_extrude(height=%f,convexity=4)aa(%f,white=true);\n", basethickness - logodepth, basethickness, r0 * 1.8);
     printf ("}\n");
     if ((!inside && wall < walls) || (inside && wall > 1))
       {				// Maze
@@ -798,7 +808,7 @@ main (int argc, const char *argv[])
       }
     else if (wall < walls)	// Non maze
       printf ("difference(){translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);}\n", basethickness / 2, r1, height - basethickness / 2, W * 4, basethickness, r0, height, W * 4);
-    if ((!inside && wall < walls) || (inside && wall > 1))
+    if (parkheight && ((!inside && wall < walls) || (inside && wall > 1)))
       {				// Park ridge
 	for (X = 0; X < W; X += W / nubs)
 	  printf ("rotate([0,0,%f])translate([0,%f,%f])park();\n", (double) X * 360 / W, r, base + mazestep);
