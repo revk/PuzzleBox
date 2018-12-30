@@ -21,14 +21,14 @@ end
 foreach w (0 1 2)
 	setenv P part-$w
 	if(! $w) setenv P all
-	./puzzlebox --walls=2 --core-height=85 --core-gap=20 --core-diameter=10 --inside --outer-sides=4 --wall=$w --text-slow --text-depth=1 --text-end='£' --text-side="Good luck\\Prepare to\be amazed!" --text-font="Mountains of Christmas" --logo $* > /tmp/lottery-ticket-inside-$P.scad
-	openscad -o /tmp/lottery-ticket-inside-$P.stl /tmp/lottery-ticket-inside-$P.scad&
+	./puzzlebox --walls=2 --core-height=85 --core-gap=20 --core-diameter=10 --inside --outer-sides=4 --wall=$w --text-slow --text-depth=1 --text-end='£' --text-side="Good luck\\Prepare to\be amazed!" --text-font="Mountains of Christmas" --logo $* > /tmp/lottery-ticket-hard-$P.scad
+	openscad -o /tmp/lottery-ticket-hard-$P.stl /tmp/lottery-ticket-hard-$P.scad&
 end
 foreach w (0 1 2)
 	setenv P part-$w
 	if(! $w) setenv P all
-	./puzzlebox --walls=2 --core-height=85 --core-gap=20 --core-diameter=10 --outer-sides=4 --wall=$w --text-slow --text-depth=1 --text-end='£' --text-side="Good luck\\Prepare to\be amazed!" --text-font="Mountains of Christmas" --logo $* > /tmp/lottery-ticket-holder-$P.scad
-	openscad -o /tmp/lottery-ticket-holder-$P.stl /tmp/lottery-ticket-holder-$P.scad&
+	./puzzlebox --walls=2 --core-height=85 --core-gap=20 --core-diameter=10 --outer-sides=4 --wall=$w --text-slow --text-depth=1 --text-end='£' --text-side="Good luck\\Prepare to\be amazed!" --text-font="Mountains of Christmas" --logo $* > /tmp/lottery-ticket-easy-$P.scad
+	openscad -o /tmp/lottery-ticket-easy-$P.stl /tmp/lottery-ticket-easy-$P.scad&
 end
 foreach s (30 50 70)
 foreach w (0 1 2 3 4)

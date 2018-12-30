@@ -193,8 +193,8 @@ main (int argc, const char *argv[])
     nubs = helix;
   if (outersides)
     outersides = (outersides + nubs - 1) / nubs * nubs;
-  if (ringdepth > baseheight - outerround)
-    ringdepth = baseheight - outerround;
+  if (ringdepth > (baseheight - outerround) / 3)
+    ringdepth = (baseheight - outerround) / 3;
   if (textsides)
     {
       char *p;
