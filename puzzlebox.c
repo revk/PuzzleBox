@@ -48,8 +48,8 @@ main (int argc, const char *argv[])
   int helix = 2;
   int nubs = 2;
   int textslow = 0;
-  int mime = (getenv ("HTTP_HOST") ? 1 : 0);
   int symmectriccut = 0;
+  int mime = (getenv ("HTTP_HOST") ? 1 : 0);
 
   char pathsep = 0;
   char *path = getenv ("PATH_INFO");
@@ -185,7 +185,24 @@ main (int argc, const char *argv[])
     nubs = helix;
   if (outersides)
     outersides = (outersides + nubs - 1) / nubs * nubs;
+  if (textside)
+    {
+      char *p;
+      for (p = textside; *p; p++)
+	if (*p == '"')
+	  *p = '\'';
+    }
+  if (textend)
+    {
+      char *p;
+      for (p = textend; *p; p++)
+	if (*p == '"')
+	  *p = '\'';
+	else if (*p == '\\')
+	  *p = '/';
+    }
 
+  // MIME header
   if (mime)
     {
       printf ("Content-Type: application/scad\r\nContent-Disposition: Attachment; filename=puzzlebox");
@@ -210,7 +227,13 @@ main (int argc, const char *argv[])
 		printf ("-%s%c%s", temp, optionsTable[o].shortName, p);
 	      }
 	    else if ((optionsTable[o].argInfo & POPT_ARG_MASK) == POPT_ARG_STRING && *(int *) optionsTable[o].arg)
-	      printf ("-%c%s", optionsTable[o].shortName, *(char * *) optionsTable[o].arg);
+	      {			// String, but sanity check for filename
+		char *p = strdupa (*(char * *) optionsTable[o].arg), *q;
+		for (q = p; *q; q++)
+		  if (*q <= ' ' || *q == '/' || *q == '\\' || *q == '"' || *q == '\'' || *q == ':')
+		    *q = '_';
+		printf ("-%c%s", optionsTable[o].shortName, p);
+	      }
 
 	  }
       printf (".scad\r\n\r\n");	// Used from apache
