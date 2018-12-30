@@ -409,8 +409,8 @@ main (int argc, const char *argv[])
       printf ("mirror([1,0,0])outer(%f,%f);\n", baseheight, (r3 - outerround) / cos ((double) M_PIl / outersides));
     else
       printf ("hull(){cylinder(r=%f,h=%f,$fn=%d);translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);}\n", r2 - mazethickness, baseheight, W * 4, mazemargin, r2, baseheight - mazemargin, W * 4);
-    if (ringdepth && wall + 1 == walls)
-      printf ("translate([0,0,%f])rotate_extrude(convexity=4,$fn=%d)translate([%f,0,0])circle(r=%f,$fn=100);\n", outerround + (baseheight - outerround) / 2, outersides ? : 100, r2, ringdepth);
+    if (ringdepth && wall < walls)
+      printf ("translate([0,0,%f])rotate_extrude(convexity=4,$fn=%d)translate([%f,0,0])circle(r=%f,$fn=100);\n", outerround + (baseheight - outerround) / 2, (wall + 1 == walls && outersides) ? outersides : 100, r2, ringdepth);
     if (!inside && wall + 1 < walls)
       {				// Connect endpoints over base
 	int N;
