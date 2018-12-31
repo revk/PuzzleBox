@@ -35,7 +35,7 @@ main (int argc, const char *argv[])
   double coregap = 0;
   double outerround = 2;
   double mazemargin = 1;
-  double parkheight = 0.6;
+  double parkheight = 0.35;
   double textdepth = 0.5;
   double logodepth = 0.6;
   double gripdepth = 2;
@@ -290,7 +290,7 @@ main (int argc, const char *argv[])
   {				// Modules
     printf ("module nub(){translate([0,0,-0.1])hull(){cube([%f,%f,0.1],center=true);translate([0,%f,%f])cube([%f,%f,0.1],center=true);};}\n", mazestep * 3 / 4, mazestep * 3 / 4, nubskew, mazethickness - clearance / 2, mazestep / 4, mazestep / 4);
     if (parkheight)
-      printf ("module park(){translate([0,%f,%f])hull(){cube([%f,%f,0.1],center=true);translate([0,0,%f])cube([%f,%f,0.1],center=true);}}\n", -nubskew, mazethickness - parkheight, mazestep, mazestep / 4, parkheight, mazestep, mazestep * 3 / 4);
+      printf ("module park(){translate([0,%f,%f])hull(){cube([%f,%f,0.1],center=true);translate([0,0,%f])cube([%f,%f,0.1],center=true);}}\n", -nubskew, mazethickness - parkheight - clearance, mazestep, mazestep / 4, parkheight + clearance, mazestep, mazestep * 3 / 4);
     if (textslow)
       {
 	printf ("module cuttext(s,t){translate([0,0,-1])minkowski(){rotate([0,0,45])cylinder(h=%f,d1=%f,d2=0,$fn=4);linear_extrude(height=1,convexity=2)mirror([1,0,0])text(t,valign=\"center\",halign=\"center\",size=s", textdepth, textdepth);
