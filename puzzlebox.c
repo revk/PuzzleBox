@@ -347,6 +347,8 @@ main (int argc, const char *argv[])
     double r3 = r2;		// Base outer
     if (wall < walls)
       r3 += wallthickness + mazethickness + clearance;
+    else if (textsides)
+      r3 += textdepth;
     if (mazeoutside && wall < walls)
       {				// Allow for maze on outside
 	r2 += mazethickness;
@@ -607,8 +609,8 @@ main (int argc, const char *argv[])
 	      double sa = sin (a), ca = cos (a);
 	      if (inside)
 		{
-		  s[S].x[0] = (r + mazethickness + wallthickness) * sa;
-		  s[S].y[0] = (r + mazethickness + wallthickness) * ca;
+		  s[S].x[0] = (r + mazethickness + (wall < walls ? wallthickness : clearance * 2)) * sa;
+		  s[S].y[0] = (r + mazethickness + (wall < walls ? wallthickness : clearance * 2)) * ca;
 		  s[S].x[1] = (r + mazethickness) * sa;
 		  s[S].y[1] = (r + mazethickness) * ca;
 		  s[S].x[2] = r * sa;
