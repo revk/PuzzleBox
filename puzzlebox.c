@@ -359,54 +359,16 @@ main (int argc, const char *argv[])
     double r3 = r2;
     if (outersides && wall + 1 >= walls)
       r3 /= cos ((double) M_PIl / outersides);	// Bigger because of number of sides
-    printf ("// Wall %d %f %f %f %f %f\n", wall, r0, r1, r1, r2, r3);
+    printf ("// Wall %d (%fmm to %fmm)\n", wall, r0, r1);
     double height = coreheight + basethickness + (basethickness + basegap) * (wall - 1);
     if (wall == 1)
       height -= coregap;
     if (wall > 1)
       height -= baseheight;	// base from previous unit is added to this
-    // Base
-    printf ("translate([%f,0,0]){\n", x + r3);
-    printf ("difference(){\n");
-    if (wall == walls)
-      printf ("outer(%f,%f);\n", height, (r2 - outerround) / cos ((double) M_PIl / outersides));
-    else if (wall + 1 >= walls)
-      printf ("mirror([1,0,0])outer(%f,%f);\n", baseheight, (r2 - outerround) / cos ((double) M_PIl / outersides));
-    else
-      printf ("hull(){cylinder(r=%f,h=%f,$fn=%d);translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);}\n", r3 - mazethickness, baseheight, W * 4, mazemargin, r3, baseheight - mazemargin, W * 4);
-    if (gripdepth && wall + 1 < walls)
-      printf ("translate([0,0,%f])rotate_extrude(convexity=4,$fn=%d)translate([%f,0,0])circle(r=%f,$fn=100);\n", mazemargin + (baseheight - mazemargin) / 2, W * 4, r3 + gripdepth, gripdepth * 2);
-    else if (gripdepth && wall + 1 == walls)
-      printf ("translate([0,0,%f])rotate_extrude(convexity=4,$fn=%d)translate([%f,0,0])circle(r=%f,$fn=100);\n", outerround + (baseheight - outerround) / 2, outersides ? : 100, r3 + gripdepth, gripdepth * 2);
-    if (nextoutside && wall + 1 < walls)	// Connect endpoints over base
-      for (N = 0; N < nubs; N++)
-	printf ("rotate([0,0,%f])translate([0,%f,%f])hull(){rotate([90,0,0])nub();translate([0,0,%f])rotate([90,0,0])nub();}\n", -(double) N * 360 / nubs, r3, -mazestep, baseheight + mazestep);
-    printf ("translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);\n", basethickness, r0 + (wall > 1 && mazeinside ? mazethickness + clearance : 0) + (!mazeinside && wall < walls ? clearance : 0), height, W * 4);	// Hole
-    if (textend && wall + 1 >= walls)
-      printf ("cuttext(%f,\"%s\");\n", r2 - outerround, textend);
-    if (textsides && wall == walls && outersides)
-      {
-	double a = 90 + 180 / outersides;
-	double h = r3 * sin (M_PIl / outersides);
-	char *p = strdupa (textsides);
-	while (p)
-	  {
-	    char *q = strchr (p, '\\');
-	    if (q)
-	      *q++ = 0;
-	    if (*p)
-	      printf ("rotate([0,0,%f])translate([0,%f,%f])rotate([90,90,0])cuttext(%f,\"%s\");", a, r2, outerround + (height - outerround) / 2, h, p);
-	    a += 360 / outersides;
-	    p = q;
-	  }
-      }
-    if (logo && wall == walls)
-      printf ("translate([0,0,%f])linear_extrude(height=%f,convexity=4)aa(%f,white=true);\n", basethickness - logodepth, basethickness, r0 * 1.8);
-    printf ("}\n");
     // Output
     void makemaze (double r, int inside)
     {				// Make the maze
-      W = ((int) (r * 2 * M_PIl / mazestep)) / nubs * nubs;
+      W = ((int) (r * 2 * M_PIl / mazestep)) / nubs * nubs;	// Update W for actual maze
       double base = (inside ? basethickness : baseheight);
       if (inside && wall > 2)
 	base += baseheight;	// Nubs don't go all the way to the end
@@ -416,6 +378,7 @@ main (int argc, const char *argv[])
 	base += basegap;
       double h = height - base - mazemargin - mazestep / 8;
       int H = (int) (h / mazestep);
+      printf ("// Maze %s %d/%d\n", inside ? "inside" : "outside", W, H);
       double y0 = base + mazestep / 2 - mazestep * (helix + 1) + (h - (mazestep * H));
       H += 2 + helix;		// Allow one above, one below and helix below
       if (W < 3 || H < 1)
@@ -840,12 +803,53 @@ main (int argc, const char *argv[])
 	    printf ("rotate([0,0,%f])translate([0,%f,%f])rotate([%d,0,0])park();\n", inside ? -90 : 90, (double) X * 360 / W, r, base + mazestep);
 	}
     }
-    if (mazeoutside)
-      makemaze (r1, 0);
+    printf ("translate([%f,0,0]){\n", x + r3);
+    // Maze
     if (mazeinside)
       makemaze (r0, 1);
+    if (mazeoutside)
+      makemaze (r1, 0);
     if (!mazeinside && !mazeoutside && wall < walls)
-      printf ("difference(){translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);}\n", basethickness / 2, r1, height - basethickness / 2, W * 4, basethickness, r0, height, W * 4);
+      printf ("difference(){translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);}\n", basethickness / 2, r1, height - basethickness / 2, W * 4, basethickness, r0, height, W * 4);	// Non maze
+    // Base
+    printf ("difference(){\n");
+    if (wall == walls)
+      printf ("outer(%f,%f);\n", height, (r2 - outerround) / cos ((double) M_PIl / outersides));
+    else if (wall + 1 >= walls)
+      printf ("mirror([1,0,0])outer(%f,%f);\n", baseheight, (r2 - outerround) / cos ((double) M_PIl / outersides));
+    else
+      printf ("hull(){cylinder(r=%f,h=%f,$fn=%d);translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);}\n", r3 - mazethickness, baseheight, W * 4, mazemargin, r3, baseheight - mazemargin, W * 4);
+    // Cut outs
+    if (gripdepth && wall + 1 < walls)
+      printf ("translate([0,0,%f])rotate_extrude(convexity=4,$fn=%d)translate([%f,0,0])circle(r=%f,$fn=100);\n", mazemargin + (baseheight - mazemargin) / 2, W * 4, r3 + gripdepth, gripdepth * 2);
+    else if (gripdepth && wall + 1 == walls)
+      printf ("translate([0,0,%f])rotate_extrude(convexity=4,$fn=%d)translate([%f,0,0])circle(r=%f,$fn=100);\n", outerround + (baseheight - outerround) / 2, outersides ? : 100, r3 + gripdepth, gripdepth * 2);
+    if (nextoutside && wall + 1 < walls)	// Connect endpoints over base
+      for (N = 0; N < nubs; N++)
+	printf ("rotate([0,0,%f])translate([0,%f,%f])hull(){rotate([90,0,0])nub();translate([0,0,%f])rotate([90,0,0])nub();}\n", -(double) N * 360 / nubs, r3, -mazestep, baseheight + mazestep);
+    printf ("translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);\n", basethickness, r0 + (wall > 1 && mazeinside ? mazethickness + clearance : 0) + (!mazeinside && wall < walls ? clearance : 0), height, W * 4);	// Hole
+    if (textend && wall + 1 >= walls)
+      printf ("cuttext(%f,\"%s\");\n", r2 - outerround, textend);
+    if (textsides && wall == walls && outersides)
+      {
+	double a = 90 + 180 / outersides;
+	double h = r3 * sin (M_PIl / outersides);
+	char *p = strdupa (textsides);
+	while (p)
+	  {
+	    char *q = strchr (p, '\\');
+	    if (q)
+	      *q++ = 0;
+	    if (*p)
+	      printf ("rotate([0,0,%f])translate([0,%f,%f])rotate([90,90,0])cuttext(%f,\"%s\");", a, r2, outerround + (height - outerround) / 2, h, p);
+	    a += 360 / outersides;
+	    p = q;
+	  }
+      }
+    if (logo && wall == walls)
+      printf ("translate([0,0,%f])linear_extrude(height=%f,convexity=4)aa(%f,white=true);\n", basethickness - logodepth, basethickness, r0 * 1.8);
+    printf ("}\n");
+    // Nubs
     if (mazeinside && wall + 1 >= walls)
       entry = 0;		// Nubs needs to align for outside to align when closed
     if (!mazeinside && wall > 1)
