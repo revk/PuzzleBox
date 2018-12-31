@@ -347,7 +347,7 @@ main (int argc, const char *argv[])
     double r3 = r2;		// Base outer
     if (wall < walls)
       r3 += wallthickness + mazethickness + clearance;
-    else if (textsides)
+    if (wall + 1 >= walls && textsides)
       r3 += textdepth;
     if (mazeoutside && wall < walls)
       {				// Allow for maze on outside
