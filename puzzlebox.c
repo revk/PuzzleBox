@@ -322,7 +322,10 @@ main (int argc, const char *argv[])
     if (flip)
       {
 	if (wall & 1)
-	  mazeinside = 1 - mazeinside;
+	  {
+	    mazeinside = 1 - mazeinside;
+	    nextoutside = 1 - nextoutside;
+	  }
 	else
 	  mazeoutside = 1 - mazeoutside;
       }
@@ -466,9 +469,12 @@ main (int argc, const char *argv[])
 	int f = open ("/dev/urandom", O_RDONLY);
 	if (f < 0)
 	  err (1, "Open /dev/random");
-	if (read (f, &entry, sizeof (entry)) != sizeof (entry))
-	  err (1, "Read /dev/random");
-	entry = 1 + (entry % (W / nubs - 1));	// Random entry point not matching exit
+	if (!flip)
+	  {
+	    if (read (f, &entry, sizeof (entry)) != sizeof (entry))
+	      err (1, "Read /dev/random");
+	    entry = 1 + (entry % (W / nubs - 1));	// Random entry point not matching exit
+	  }
 	// Clear too high/low
 	for (Y = 0; Y < H; Y++)
 	  for (X = 0; X < W; X++)
@@ -834,10 +840,10 @@ main (int argc, const char *argv[])
 	    printf ("rotate([0,0,%f])translate([0,%f,%f])rotate([%d,0,0])park();\n", inside ? -90 : 90, (double) X * 360 / W, r, base + mazestep);
 	}
     }
-    if (mazeinside)
-      makemaze (r0, 1);
     if (mazeoutside)
       makemaze (r2, 0);
+    if (mazeinside)
+      makemaze (r0, 1);
     if (!mazeinside && !mazeoutside && wall < walls)
       printf ("difference(){translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);}\n", basethickness / 2, r2, height - basethickness / 2, W * 4, basethickness, r0, height, W * 4);
     if (mazeinside && wall + 1 >= walls)
