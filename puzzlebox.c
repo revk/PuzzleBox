@@ -308,33 +308,31 @@ main (int argc, const char *argv[])
 	("module aa(w=100,white=0,$fn=100){scale(w/100){if(!white)difference(){circle(d=100.5);circle(d=99.5);}difference(){if(white)circle(d=100);difference(){circle(d=92);for(m=[0,1])mirror([m,0,0]){difference(){translate([24,0,0])circle(r=22.5);translate([24,0,0])circle(r=15);}polygon([[1.5,22],[9,22],[9,-18.5],[1.5,-22]]);}}}}} // A&A Logo is copyright (c) 2013 and trademark Andrews & Arnold Ltd\n");
   }
   // The base
-  printf ("module outer(h,r){e=%f;minkowski(){cylinder(r1=0,r3=e,h=e,$fn=100);cylinder(h=h-e,r=r,$fn=%d);}}\n", outerround, outersides ? : 100);
+  printf ("module outer(h,r){e=%f;minkowski(){cylinder(r1=0,r2=e,h=e,$fn=100);cylinder(h=h-e,r=r,$fn=%d);}}\n", outerround, outersides ? : 100);
   double x = 0;
   int box (int wall)
   {				// Make the box - wall 1 in inside
     // Dimensions
-    // r0 is inside of wall/maze
-    // r1 is outside of wall/maze
-    // r2 is outside of base before "sides"
-    // r3 is outside of base with "sides"
+    // r0 is inside of wall+maze
+    // r1 is outside of wall+maze
+    // r2 is outside of base before "sides" adjust
+    // r3 is outside of base with "sides" adjust
     double r1 = corediameter / 2 + wallthickness + (wall - 1) * (wallthickness + mazethickness + clearance);	// Outer
     double r0 = r1 - wallthickness;	// Inner
-    double r3 = r1;		// Base outer
+    double r2 = r1;		// Base outer
     if (wall < walls)
-      r3 += wallthickness + mazethickness + clearance;
+      r2 += wallthickness + mazethickness + clearance;
     if (!inside && wall < walls)
       {				// Allow for maze on outside
 	r1 += mazethickness;
 	if (wall + 1 < walls)
-	  r3 += mazethickness;
+	  r2 += mazethickness;
       }
     if (inside && wall > 1)
-      {				// Allow for maze on inside
-	r0 -= mazethickness;
-      }
-    double r2 = r3;		// Base outer before adjust for sides
+      r0 -= mazethickness;	// Maze on inside
+    double r3 = r2;
     if (outersides && wall + 1 >= walls)
-      r3 /= cos ((double) M_PIl / outersides);
+      r3 /= cos ((double) M_PIl / outersides);	// Bigger because of number of sides
     double height = coreheight + basethickness + (basethickness + basegap) * (wall - 1);
     if (wall == 1)
       height -= coregap;
@@ -417,12 +415,9 @@ main (int argc, const char *argv[])
       printf ("translate([0,0,%f])rotate_extrude(convexity=4,$fn=%d)translate([%f,0,0])circle(r=%f,$fn=100);\n", mazemargin + (baseheight - mazemargin) / 2, W * 4, r3 + gripdepth, gripdepth * 2);
     else if (gripdepth && wall + 1 == walls)
       printf ("translate([0,0,%f])rotate_extrude(convexity=4,$fn=%d)translate([%f,0,0])circle(r=%f,$fn=100);\n", outerround + (baseheight - outerround) / 2, outersides ? : 100, r3 + gripdepth, gripdepth * 2);
-    if (!inside && wall + 1 < walls)
-      {				// Connect endpoints over base
-	int N;
-	for (N = 0; N < nubs; N++)
-	  printf ("rotate([0,0,%f])translate([0,%f,%f])hull(){nub();translate([0,0,%f])nub();}\n", -(double) N * 360 / nubs, r3, -mazestep, baseheight + mazestep);
-      }
+    if (!inside && wall + 1 < walls)	// Connect endpoints over base
+      for (N = 0; N < nubs; N++)
+	printf ("rotate([0,0,%f])translate([0,%f,%f])hull(){nub();translate([0,0,%f])nub();}\n", -(double) N * 360 / nubs, r3, -mazestep, baseheight + mazestep);
     printf ("translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);\n", basethickness, r0 + (wall > 1 && inside ? mazethickness + clearance : 0) + (!inside && wall < walls ? clearance : 0), height, W * 4);	// Hole
     if (textend && wall + 1 >= walls)
       printf ("cuttext(%f,\"%s\");\n", r2 - outerround, textend);
