@@ -35,7 +35,7 @@ main (int argc, const char *argv[])
   double coregap = 0;
   double outerround = 2;
   double mazemargin = 1;
-  double parkheight = 0.35;
+  double parkheight = 0.4;
   double textdepth = 0.5;
   double logodepth = 0.6;
   double gripdepth = 2;
