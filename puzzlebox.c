@@ -963,7 +963,7 @@ main (int argc, const char *argv[])
 	printf ("rotate([0,0,%f])translate([0,%f,%f])rotate([90,0,0])nub();\n", (double) X * 360 / W, r0, height - mazestep / 2);
     if (!mazeoutside && part < parts)
       for (X = entry; X < W; X += W / nubs)
-	printf ("rotate([0,0,%f])translate([0,%f,%f])rotate([-90,0,0])nub();\n", (double) X * 360 / W, r1, height - mazestep / 2);
+	printf ("rotate([0,0,%f])translate([0,%f,%f])rotate([-90,180,0])nub();\n", (double) X * 360 / W, r1, height - mazestep / 2);
     printf ("}\n");
     x += r3 * 2 + 10;
   }
