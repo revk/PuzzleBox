@@ -916,10 +916,10 @@ main (int argc, const char *argv[])
       printf ("difference(){translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);}\n", basethickness / 2, r1, height - basethickness / 2, W * 4, basethickness, r0, height, W * 4);	// Non maze
     // Base
     printf ("difference(){\n");
-    if (outersides && part == parts)
-      printf ("outer(%f,%f);\n", height, (r2 - outerround) / cos ((double) M_PIl / outersides));
-    else if (outersides && part + 1 >= parts)
-      printf ("mirror([1,0,0])outer(%f,%f);\n", baseheight, (r2 - outerround) / cos ((double) M_PIl / outersides));
+    if (part == parts)
+      printf ("outer(%f,%f);\n", height, (r2 - outerround) / cos ((double) M_PIl / (outersides ? : 100)));
+    else if (part + 1 >= parts)
+      printf ("mirror([1,0,0])outer(%f,%f);\n", baseheight, (r2 - outerround) / cos ((double) M_PIl / (outersides ? : 100)));
     else
       printf ("hull(){cylinder(r=%f,h=%f,$fn=%d);translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);}\n", r3 - mazethickness, baseheight, W * 4, mazemargin, r3, baseheight - mazemargin, W * 4);
     // Cut outs
