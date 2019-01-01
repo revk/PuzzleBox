@@ -917,67 +917,65 @@ main (int argc, const char *argv[])
 	// Done
 	printf (");\n");
 	{			// Park ridge
-	  inline void add (int S, int p, double z)
-	  {
-	    double x = s[S].x[p];
-	    double y = s[S].y[p];
-	    if (p == 2)
-	      {			// ridge height instead or surface
-		x = (x * parkthickness + s[S].x[1] * (mazethickness - parkthickness)) / mazethickness;
-		y = (y * parkthickness + s[S].y[1] * (mazethickness - parkthickness)) / mazethickness;
-	      }
-	    printf ("[%f,%f,%f],", x, y, z);
-	  }
 	  printf ("polyhedron(points=[");
-	  for (X = 0; X < W; X += W / nubs)
-	    if (parkvertical)
-	      {
-		for (Y = 0; Y < 4; Y++)
-		  {
-		    int p = 1;
-		    if (Y == 1 || Y == 2)
-		      p = 2;
-		    add (X * 4 + 3, p, y0 + dy * 3 / 4 + mazestep * (helix + 1) + mazestep * Y / 4 - nubskew);
-		    add (X * 4, p, y0 + mazestep * (helix + 1) + mazestep * Y / 4 - nubskew);
-		  }
-		add (X * 4 + 3, 0, y0 + dy * 3 / 4 + mazestep * (helix + 1) - nubskew);
-		add (X * 4, 0, y0 + mazestep * (helix + 1) - nubskew);
-		add (X * 4 + 3, 0, y0 + dy * 3 / 4 + mazestep * (helix + 1) + mazestep * 3 / 4 - nubskew);
-		add (X * 4, 0, y0 + mazestep * (helix + 1) + mazestep * 3 / 4 - nubskew);
-	      }
-	    else
-	      {
-		for (S = X * 4 + 2; S < X * 4 + 6; S++)
-		  {
-		    int p = 1;
-		    if ((S % 4) == 0 || (S % 4) == 3)
-		      p = 2;
-		    add (S, p, y0 + dy * (S % (W * 4 / nubs)) / 4 + mazestep * (helix + 0.5));
-		    add (S, p, y0 + dy * (S % (W * 4 / nubs)) / 4 + mazestep * (helix + 1.5));
-		  }
-		add (X * 4 + 2, 0, y0 + dy * (S % (W * 4 / nubs)) / 4 + mazestep * (helix + 0.5));
-		add (X * 4 + 2, 0, y0 + dy * (S % (W * 4 / nubs)) / 4 + mazestep * (helix + 1.5));
-		add (X * 4 + 5, 0, y0 + dy * (S % (W * 4 / nubs)) / 4 + mazestep * (helix + 0.5));
-		add (X * 4 + 5, 0, y0 + dy * (S % (W * 4 / nubs)) / 4 + mazestep * (helix + 1.5));
-	      }
+	  for (N = 0; N < W; N += W / nubs)
+	    for (Y = 0; Y < 4; Y++)
+	      for (X = 0; X < 4; X++)
+		{
+
+#if 0
+		  double dy = mazestep * helix / W / 4;	// Step per S
+		  double my = mazestep / 8;	// Vertical steps
+		  double y = y0 - dy * 1.5;	// Y vertical centre for S=0
+		  unsigned char v = test (X, Y);
+		  if (!(v & A) || (v & 0x80))
+		    continue;
+		  p[X][Y] = P;
+		  for (S = X * 4; S < X * 4 + 4; S++)
+		    addpoint (S, s[S].x[2], s[S].y[2], y + Y * mazestep + dy * S - my * 3);
+		  for (S = X * 4; S < X * 4 + 4; S++)
+		    addpointr (S, s[S].x[1], s[S].y[1], y + Y * mazestep + dy * S - my - nubskew);
+		  for (S = X * 4; S < X * 4 + 4; S++)
+		    addpointr (S, s[S].x[1], s[S].y[1], y + Y * mazestep + dy * S + my - nubskew);
+#endif
+
+		  int S = N * 4 + X + (parkvertical ? 0 : 2);
+		  double z = y0 - dy * 1.5 / 4 + (helix + 1) * mazestep + Y * mazestep / 4 + dy * X / 4 + (parkvertical ? mazestep / 8 : dy / 2 - mazestep * 3 / 8);
+		  double x = s[S].x[1];
+		  double y = s[S].y[1];
+		  if (parkvertical ? Y == 1 || Y == 2 : X == 1 || X == 2)
+		    {		// ridge height instead or surface
+		      x = (s[S].x[1] * parkthickness + s[S].x[2] * (mazethickness - parkthickness)) / mazethickness;
+		      y = (s[S].y[1] * parkthickness + s[S].y[2] * (mazethickness - parkthickness)) / mazethickness;
+		    }
+		  else if (parkvertical)
+		    z -= nubskew;
+		  printf ("[%f,%f,%f],", s[S].x[0], s[S].y[0], z);
+		  printf ("[%f,%f,%f],", x, y, z);
+		}
 	  printf ("],faces=[");
 	  for (N = 0; N < nubs; N++)
 	    {
-	      int P = N * 12;
+	      int P = N * 32;
 	      inline void add (int a, int b, int c, int d)
 	      {
-		printf ("[%d,%d,%d],[%d,%d,%d],", a, b, c, a, c, d);
+		printf ("[%d,%d,%d],[%d,%d,%d],", P + a, P + b, P + c, P + a, P + c, P + d);
 	      }
-	      add (P + 9, P + 8, P + 10, P + 11);
-	      add (P + 9, P + 1, P + 0, P + 8);
-	      add (P + 9, P + 11, P + 7, P + 1);
-	      add (P + 11, P + 10, P + 6, P + 7);
-	      add (P + 10, P + 8, P + 0, P + 6);
-	      add (P + 1, P + 7, P + 5, P + 3);
-	      add (P + 0, P + 2, P + 4, P + 6);
-	      add (P + 1, P + 3, P + 2, P + 0);
-	      add (P + 3, P + 5, P + 4, P + 2);
-	      add (P + 5, P + 7, P + 6, P + 4);
+	      for (X = 0; X < 6; X += 2)
+		{
+		  add (X + 0, X + 1, X + 3, X + 2);
+		  for (Y = 0; Y < 24; Y += 8)
+		    {
+		      add (X + 0 + Y, X + 2 + Y, X + 10 + Y, X + 8 + Y);
+		      add (X + 1 + Y, X + 9 + Y, X + 11 + Y, X + 3 + Y);
+		    }
+		  add (X + 25, X + 24, X + 26, X + 27);
+		}
+	      for (Y = 0; Y < 24; Y += 8)
+		{
+		  add (Y + 0, Y + 8, Y + 9, Y + 1);
+		  add (Y + 6, Y + 7, Y + 15, Y + 14);
+		}
 	    }
 	  printf ("],convexity=4);\n");
 	}
