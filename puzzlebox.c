@@ -492,7 +492,7 @@ main (int argc, const char *argv[])
       double h = height - base - mazemargin - (parkvertical ? mazestep / 4 : 0) - mazestep / 8;
       int H = (int) (h / mazestep);
       printf ("// Maze %s %d/%d\n", inside ? "inside" : "outside", W, H);
-      double y0 = base + mazestep / 2 - mazestep * (helix + 1) + (parkvertical ? mazestep / 8 : 0);
+      double y0 = base + mazestep / 2 - mazestep * (helix + 1) + mazestep / 8;
       H += 2 + helix;		// Allow one above, one below and helix below
       if (W < 3 || H < 1)
 	errx (1, "Too small");
@@ -554,7 +554,7 @@ main (int argc, const char *argv[])
 	// Clear too high/low
 	for (Y = 0; Y < H; Y++)
 	  for (X = 0; X < W; X++)
-	    if (mazestep * Y + y0 + dy * X < base + mazestep / 2 + (parkvertical ? mazestep / 8 : 0) || mazestep * Y + y0 + dy * X > height - mazestep / 2 - margin - mazestep / 8)
+	    if (mazestep * Y + y0 + dy * X < base + mazestep / 2 + mazestep / 8 || mazestep * Y + y0 + dy * X > height - mazestep / 2 - margin - mazestep / 8)
 	      maze[X][Y] |= 0x80;	// To high or low
 	// Final park point
 	if (parkvertical)
@@ -1034,10 +1034,10 @@ main (int argc, const char *argv[])
       entry = 0;		// Nubs needs to align for outside to align when closed
     if (!mazeinside && part > 1)
       for (X = entry; X < W; X += W / nubs)
-	printf ("rotate([0,0,%f])translate([0,%f,%f])rotate([90,0,0])nub();\n", (double) X * 360 / W, r0, height - mazestep / 2);
+	printf ("rotate([0,0,%f])translate([0,%f,%f])rotate([90,0,0])nub();\n", (double) X * 360 / W, r0, height - mazestep / 2 - (parkvertical ? 0 : mazestep / 8));
     if (!mazeoutside && part < parts)
       for (X = entry; X < W; X += W / nubs)
-	printf ("rotate([0,0,%f])translate([0,%f,%f])rotate([-90,180,0])nub();\n", (double) X * 360 / W, r1, height - mazestep / 2);
+	printf ("rotate([0,0,%f])translate([0,%f,%f])rotate([-90,180,0])nub();\n", (double) X * 360 / W, r1, height - mazestep / 2 - (parkvertical ? 0 : mazestep / 8));
     printf ("}\n");
     x += r3 * 2 + 10;
   }
