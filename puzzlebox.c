@@ -65,10 +65,10 @@ main (int argc, const char *argv[])
     pathsep = '&';
 
   const struct poptOption optionsTable[] = {
-    {"inside", 'i', POPT_ARG_NONE, &inside, 0, "Maze on inside (hard)"},
-    {"flip", 'f', POPT_ARG_NONE, &flip, 0, "Flipping inside/outside maze"},
     {"parts", 'm', POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT, &parts, 0, "Parts", "N"},
     {"part", 'n', POPT_ARG_INT, &part, 0, "Part", "N (0 for all)"},
+    {"inside", 'i', POPT_ARG_NONE, &inside, 0, "Maze on inside (hard)"},
+    {"flip", 'f', POPT_ARG_NONE, &flip, 0, "Alternating inside/outside maze"},
     {"nubs", 'N', POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT, &nubs, 0, "Nubs", "N"},
     {"helix", 'H', POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT, &helix, 0, "Helix", "N"},
     {"base-height", 'b', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &baseheight, 0, "Base height", "mm"},
@@ -84,7 +84,7 @@ main (int argc, const char *argv[])
     {"maze-margin", 'M', POPT_ARG_DOUBLE | (mazemargin ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &mazemargin, 0, "Maze top margin", "mm"},
     {"park-height", 'p', POPT_ARG_DOUBLE | (parkheight ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &parkheight, 0, "Height of park ridge", "mm"},
     {"clearance", 'g', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &clearance, 0, "General X clearance", "mm"},
-    {"outer-sides", 's', POPT_ARG_INT | (outersides ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &outersides, 0, "Number of outer sides (0=round)", "N"},
+    {"outer-sides", 's', POPT_ARG_INT | (outersides ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &outersides, 0, "Number of outer sides", "N (0=round)"},
     {"outer-round", 'r', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &outerround, 0, "Outer rounding", "mm"},
     {"grip-depth", 'R', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &gripdepth, 0, "Grip depth", "mm"},
     {"text-depth", 'D', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &textdepth, 0, "Text depth", "mm"},
@@ -152,7 +152,8 @@ main (int argc, const char *argv[])
 		    asprintf (&error, "Missing value [%c=]", arg);
 		    break;
 		  }
-		*(int *) optionsTable[o].arg = strtod (path + 1, &path);
+		if (path[1])
+		  *(int *) optionsTable[o].arg = strtod (path + 1, &path);
 		break;
 	      case POPT_ARG_DOUBLE:
 		if (*path != '=')
@@ -160,7 +161,8 @@ main (int argc, const char *argv[])
 		    asprintf (&error, "Missing value [%c=]", arg);
 		    break;
 		  }
-		*(double *) optionsTable[o].arg = strtod (path + 1, &path);
+		if (path[1])
+		  *(double *) optionsTable[o].arg = strtod (path + 1, &path);
 		break;
 	      case POPT_ARG_NONE:
 		*(int *) optionsTable[o].arg = 1;
@@ -913,9 +915,9 @@ main (int argc, const char *argv[])
       printf ("difference(){translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);}\n", basethickness / 2, r1, height - basethickness / 2, W * 4, basethickness, r0, height, W * 4);	// Non maze
     // Base
     printf ("difference(){\n");
-    if (part == parts)
+    if (outersides && part == parts)
       printf ("outer(%f,%f);\n", height, (r2 - outerround) / cos ((double) M_PIl / outersides));
-    else if (part + 1 >= parts)
+    else if (outersides && part + 1 >= parts)
       printf ("mirror([1,0,0])outer(%f,%f);\n", baseheight, (r2 - outerround) / cos ((double) M_PIl / outersides));
     else
       printf ("hull(){cylinder(r=%f,h=%f,$fn=%d);translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);}\n", r3 - mazethickness, baseheight, W * 4, mazemargin, r3, baseheight - mazemargin, W * 4);
