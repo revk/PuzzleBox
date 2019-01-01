@@ -912,10 +912,14 @@ main (int argc, const char *argv[])
 	  printf (");\n");
 	}
       }
-      if (parkheight && ((!inside && part < parts) || (inside && part > 1)))
-	{			// Park ridge
-	  for (X = 0; X < W; X += W / nubs)
-	    printf ("rotate([0,0,%f])translate([0,%f,%f])rotate([%d,0,0])park();\n", inside ? -90 : 90, (double) X * 360 / W, r, base + mazestep);
+      if (parkheight)
+	{
+	  if (!inside && part < parts)
+	    for (X = 0; X < W; X += W / nubs)
+	      printf ("rotate([0,0,%f])translate([0,%f,%f])rotate([90,0,0])park();\n", (double) X * 360 / W, r, base + mazestep);
+	  if (inside && part > 1)
+	    for (X = 0; X < W; X += W / nubs)
+	      printf ("rotate([0,0,%f])translate([0,%f,%f])rotate([-90,180,0])park();\n", (double) X * 360 / W, r, base + mazestep);
 	}
     }
     printf ("translate([%f,0,0]){\n", x + r3);
