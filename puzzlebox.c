@@ -217,10 +217,12 @@ main (int argc, const char *argv[])
 	      case POPT_ARG_INT:	// Select
 		{
 		  int l = 0, h = 3, v = *(int *) optionsTable[o].arg;
+		  if (optionsTable[o].shortName == 'N')
+		    l = 1;	// Nubs
 		  if (optionsTable[o].shortName == 'm')
-		    l = 2;
+		    l = 2;	// Walls
 		  if (optionsTable[o].shortName == 'n' || optionsTable[o].shortName == 'm')
-		    h = 6;
+		    h = 6;	// Walls or wall
 		  printf ("<select name='%c' id='%c'>", optionsTable[o].shortName, optionsTable[o].shortName);
 		  for (; l <= h; l++)
 		    printf ("<option value='%d'%s>%d</option>", l, l == v ? " selected" : "", l);
@@ -230,7 +232,7 @@ main (int argc, const char *argv[])
 	      case POPT_ARG_DOUBLE:	// Double
 		{
 		  double v = *(double *) optionsTable[o].arg;
-		  printf ("<input name='%c' id='%c'", optionsTable[o].shortName, optionsTable[o].shortName);
+		  printf ("<input size='5' name='%c' id='%c'", optionsTable[o].shortName, optionsTable[o].shortName);
 		  if (v)
 		    {
 		      char temp[50], *p;
