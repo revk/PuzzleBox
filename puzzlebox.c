@@ -489,7 +489,7 @@ main (int argc, const char *argv[])
 	base += coregap;	// First one is short...
       if (inside)
 	base += basegap;
-      double h = height - base - mazemargin - mazestep / 4;
+      double h = height - base - mazemargin - (parkvertical ? mazestep / 4 : 0) - mazestep / 8;
       int H = (int) (h / mazestep);
       printf ("// Maze %s %d/%d\n", inside ? "inside" : "outside", W, H);
       double y0 = base + mazestep / 2 - mazestep * (helix + 1) + (parkvertical ? mazestep / 8 : 0);
@@ -554,7 +554,7 @@ main (int argc, const char *argv[])
 	// Clear too high/low
 	for (Y = 0; Y < H; Y++)
 	  for (X = 0; X < W; X++)
-	    if (mazestep * Y + y0 + dy * X < base + mazestep / 2 + mazestep / 8 || mazestep * Y + y0 + dy * X > height - mazestep / 2 - margin - mazestep / 8)
+	    if (mazestep * Y + y0 + dy * X < base + mazestep / 2 + (parkvertical ? mazestep / 8 : 0) || mazestep * Y + y0 + dy * X > height - mazestep / 2 - margin - mazestep / 8)
 	      maze[X][Y] |= 0x80;	// To high or low
 	// Final park point
 	if (parkvertical)
