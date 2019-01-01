@@ -953,6 +953,7 @@ main (int argc, const char *argv[])
 	    {
 	      printf ("[%d,%d,%d],[%d,%d,%d],", a, b, c, a, c, d);
 	    }
+	    add (P + 1, P + 0, P + 6, P + 7);
 	    add (P + 1, P + 7, P + 5, P + 3);
 	    add (P + 0, P + 2, P + 4, P + 6);
 	    add (P + 1, P + 3, P + 2, P + 0);
