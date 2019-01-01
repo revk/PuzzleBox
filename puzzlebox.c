@@ -420,6 +420,7 @@ main (int argc, const char *argv[])
     int entry = 0;		// Entry point and pips
     int mazeinside = inside;	// This part has maze inside
     int mazeoutside = !inside;	// This part has maze outside
+    int nextinside = inside;	// Next part has maze inside
     int nextoutside = !inside;	// Next part has maze outside
     if (flip)
       {
@@ -429,14 +430,20 @@ main (int argc, const char *argv[])
 	    nextoutside = 1 - nextoutside;
 	  }
 	else
-	  mazeoutside = 1 - mazeoutside;
+	  {
+	    mazeoutside = 1 - mazeoutside;
+	    nextinside = 1 - nextinside;
+	  }
       }
     if (part == 1)
       mazeinside = 0;
     if (part == parts)
       mazeoutside = 0;
     if (part + 1 >= parts)
-      nextoutside = 0;
+      {
+	nextinside = 0;
+	nextoutside = 0;
+      }
     // Dimensions
     // r0 is inside of part+maze
     // r1 is outside of part+maze
@@ -447,7 +454,11 @@ main (int argc, const char *argv[])
     double r0 = r1 - wallthickness;	// Inner
     double r2 = r1;		// Base outer
     if (part < parts)
-      r2 += wallthickness + mazethickness + clearance;
+      r2 += wallthickness + clearance;
+    if (nextinside || part + 1 == parts)
+      r2 += mazethickness;
+    if (nextoutside)
+      r2 += mazethickness;
     if (part + 1 >= parts && textsides)
       r2 += textdepth;
     if (mazeoutside && part < parts)
@@ -461,7 +472,7 @@ main (int argc, const char *argv[])
     double r3 = r2;
     if (outersides && part + 1 >= parts)
       r3 /= cos ((double) M_PIl / outersides);	// Bigger because of number of sides
-    printf ("// Wall %d (%fmm to %fmm)\n", part, r0, r1);
+    printf ("// Part %d (%.2fmm to %.2fmm and %.2fmm/%.2fmm base)\n", part, r0, r1, r2, r3);
     double height = coreheight + basethickness + (basethickness + basegap) * (part - 1);
     if (part == 1)
       height -= coregap;
