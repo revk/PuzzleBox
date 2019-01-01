@@ -17,10 +17,11 @@ a {color: white;}
 </head>
 <body>
 	<h1>Puzzle Box</h1>
-<img src='puzzlebox.jpg' style='float:right'>
+<p><img src='puzzlebox.jpg' style='float:right'>This makes a customised puzzle box with random maze. Use <a href='https://www.openscad.org'>OpenSCAD</a> to render to an STL for 3D printing.</p>
 <p>See <a href='https://www.thingiverse.com/thing:2410748'>https://www.thingiverse.com/thing:2410748</a> for examples.</p>
 <p>Do click like on thingiverse. Gifts <a href='https://monzo.me/adriankennard'>accepted</a> (just because people have asked how they can do this).</p>
 <form method=get action='puzzlebox.cgi'>
+	<input type=submit value='Get SCAD'>
 	<table>
 END
 ./puzzlebox.cgi --web-form
