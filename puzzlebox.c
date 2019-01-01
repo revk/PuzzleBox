@@ -42,8 +42,8 @@ main (int argc, const char *argv[])
   char *textend = NULL;
   char *textsides = NULL;
   char *textfont = NULL;
-  int walls = 4;
-  int wall = 0;
+  int parts = 4;
+  int part = 0;
   int inside = 0;
   int flip = 0;
   int outersides = 7;
@@ -67,8 +67,8 @@ main (int argc, const char *argv[])
   const struct poptOption optionsTable[] = {
     {"inside", 'i', POPT_ARG_NONE, &inside, 0, "Maze on inside (hard)"},
     {"flip", 'f', POPT_ARG_NONE, &flip, 0, "Flipping inside/outside maze"},
-    {"wall", 'n', POPT_ARG_INT, &wall, 0, "Wall", "N (0 for all)"},
-    {"walls", 'm', POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT, &walls, 0, "Walls", "N"},
+    {"parts", 'm', POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT, &parts, 0, "Parts", "N"},
+    {"part", 'n', POPT_ARG_INT, &part, 0, "Part", "N (0 for all)"},
     {"nubs", 'N', POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT, &nubs, 0, "Nubs", "N"},
     {"helix", 'H', POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT, &helix, 0, "Helix", "N"},
     {"base-height", 'b', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &baseheight, 0, "Base height", "mm"},
@@ -78,20 +78,20 @@ main (int argc, const char *argv[])
     {"core-solid", 'q', POPT_ARG_NONE, &coresolid, 0, "Core solid"},
     {"base-thickness", 'B', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &basethickness, 0, "Base thickness", "mm"},
     {"base-gap", 'G', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &basegap, 0, "Base gap", "mm"},
-    {"wall-thickness", 'w', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &wallthickness, 0, "Wall thickness", "mm"},
+    {"part-thickness", 'w', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &wallthickness, 0, "Wall thickness", "mm"},
     {"maze-thickness", 't', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &mazethickness, 0, "Maze thickness", "mm"},
     {"maze-step", 'z', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &mazestep, 0, "Maze step", "mm"},
     {"maze-margin", 'M', POPT_ARG_DOUBLE | (mazemargin ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &mazemargin, 0, "Maze top margin", "mm"},
     {"park-height", 'p', POPT_ARG_DOUBLE | (parkheight ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &parkheight, 0, "Height of park ridge", "mm"},
-    {"clearance", 'g', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &clearance, 0, "Clearance", "mm"},
-    {"outer-sides", 's', POPT_ARG_INT | (outersides ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &outersides, 0, "Outer sides", "N"},
+    {"clearance", 'g', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &clearance, 0, "General X clearance", "mm"},
+    {"outer-sides", 's', POPT_ARG_INT | (outersides ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &outersides, 0, "Number of outer sides (0=round)", "N"},
     {"outer-round", 'r', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &outerround, 0, "Outer rounding", "mm"},
     {"grip-depth", 'R', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &gripdepth, 0, "Grip depth", "mm"},
     {"text-depth", 'D', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &textdepth, 0, "Text depth", "mm"},
     {"text-end", 'E', POPT_ARG_STRING | (textend ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &textend, 0, "Text (initial) on end", "X"},
-    {"text-font", 'F', POPT_ARG_STRING | (textfont ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &textfont, 0, "Text font", "Font"},
     {"text-side", 'S', POPT_ARG_STRING | (textsides ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &textsides, 0, "Text on sides", "Line1\\Line2..."},
-    {"text-slow", 'Z', POPT_ARG_NONE, &textslow, 0, "Text with edges (slow)"},
+    {"text-font", 'F', POPT_ARG_STRING | (textfont ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &textfont, 0, "Text font", "Font"},
+    {"text-slow", 'Z', POPT_ARG_NONE, &textslow, 0, "Text with diagonal edges (slow)"},
     {"symmetric-cut", 'V', POPT_ARG_NONE, &symmectriccut, 0, "Symmetric maze cut"},
     {"logo", 'A', POPT_ARG_NONE, &logo, 0, "Include A&A logo"},
     {"text-depth", 'L', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &logodepth, 0, "Logo depth", "mm"},
@@ -222,7 +222,7 @@ main (int argc, const char *argv[])
 		  if (optionsTable[o].shortName == 'm')
 		    l = 2;	// Walls
 		  if (optionsTable[o].shortName == 'n' || optionsTable[o].shortName == 'm')
-		    h = 6;	// Walls or wall
+		    h = 6;	// Walls or part
 		  printf ("<select name='%c' id='%c'>", optionsTable[o].shortName, optionsTable[o].shortName);
 		  for (; l <= h; l++)
 		    printf ("<option value='%d'%s>%d</option>", l, l == v ? " selected" : "", l);
@@ -250,6 +250,8 @@ main (int argc, const char *argv[])
 		{
 		  char *v = *(char **) optionsTable[o].arg;
 		  printf ("<input name='%c' id='%c'", optionsTable[o].shortName, optionsTable[o].shortName);
+		  if (optionsTable[o].shortName == 'E')
+		    printf (" size='2'");	// Initials
 		  if (v)
 		    printf (" value='%s'", v);
 		  printf ("/>");
@@ -407,16 +409,16 @@ main (int argc, const char *argv[])
   // The base
   printf ("module outer(h,r){e=%f;minkowski(){cylinder(r1=0,r2=e,h=e,$fn=100);cylinder(h=h-e,r=r,$fn=%d);}}\n", outerround, outersides ? : 100);
   double x = 0;
-  int box (int wall)
-  {				// Make the box - wall 1 in inside
+  int box (int part)
+  {				// Make the box - part 1 in inside
     int N, X, Y, S;
     int entry = 0;		// Entry point and pips
-    int mazeinside = inside;	// This wall has maze inside
-    int mazeoutside = !inside;	// This wall has maze outside
-    int nextoutside = !inside;	// Next wall has maze outside
+    int mazeinside = inside;	// This part has maze inside
+    int mazeoutside = !inside;	// This part has maze outside
+    int nextoutside = !inside;	// Next part has maze outside
     if (flip)
       {
-	if (wall & 1)
+	if (part & 1)
 	  {
 	    mazeinside = 1 - mazeinside;
 	    nextoutside = 1 - nextoutside;
@@ -424,50 +426,50 @@ main (int argc, const char *argv[])
 	else
 	  mazeoutside = 1 - mazeoutside;
       }
-    if (wall == 1)
+    if (part == 1)
       mazeinside = 0;
-    if (wall == walls)
+    if (part == parts)
       mazeoutside = 0;
-    if (wall + 1 >= walls)
+    if (part + 1 >= parts)
       nextoutside = 0;
     // Dimensions
-    // r0 is inside of wall+maze
-    // r1 is outside of wall+maze
+    // r0 is inside of part+maze
+    // r1 is outside of part+maze
     // r2 is outside of base before "sides" adjust
     // r3 is outside of base with "sides" adjust
-    double r1 = corediameter / 2 + wallthickness + (wall - 1) * (wallthickness + mazethickness + clearance);	// Outer
+    double r1 = corediameter / 2 + wallthickness + (part - 1) * (wallthickness + mazethickness + clearance);	// Outer
     int W = ((int) (r1 * 2 * M_PIl / mazestep)) / nubs * nubs;	// Default value
     double r0 = r1 - wallthickness;	// Inner
     double r2 = r1;		// Base outer
-    if (wall < walls)
+    if (part < parts)
       r2 += wallthickness + mazethickness + clearance;
-    if (wall + 1 >= walls && textsides)
+    if (part + 1 >= parts && textsides)
       r2 += textdepth;
-    if (mazeoutside && wall < walls)
+    if (mazeoutside && part < parts)
       {				// Allow for maze on outside
 	r1 += mazethickness;
-	if (wall + 1 < walls)
+	if (part + 1 < parts)
 	  r2 += mazethickness;
       }
-    if (mazeinside && wall > 1)
+    if (mazeinside && part > 1)
       r0 -= mazethickness;	// Maze on inside
     double r3 = r2;
-    if (outersides && wall + 1 >= walls)
+    if (outersides && part + 1 >= parts)
       r3 /= cos ((double) M_PIl / outersides);	// Bigger because of number of sides
-    printf ("// Wall %d (%fmm to %fmm)\n", wall, r0, r1);
-    double height = coreheight + basethickness + (basethickness + basegap) * (wall - 1);
-    if (wall == 1)
+    printf ("// Wall %d (%fmm to %fmm)\n", part, r0, r1);
+    double height = coreheight + basethickness + (basethickness + basegap) * (part - 1);
+    if (part == 1)
       height -= coregap;
-    if (wall > 1)
+    if (part > 1)
       height -= baseheight;	// base from previous unit is added to this
     // Output
     void makemaze (double r, int inside)
     {				// Make the maze
       W = ((int) (r * 2 * M_PIl / mazestep)) / nubs * nubs;	// Update W for actual maze
       double base = (inside ? basethickness : baseheight);
-      if (inside && wall > 2)
+      if (inside && part > 2)
 	base += baseheight;	// Nubs don't go all the way to the end
-      if (inside && wall == 2)
+      if (inside && part == 2)
 	base += coregap;	// First one is short...
       if (inside)
 	base += basegap;
@@ -521,7 +523,7 @@ main (int argc, const char *argv[])
       }
       {				// Maze
 	double margin = mazemargin;
-	if (!inside && wall > 1)
+	if (!inside && part > 1)
 	  margin = 0;
 	// Make maze
 	int f = open ("/dev/urandom", O_RDONLY);
@@ -665,8 +667,8 @@ main (int argc, const char *argv[])
 	      double sa = sin (a), ca = cos (a);
 	      if (inside)
 		{
-		  s[S].x[0] = (r + mazethickness + (wall < walls ? wallthickness : clearance * 2)) * sa;
-		  s[S].y[0] = (r + mazethickness + (wall < walls ? wallthickness : clearance * 2)) * ca;
+		  s[S].x[0] = (r + mazethickness + (part < parts ? wallthickness : clearance * 2)) * sa;
+		  s[S].y[0] = (r + mazethickness + (part < parts ? wallthickness : clearance * 2)) * ca;
 		  s[S].x[1] = (r + mazethickness) * sa;
 		  s[S].y[1] = (r + mazethickness) * ca;
 		  s[S].x[2] = r * sa;
@@ -895,7 +897,7 @@ main (int argc, const char *argv[])
 	  printf (");\n");
 	}
       }
-      if (parkheight && ((!inside && wall < walls) || (inside && wall > 1)))
+      if (parkheight && ((!inside && part < parts) || (inside && part > 1)))
 	{			// Park ridge
 	  for (X = 0; X < W; X += W / nubs)
 	    printf ("rotate([0,0,%f])translate([0,%f,%f])rotate([%d,0,0])park();\n", inside ? -90 : 90, (double) X * 360 / W, r, base + mazestep);
@@ -907,28 +909,28 @@ main (int argc, const char *argv[])
       makemaze (r0, 1);
     if (mazeoutside)
       makemaze (r1, 0);
-    if (!mazeinside && !mazeoutside && wall < walls)
+    if (!mazeinside && !mazeoutside && part < parts)
       printf ("difference(){translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);}\n", basethickness / 2, r1, height - basethickness / 2, W * 4, basethickness, r0, height, W * 4);	// Non maze
     // Base
     printf ("difference(){\n");
-    if (wall == walls)
+    if (part == parts)
       printf ("outer(%f,%f);\n", height, (r2 - outerround) / cos ((double) M_PIl / outersides));
-    else if (wall + 1 >= walls)
+    else if (part + 1 >= parts)
       printf ("mirror([1,0,0])outer(%f,%f);\n", baseheight, (r2 - outerround) / cos ((double) M_PIl / outersides));
     else
       printf ("hull(){cylinder(r=%f,h=%f,$fn=%d);translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);}\n", r3 - mazethickness, baseheight, W * 4, mazemargin, r3, baseheight - mazemargin, W * 4);
     // Cut outs
-    if (gripdepth && wall + 1 < walls)
+    if (gripdepth && part + 1 < parts)
       printf ("translate([0,0,%f])rotate_extrude(convexity=4,$fn=%d)translate([%f,0,0])circle(r=%f,$fn=100);\n", mazemargin + (baseheight - mazemargin) / 2, W * 4, r3 + gripdepth, gripdepth * 2);
-    else if (gripdepth && wall + 1 == walls)
+    else if (gripdepth && part + 1 == parts)
       printf ("translate([0,0,%f])rotate_extrude(convexity=4,$fn=%d)translate([%f,0,0])circle(r=%f,$fn=100);\n", outerround + (baseheight - outerround) / 2, outersides ? : 100, r3 + gripdepth, gripdepth * 2);
-    if (nextoutside && wall + 1 < walls)	// Connect endpoints over base
+    if (nextoutside && part + 1 < parts)	// Connect endpoints over base
       for (N = 0; N < nubs; N++)
 	printf ("rotate([0,0,%f])translate([0,%f,%f])hull(){rotate([90,0,0])nub();translate([0,0,%f])rotate([90,0,0])nub();}\n", -(double) N * 360 / nubs, r3, -mazestep, baseheight + mazestep);
-    printf ("translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);\n", basethickness, r0 + (wall > 1 && mazeinside ? mazethickness + clearance : 0) + (!mazeinside && wall < walls ? clearance : 0), height, W * 4);	// Hole
-    if (textend && wall + 1 >= walls)
+    printf ("translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);\n", basethickness, r0 + (part > 1 && mazeinside ? mazethickness + clearance : 0) + (!mazeinside && part < parts ? clearance : 0), height, W * 4);	// Hole
+    if (textend && part + 1 >= parts)
       printf ("cuttext(%f,\"%s\");\n", r2 - outerround, textend);
-    if (textsides && wall == walls && outersides)
+    if (textsides && part == parts && outersides)
       {
 	double a = 90 + 180 / outersides;
 	double h = r3 * sin (M_PIl / outersides);
@@ -944,28 +946,28 @@ main (int argc, const char *argv[])
 	    p = q;
 	  }
       }
-    if (logo && wall == walls)
+    if (logo && part == parts)
       printf ("translate([0,0,%f])linear_extrude(height=%f,convexity=4)aa(%f,white=true);\n", basethickness - logodepth, basethickness, r0 * 1.8);
     printf ("}\n");
-    if (coresolid && wall == 1)
-      printf ("translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);\n", basethickness, r0 + clearance + (!mazeinside && wall < walls ? clearance : 0), height - basethickness, W * 4);	// Solid core
+    if (coresolid && part == 1)
+      printf ("translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);\n", basethickness, r0 + clearance + (!mazeinside && part < parts ? clearance : 0), height - basethickness, W * 4);	// Solid core
     // Nubs
-    if (mazeinside && wall + 1 >= walls)
+    if (mazeinside && part + 1 >= parts)
       entry = 0;		// Nubs needs to align for outside to align when closed
-    if (!mazeinside && wall > 1)
+    if (!mazeinside && part > 1)
       for (X = entry; X < W; X += W / nubs)
 	printf ("rotate([0,0,%f])translate([0,%f,%f])rotate([90,0,0])nub();\n", (double) X * 360 / W, r0, height - mazestep / 2);
-    if (!mazeoutside && wall < walls)
+    if (!mazeoutside && part < parts)
       for (X = entry; X < W; X += W / nubs)
 	printf ("rotate([0,0,%f])translate([0,%f,%f])rotate([-90,0,0])nub();\n", (double) X * 360 / W, r1, height - mazestep / 2);
     printf ("}\n");
     x += r3 * 2 + 10;
   }
 
-  if (wall)
-    box (wall);
+  if (part)
+    box (part);
   else
-    for (wall = 1; wall <= walls; wall++)
-      box (wall);
+    for (part = 1; part <= parts; part++)
+      box (part);
   return 0;
 }
