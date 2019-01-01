@@ -144,7 +144,7 @@ main (int argc, const char *argv[])
 	      break;
 	    }
 	  if (optionsTable[o].arg)
-	    switch ((optionsTable[o].argInfo & POPT_ARG_MASK))
+	    switch (optionsTable[o].argInfo & POPT_ARG_MASK)
 	      {
 	      case POPT_ARG_INT:
 		if (*path != '=')
@@ -207,9 +207,9 @@ main (int argc, const char *argv[])
 	if (optionsTable[o].shortName && optionsTable[o].arg)
 	  {
 	    printf ("<tr>");
-	    printf ("<td><label for='%c'>%c</label></td>", optionsTable[o].shortName, optionsTable[o].shortName);
+	    printf ("<td><label for='%c'>%c%s</label></td>", optionsTable[o].shortName, optionsTable[o].shortName, (optionsTable[o].argInfo & POPT_ARG_MASK) == POPT_ARG_NONE ? "" : "=");
 	    printf ("<td>");
-	    switch ((optionsTable[o].argInfo & POPT_ARG_MASK))
+	    switch (optionsTable[o].argInfo & POPT_ARG_MASK)
 	      {
 	      case POPT_ARG_NONE:	// Checkbox
 		printf ("<input type=checkbox id='%c' name='%c'/>", optionsTable[o].shortName, optionsTable[o].shortName);
