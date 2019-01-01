@@ -53,6 +53,7 @@ main (int argc, const char *argv[])
   int logo = 0;
   int textslow = 0;
   int symmectriccut = 0;
+  int coresolid = 0;
   int mime = (getenv ("HTTP_HOST") ? 1 : 0);
 
   char pathsep = 0;
@@ -73,6 +74,7 @@ main (int argc, const char *argv[])
     {"core-diameter", 'c', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &corediameter, 0, "Core diameter", "mm"},
     {"core-height", 'h', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &coreheight, 0, "Core height", "mm"},
     {"core-gap", 'C', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &coregap, 0, "Core gap", "mm"},
+    {"core-solid", 'q', POPT_ARG_NONE, &coresolid, 0, "Core solid"},
     {"base-thickness", 'B', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &basethickness, 0, "Base thickness", "mm"},
     {"base-gap", 'G', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &basegap, 0, "Base gap", "mm"},
     {"wall-thickness", 'w', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &wallthickness, 0, "Wall thickness", "mm"},
@@ -547,14 +549,14 @@ main (int argc, const char *argv[])
 	    maze[X][Y] += U;
 	  }
 	{			// Construct maze polyhedron
-	  int MAXY = height / (mazestep / 4) + 8;
+	  int MAXY = height / (mazestep / 4) + 10;
 	  struct
 	  {			// Data for each slive
 	    // Pre calculated x/y for left side 0=back, 1=recess, 2=front - used to create points
 	    double x[3], y[3];
 	    // The last points as we work up slice (-ve for recess, 0 for not set yet)
 	    int l, r;
-	    // Points from bottom up on this slice in order - used to create manifold
+	    // Points from bottom up on this slice in order - used to ensure manifold buy using points that would be skipped
 	    int n;		// Points added to p
 	    int p[MAXY];
 	  } s[W * 4];
@@ -595,14 +597,14 @@ main (int argc, const char *argv[])
 	  {
 	    printf ("[%f,%f,%f],", x, y, z);
 	    if (s[S].n >= MAXY)
-	      errx (1, "WTF points");
+	      errx (1, "WTF points 5d", S);
 	    s[S].p[s[S].n++] = P++;
 	  }
 	  void addpointr (int S, double x, double y, double z)
 	  {
 	    printf ("[%f,%f,%f],", x, y, z);
 	    if (s[S].n >= MAXY)
-	      errx (1, "WTF points");
+	      errx (1, "WTF points %d", S);
 	    s[S].p[s[S].n++] = -(P++);
 	  }
 	  int bottom = P;
@@ -665,6 +667,9 @@ main (int argc, const char *argv[])
 		return 1;
 	      return 0;
 	    }
+	    if (S >= W * 4)
+	      errx (1, "Bad render %d", S);
+	    printf (" // %d: %d,%d\n", S, l, r);
 	    char start = 0;
 	    if (!s[S].l)
 	      {			// New - draw to bottom
@@ -682,7 +687,7 @@ main (int argc, const char *argv[])
 	    for (n1 = 0; n1 < s[S].n && abs (s[S].p[n1]) != abs (s[S].l); n1++);
 	    for (n2 = n1; n2 < s[S].n && abs (s[S].p[n2]) != abs (l); n2++);
 	    if (n1 == s[S].n || n2 == s[S].n)
-	      errx (1, "Bad render");
+	      errx (1, "Bad render %d->%d", s[S].l, l);
 	    while (n1 < n2)
 	      {
 		if (sgn (s[S].p[n1]) == sgn (s[S].l))
@@ -698,7 +703,7 @@ main (int argc, const char *argv[])
 	    for (n1 = 0; n1 < s[SR].n && abs (s[SR].p[n1]) != abs (s[S].r); n1++);
 	    for (n2 = n1; n2 < s[SR].n && abs (s[SR].p[n2]) != abs (r); n2++);
 	    if (n1 == s[SR].n || n2 == s[SR].n)
-	      errx (1, "Bad render");
+	      errx (1, "Bad render %d->%d", r, s[S].r);
 	    if (!p || n1 < n2)
 	      {
 		n2--;
@@ -726,8 +731,8 @@ main (int argc, const char *argv[])
 		unsigned char v = test (X, Y);
 		if (!(v & A) || (v & 0x80))
 		  continue;
-		int P = p[X][Y];
 		S = X * 4;
+		int P = p[X][Y];
 		// Left
 		if (!(v & D))
 		  slice (S + 0, P + 0, P + 1);
@@ -849,6 +854,8 @@ main (int argc, const char *argv[])
     if (logo && wall == walls)
       printf ("translate([0,0,%f])linear_extrude(height=%f,convexity=4)aa(%f,white=true);\n", basethickness - logodepth, basethickness, r0 * 1.8);
     printf ("}\n");
+    if (coresolid && wall == 1)
+      printf ("translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);\n", basethickness, r0 + clearance + (!mazeinside && wall < walls ? clearance : 0), height - basethickness, W * 4);	// Solid core
     // Nubs
     if (mazeinside && wall + 1 >= walls)
       entry = 0;		// Nubs needs to align for outside to align when closed
