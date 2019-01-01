@@ -67,7 +67,7 @@ main (int argc, const char *argv[])
   const struct poptOption optionsTable[] = {
     {"inside", 'i', POPT_ARG_NONE, &inside, 0, "Maze on inside (hard)"},
     {"flip", 'f', POPT_ARG_NONE, &flip, 0, "Flipping inside/outside maze"},
-    {"wall", 'n', POPT_ARG_INT, &wall, 0, "Wall", "N"},
+    {"wall", 'n', POPT_ARG_INT, &wall, 0, "Wall", "N (0 for all)"},
     {"walls", 'm', POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT, &walls, 0, "Walls", "N"},
     {"nubs", 'N', POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT, &nubs, 0, "Nubs", "N"},
     {"helix", 'H', POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT, &helix, 0, "Helix", "N"},
@@ -232,7 +232,15 @@ main (int argc, const char *argv[])
 		  double v = *(double *) optionsTable[o].arg;
 		  printf ("<input name='%c' id='%c'", optionsTable[o].shortName, optionsTable[o].shortName);
 		  if (v)
-		    printf (" value='%f'", v);
+		    {
+		      char temp[50], *p;
+		      sprintf (temp, "%f", v);
+		      for (p = temp + strlen (temp); p > temp && p[-1] == '0'; p--);
+		      if (p > temp && p[-1] == '.')
+			p--;
+		      *p = 0;
+		      printf (" value='%s'", temp);
+		    }
 		  printf ("/>");
 		}
 		break;
@@ -246,7 +254,9 @@ main (int argc, const char *argv[])
 		}
 		break;
 	      }
-	    printf ("%s</td>", optionsTable[o].argDescrip);
+	    if (optionsTable[o].argDescrip)
+	      printf ("%s", optionsTable[o].argDescrip);
+	    printf ("</td>", optionsTable[o].argDescrip);
 	    printf ("<td><label for='%c'>%s</label></td>", optionsTable[o].shortName, optionsTable[o].descrip);
 	    printf ("</tr>\n");
 	  }
