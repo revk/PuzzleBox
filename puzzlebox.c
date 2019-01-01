@@ -365,8 +365,8 @@ main (int argc, const char *argv[])
   {				// Document args
     time_t now = time (0);
     struct tm t;
-    localtime_r (&now, &t);
-    printf ("// Created %04d-%02d-%02d %02d:%02d:%02d %s\n", t.tm_year + 1900, t.tm_mon + 1, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec, getenv ("REMOTE_ADDR") ? : "");
+    gmtime_r (&now, &t);
+    printf ("// Created %04d-%02d-%02dT%02d:%02d:%02dZ %s\n", t.tm_year + 1900, t.tm_mon + 1, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec, getenv ("REMOTE_ADDR") ? : "");
     int o;
     for (o = 0; optionsTable[o].longName; o++)
       if (optionsTable[o].shortName && optionsTable[o].arg)
