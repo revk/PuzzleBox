@@ -35,10 +35,10 @@ main (int argc, const char *argv[])
   double coregap = 0;
   double outerround = 2;
   double mazemargin = 1;
-  double parkthickness = 0.4;
   double textdepth = 0.5;
   double logodepth = 0.6;
   double gripdepth = 2;
+  double parkthickness = 0.7;
   char *textend = NULL;
   char *textsides = NULL;
   char *textfont = NULL;
@@ -393,9 +393,6 @@ main (int argc, const char *argv[])
 
   {				// Modules
     printf ("module nub(){translate([0,0,-0.1])hull(){cube([%f,%f,0.1],center=true);translate([0,%f,%f])cube([%f,%f,0.1],center=true);};}\n", mazestep * 3 / 4, mazestep * 3 / 4, nubskew, mazethickness - clearance / 2, mazestep / 4, mazestep / 4);
-    if (parkthickness)
-      printf ("module park(){%stranslate([0,%f,%f])hull(){cube([%f,%f,0.1],center=true);translate([0,0,%f])cube([%f,%f,0.1],center=true);}}\n", parkvertical ? "" : "rotate([0,0,90])", -(parkvertical ? nubskew : 0), mazethickness - parkthickness - clearance, mazestep, mazestep / 4,
-	      parkthickness + clearance, mazestep, mazestep * 3 / 4);
     if (textslow)
       {
 	printf ("module cuttext(s,t){translate([0,0,-1])minkowski(){rotate([0,0,45])cylinder(h=%f,d1=%f,d2=0,$fn=4);linear_extrude(height=1,convexity=2)mirror([1,0,0])text(t,valign=\"center\",halign=\"center\",size=s", textdepth, textdepth);
@@ -668,280 +665,299 @@ main (int argc, const char *argv[])
 	      maze[X][Y--] |= U + D;
 	    maze[X][Y] += U;
 	  }
-	{			// Construct maze polyhedron
-	  int MAXY = height / (mazestep / 4) + 10;
-	  struct
-	  {			// Data for each slive
-	    // Pre calculated x/y for left side 0=back, 1=recess, 2=front - used to create points
-	    double x[3], y[3];
-	    // The last points as we work up slice (-ve for recess, 0 for not set yet)
-	    int l, r;
-	    // Points from bottom up on this slice in order - used to ensure manifold buy using points that would be skipped
-	    int n;		// Points added to p
-	    int p[MAXY];
-	  } s[W * 4];
-	  memset (&s, 0, sizeof (*s) * W * 4);
-	  int p[W][H];		// The point start for each usable maze location (0 for not set) - 16 points
-	  memset (*p, 0, sizeof (int) * W * H);
-	  // Work out pre-sets
-	  for (S = 0; S < W * 4; S++)
-	    {
-	      double a = M_PIl * 2 * (S - 1.5) / W / 4;
-	      if (!inside)
-		a = M_PIl * 2 - a;
-	      double sa = sin (a), ca = cos (a);
-	      if (inside)
-		{
-		  s[S].x[0] = (r + mazethickness + (part < parts ? wallthickness : clearance * 2)) * sa;
-		  s[S].y[0] = (r + mazethickness + (part < parts ? wallthickness : clearance * 2)) * ca;
-		  s[S].x[1] = (r + mazethickness) * sa;
-		  s[S].y[1] = (r + mazethickness) * ca;
-		  s[S].x[2] = r * sa;
-		  s[S].y[2] = r * ca;
-		}
-	      else
-		{
-		  s[S].x[0] = (r - mazethickness - wallthickness) * sa;
-		  s[S].y[0] = (r - mazethickness - wallthickness) * ca;
-		  s[S].x[1] = (r - mazethickness) * sa;
-		  s[S].y[1] = (r - mazethickness) * ca;
-		  s[S].x[2] = r * sa;
-		  s[S].y[2] = r * ca;
-		}
-	    }
-	  printf ("polyhedron(");
-	  // Make points
-	  printf ("points=[");
-	  int P = 0;
-	  void addpoint (int S, double x, double y, double z)
+
+	int MAXY = height / (mazestep / 4) + 10;
+	struct
+	{			// Data for each slive
+	  // Pre calculated x/y for left side 0=back, 1=recess, 2=front - used to create points
+	  double x[3], y[3];
+	  // The last points as we work up slice (-ve for recess, 0 for not set yet)
+	  int l, r;
+	  // Points from bottom up on this slice in order - used to ensure manifold buy using points that would be skipped
+	  int n;		// Points added to p
+	  int p[MAXY];
+	} s[W * 4];
+	memset (&s, 0, sizeof (*s) * W * 4);
+	int p[W][H];		// The point start for each usable maze location (0 for not set) - 16 points
+	memset (*p, 0, sizeof (int) * W * H);
+	// Work out pre-sets
+	for (S = 0; S < W * 4; S++)
 	  {
-	    printf ("[%f,%f,%f],", x, y, z);
-	    if (s[S].n >= MAXY)
-	      errx (1, "WTF points 5d", S);
-	    s[S].p[s[S].n++] = P++;
-	  }
-	  void addpointr (int S, double x, double y, double z)
-	  {
-	    printf ("[%f,%f,%f],", x, y, z);
-	    if (s[S].n >= MAXY)
-	      errx (1, "WTF points %d", S);
-	    s[S].p[s[S].n++] = -(P++);
-	  }
-	  int bottom = P;
-	  // Base points
-	  for (S = 0; S < W * 4; S++)
-	    addpoint (S, s[S].x[0], s[S].y[0], basethickness / 2);
-	  for (S = 0; S < W * 4; S++)
-	    addpointr (S, s[S].x[1], s[S].y[1], basethickness / 2);
-	  for (S = 0; S < W * 4; S++)
-	    addpoint (S, s[S].x[2], s[S].y[2], basethickness / 2);
-	  {			// Points for each maze location
-	    double dy = mazestep * helix / W / 4;	// Step per S
-	    double my = mazestep / 8;	// Vertical steps
-	    double y = y0 - dy * 1.5;	// Y vertical centre for S=0
-	    for (Y = 0; Y < H; Y++)
-	      for (X = 0; X < W; X++)
-		{
-		  unsigned char v = test (X, Y);
-		  if (!(v & A) || (v & 0x80))
-		    continue;
-		  p[X][Y] = P;
-		  for (S = X * 4; S < X * 4 + 4; S++)
-		    addpoint (S, s[S].x[2], s[S].y[2], y + Y * mazestep + dy * S - my * 3);
-		  for (S = X * 4; S < X * 4 + 4; S++)
-		    addpointr (S, s[S].x[1], s[S].y[1], y + Y * mazestep + dy * S - my - nubskew);
-		  for (S = X * 4; S < X * 4 + 4; S++)
-		    addpointr (S, s[S].x[1], s[S].y[1], y + Y * mazestep + dy * S + my - nubskew);
-		  for (S = X * 4; S < X * 4 + 4; S++)
-		    addpoint (S, s[S].x[2], s[S].y[2], y + Y * mazestep + dy * S + my * 3);
-		}
-	  }
-	  int top = P;
-	  for (S = 0; S < W * 4; S++)
-	    addpoint (S, s[S].x[2], s[S].y[2], height - margin);	// lower
-	  for (S = 0; S < W * 4; S++)
-	    addpoint (S, s[S].x[1], s[S].y[1], height);
-	  for (S = 0; S < W * 4; S++)
-	    addpoint (S, s[S].x[0], s[S].y[0], height);
-	  for (S = 0; S < W * 4; S++)
-	    {			// Wrap back to start
-	      if (s[S].n >= MAXY)
-		errx (1, "WTF points");
-	      s[S].p[s[S].n++] = S;
-	    }
-	  printf ("]");
-	  // Make faces
-	  void slice (int S, int l, int r)
-	  {			// Advance slice S to new L and R (-ve for recess)
-	    inline int abs (int x)
-	    {
-	      if (x < 0)
-		return -x;
-	      return x;
-	    }
-	    inline int sgn (int x)
-	    {
-	      if (x < 0)
-		return -1;
-	      if (x > 0)
-		return 1;
-	      return 0;
-	    }
-	    if (S >= W * 4)
-	      errx (1, "Bad render %d", S);
-	    char start = 0;
-	    if (!s[S].l)
-	      {			// New - draw to bottom
-		s[S].l = (l < 0 ? -1 : 1) * (bottom + S + W * 4 + (l < 0 ? 0 : W * 4));
-		s[S].r = (r < 0 ? -1 : 1) * (bottom + (S + 1) % (W * 4) + W * 4 + (r < 0 ? 0 : W * 4));
-		printf ("[%d,%d,%d,%d],", abs (s[S].l), abs (s[S].r), (S + 1) % (W * 4), S);
-	      }
-	    // Advance
-	    if (l == s[S].l && r == s[S].r)
-	      return;
-	    int SR = (S + 1) % (W * 4);
-	    printf ("[");
-	    int p = 0;
-	    int n1, n2;
-	    for (n1 = 0; n1 < s[S].n && abs (s[S].p[n1]) != abs (s[S].l); n1++);
-	    for (n2 = n1; n2 < s[S].n && abs (s[S].p[n2]) != abs (l); n2++);
-	    if (n1 == s[S].n || n2 == s[S].n)
-	      errx (1, "Bad render %d->%d", s[S].l, l);
-	    while (n1 < n2)
+	    double a = M_PIl * 2 * (S - 1.5) / W / 4;
+	    if (!inside)
+	      a = M_PIl * 2 - a;
+	    double sa = sin (a), ca = cos (a);
+	    if (inside)
 	      {
-		if (sgn (s[S].p[n1]) == sgn (s[S].l))
-		  {
-		    printf ("%d,", abs (s[S].p[n1]));
-		    p++;
-		  }
-		n1++;
+		s[S].x[0] = (r + mazethickness + (part < parts ? wallthickness : clearance * 2)) * sa;
+		s[S].y[0] = (r + mazethickness + (part < parts ? wallthickness : clearance * 2)) * ca;
+		s[S].x[1] = (r + mazethickness) * sa;
+		s[S].y[1] = (r + mazethickness) * ca;
+		s[S].x[2] = r * sa;
+		s[S].y[2] = r * ca;
 	      }
-	    printf ("%d,", abs (l));
-	    if (p)
-	      printf ("%d],", abs (r));	// Triangles
-	    for (n1 = 0; n1 < s[SR].n && abs (s[SR].p[n1]) != abs (s[S].r); n1++);
-	    for (n2 = n1; n2 < s[SR].n && abs (s[SR].p[n2]) != abs (r); n2++);
-	    if (n1 == s[SR].n || n2 == s[SR].n)
-	      errx (1, "Bad render %d->%d", r, s[S].r);
-	    if (!p || n1 < n2)
+	    else
 	      {
-		n2--;
-		if (p)
-		  printf ("[");
-		printf ("%d", abs (r));
-		while (n1 <= n2)
-		  {
-		    if (sgn (s[SR].p[n2]) == sgn (s[S].r))
-		      printf (",%d", abs (s[SR].p[n2]));
-		    n2--;
-		  }
-		if (p)
-		  printf (",%d", abs (s[S].l));
-		printf ("],");
+		s[S].x[0] = (r - mazethickness - wallthickness) * sa;
+		s[S].y[0] = (r - mazethickness - wallthickness) * ca;
+		s[S].x[1] = (r - mazethickness) * sa;
+		s[S].y[1] = (r - mazethickness) * ca;
+		s[S].x[2] = r * sa;
+		s[S].y[2] = r * ca;
 	      }
-	    s[S].l = l;
-	    s[S].r = r;
 	  }
-	  printf (",\nfaces=[");
-	  // Maze
+	printf ("polyhedron(");
+	// Make points
+	printf ("points=[");
+	int P = 0;
+	void addpoint (int S, double x, double y, double z)
+	{
+	  printf ("[%f,%f,%f],", x, y, z);
+	  if (s[S].n >= MAXY)
+	    errx (1, "WTF points 5d", S);
+	  s[S].p[s[S].n++] = P++;
+	}
+	void addpointr (int S, double x, double y, double z)
+	{
+	  printf ("[%f,%f,%f],", x, y, z);
+	  if (s[S].n >= MAXY)
+	    errx (1, "WTF points %d", S);
+	  s[S].p[s[S].n++] = -(P++);
+	}
+	int bottom = P;
+	// Base points
+	for (S = 0; S < W * 4; S++)
+	  addpoint (S, s[S].x[0], s[S].y[0], basethickness / 2);
+	for (S = 0; S < W * 4; S++)
+	  addpointr (S, s[S].x[1], s[S].y[1], basethickness / 2);
+	for (S = 0; S < W * 4; S++)
+	  addpoint (S, s[S].x[2], s[S].y[2], basethickness / 2);
+	{			// Points for each maze location
+	  double dy = mazestep * helix / W / 4;	// Step per S
+	  double my = mazestep / 8;	// Vertical steps
+	  double y = y0 - dy * 1.5;	// Y vertical centre for S=0
 	  for (Y = 0; Y < H; Y++)
 	    for (X = 0; X < W; X++)
 	      {
 		unsigned char v = test (X, Y);
 		if (!(v & A) || (v & 0x80))
 		  continue;
-		S = X * 4;
-		int P = p[X][Y];
-		// Left
-		if (!(v & D))
-		  slice (S + 0, P + 0, P + 1);
-		slice (S + 0, P + 0, -(P + 5));
-		if (v & L)
-		  {
-		    slice (S + 0, -(P + 4), -(P + 5));
-		    slice (S + 0, -(P + 8), -(P + 9));
-		  }
-		slice (S + 0, P + 12, -(P + 9));
-		if (!(v & U))
-		  slice (S + 0, P + 12, P + 13);
-		// Middle
-		if (!(v & D))
-		  slice (S + 1, P + 1, P + 2);
-		slice (S + 1, -(P + 5), -(P + 6));
-		slice (S + 1, -(P + 9), -(P + 10));
-		if (!(v & U))
-		  slice (S + 1, P + 13, P + 14);
-		// Right
-		if (!(v & D))
-		  slice (S + 2, P + 2, P + 3);
-		slice (S + 2, -(P + 6), P + 3);
-		if (v & R)
-		  {
-		    slice (S + 2, -(P + 6), -(P + 7));
-		    slice (S + 2, -(P + 10), -(P + 11));
-		  }
-		slice (S + 2, -(P + 10), P + 15);
-		if (!(v & U))
-		  slice (S + 2, P + 14, P + 15);
-		{		// Joining to right
-		  int x = X + 1, y = Y;
-		  if (x >= W)
-		    {
-		      x -= W;
-		      y += helix;
-		    }
-		  if (y >= 0 && y < H)
-		    {
-		      int PR = p[x][y];
-		      if (PR)
-			{
-			  slice (S + 3, P + 3, PR + 0);
-			  if (v & R)
-			    {
-			      slice (S + 3, -(P + 7), -(PR + 4));
-			      slice (S + 3, -(P + 11), -(PR + 8));
-			    }
-			  slice (S + 3, P + 15, PR + 12);
-			}
-		    }
-		}
+		p[X][Y] = P;
+		for (S = X * 4; S < X * 4 + 4; S++)
+		  addpoint (S, s[S].x[2], s[S].y[2], y + Y * mazestep + dy * S - my * 3);
+		for (S = X * 4; S < X * 4 + 4; S++)
+		  addpointr (S, s[S].x[1], s[S].y[1], y + Y * mazestep + dy * S - my - nubskew);
+		for (S = X * 4; S < X * 4 + 4; S++)
+		  addpointr (S, s[S].x[1], s[S].y[1], y + Y * mazestep + dy * S + my - nubskew);
+		for (S = X * 4; S < X * 4 + 4; S++)
+		  addpoint (S, s[S].x[2], s[S].y[2], y + Y * mazestep + dy * S + my * 3);
 	      }
-	  // Top
-	  for (S = 0; S < W * 4; S++)
-	    {
-	      //slice (S, (s[S].l < 0 ? -1 : 1) * (top + S + (s[S].l < 0 ? W * 4 : 0)), (s[S].r < 0 ? -1 : 1) * (top + ((S + 1) % (W * 4)) + (s[S].r < 0 ? W * 4 : 0)));
-	      slice (S, top + S + (s[S].l < 0 ? W * 4 : 0), top + ((S + 1) % (W * 4)) + (s[S].r < 0 ? W * 4 : 0));
-	      slice (S, top + S + W * 4, top + ((S + 1) % (W * 4)) + W * 4);
-	      slice (S, top + S + 2 * W * 4, top + ((S + 1) % (W * 4)) + 2 * W * 4);
-	      slice (S, bottom + S, bottom + (S + 1) % (W * 4));
-	    }
-	  printf ("]");
-	  printf (",\nconvexity=4");
-	  // Done
-	  printf (");\n");
 	}
-      }
-      if (parkthickness)
-	{
+	int top = P;
+	for (S = 0; S < W * 4; S++)
+	  addpoint (S, s[S].x[2], s[S].y[2], height - margin);	// lower
+	for (S = 0; S < W * 4; S++)
+	  addpoint (S, s[S].x[1], s[S].y[1], height);
+	for (S = 0; S < W * 4; S++)
+	  addpoint (S, s[S].x[0], s[S].y[0], height);
+	for (S = 0; S < W * 4; S++)
+	  {			// Wrap back to start
+	    if (s[S].n >= MAXY)
+	      errx (1, "WTF points");
+	    s[S].p[s[S].n++] = S;
+	  }
+	printf ("]");
+	// Make faces
+	void slice (int S, int l, int r)
+	{			// Advance slice S to new L and R (-ve for recess)
+	  inline int abs (int x)
+	  {
+	    if (x < 0)
+	      return -x;
+	    return x;
+	  }
+	  inline int sgn (int x)
+	  {
+	    if (x < 0)
+	      return -1;
+	    if (x > 0)
+	      return 1;
+	    return 0;
+	  }
+	  if (S >= W * 4)
+	    errx (1, "Bad render %d", S);
+	  char start = 0;
+	  if (!s[S].l)
+	    {			// New - draw to bottom
+	      s[S].l = (l < 0 ? -1 : 1) * (bottom + S + W * 4 + (l < 0 ? 0 : W * 4));
+	      s[S].r = (r < 0 ? -1 : 1) * (bottom + (S + 1) % (W * 4) + W * 4 + (r < 0 ? 0 : W * 4));
+	      printf ("[%d,%d,%d,%d],", abs (s[S].l), abs (s[S].r), (S + 1) % (W * 4), S);
+	    }
+	  // Advance
+	  if (l == s[S].l && r == s[S].r)
+	    return;
+	  int SR = (S + 1) % (W * 4);
+	  printf ("[");
+	  int p = 0;
+	  int n1, n2;
+	  for (n1 = 0; n1 < s[S].n && abs (s[S].p[n1]) != abs (s[S].l); n1++);
+	  for (n2 = n1; n2 < s[S].n && abs (s[S].p[n2]) != abs (l); n2++);
+	  if (n1 == s[S].n || n2 == s[S].n)
+	    errx (1, "Bad render %d->%d", s[S].l, l);
+	  while (n1 < n2)
+	    {
+	      if (sgn (s[S].p[n1]) == sgn (s[S].l))
+		{
+		  printf ("%d,", abs (s[S].p[n1]));
+		  p++;
+		}
+	      n1++;
+	    }
+	  printf ("%d,", abs (l));
+	  if (p)
+	    printf ("%d],", abs (r));	// Triangles
+	  for (n1 = 0; n1 < s[SR].n && abs (s[SR].p[n1]) != abs (s[S].r); n1++);
+	  for (n2 = n1; n2 < s[SR].n && abs (s[SR].p[n2]) != abs (r); n2++);
+	  if (n1 == s[SR].n || n2 == s[SR].n)
+	    errx (1, "Bad render %d->%d", r, s[S].r);
+	  if (!p || n1 < n2)
+	    {
+	      n2--;
+	      if (p)
+		printf ("[");
+	      printf ("%d", abs (r));
+	      while (n1 <= n2)
+		{
+		  if (sgn (s[SR].p[n2]) == sgn (s[S].r))
+		    printf (",%d", abs (s[SR].p[n2]));
+		  n2--;
+		}
+	      if (p)
+		printf (",%d", abs (s[S].l));
+	      printf ("],");
+	    }
+	  s[S].l = l;
+	  s[S].r = r;
+	}
+	printf (",\nfaces=[");
+	// Maze
+	for (Y = 0; Y < H; Y++)
+	  for (X = 0; X < W; X++)
+	    {
+	      unsigned char v = test (X, Y);
+	      if (!(v & A) || (v & 0x80))
+		continue;
+	      S = X * 4;
+	      int P = p[X][Y];
+	      // Left
+	      if (!(v & D))
+		slice (S + 0, P + 0, P + 1);
+	      slice (S + 0, P + 0, -(P + 5));
+	      if (v & L)
+		{
+		  slice (S + 0, -(P + 4), -(P + 5));
+		  slice (S + 0, -(P + 8), -(P + 9));
+		}
+	      slice (S + 0, P + 12, -(P + 9));
+	      if (!(v & U))
+		slice (S + 0, P + 12, P + 13);
+	      // Middle
+	      if (!(v & D))
+		slice (S + 1, P + 1, P + 2);
+	      slice (S + 1, -(P + 5), -(P + 6));
+	      slice (S + 1, -(P + 9), -(P + 10));
+	      if (!(v & U))
+		slice (S + 1, P + 13, P + 14);
+	      // Right
+	      if (!(v & D))
+		slice (S + 2, P + 2, P + 3);
+	      slice (S + 2, -(P + 6), P + 3);
+	      if (v & R)
+		{
+		  slice (S + 2, -(P + 6), -(P + 7));
+		  slice (S + 2, -(P + 10), -(P + 11));
+		}
+	      slice (S + 2, -(P + 10), P + 15);
+	      if (!(v & U))
+		slice (S + 2, P + 14, P + 15);
+	      {			// Joining to right
+		int x = X + 1, y = Y;
+		if (x >= W)
+		  {
+		    x -= W;
+		    y += helix;
+		  }
+		if (y >= 0 && y < H)
+		  {
+		    int PR = p[x][y];
+		    if (PR)
+		      {
+			slice (S + 3, P + 3, PR + 0);
+			if (v & R)
+			  {
+			    slice (S + 3, -(P + 7), -(PR + 4));
+			    slice (S + 3, -(P + 11), -(PR + 8));
+			  }
+			slice (S + 3, P + 15, PR + 12);
+		      }
+		  }
+	      }
+	    }
+	// Top
+	for (S = 0; S < W * 4; S++)
+	  {
+	    //slice (S, (s[S].l < 0 ? -1 : 1) * (top + S + (s[S].l < 0 ? W * 4 : 0)), (s[S].r < 0 ? -1 : 1) * (top + ((S + 1) % (W * 4)) + (s[S].r < 0 ? W * 4 : 0)));
+	    slice (S, top + S + (s[S].l < 0 ? W * 4 : 0), top + ((S + 1) % (W * 4)) + (s[S].r < 0 ? W * 4 : 0));
+	    slice (S, top + S + W * 4, top + ((S + 1) % (W * 4)) + W * 4);
+	    slice (S, top + S + 2 * W * 4, top + ((S + 1) % (W * 4)) + 2 * W * 4);
+	    slice (S, bottom + S, bottom + (S + 1) % (W * 4));
+	  }
+	printf ("]");
+	printf (",convexity=4");
+	// Done
+	printf (");\n");
+	// Park ridge
+	inline double ridge (double a, double b)
+	{			// work out ridge thickness logic
+	  return (a * parkthickness + b * (mazethickness - parkthickness)) / mazethickness;
+	}
+	printf ("polyhedron(points=[");
+	for (X = 0; X < W; X += W / nubs)
 	  if (parkvertical)
 	    {
-	      if (!inside && part < parts)
-		for (X = 0; X < W; X += W / nubs)
-		  printf ("rotate([0,0,%f])translate([0,%f,%f])rotate([90,0,0])park();\n", (double) X * 360 / W, r, base + mazestep);
-	      if (inside && part > 1)
-		for (X = 0; X < W; X += W / nubs)
-		  printf ("rotate([0,0,%f])translate([0,%f,%f])rotate([-90,0,0])park();\n", -(double) X * 360 / W, r, base + mazestep);
+	      for (Y = 0; Y < 4; Y++)
+		{
+		  int p = 1;
+		  if (Y == 1 || Y == 2)
+		    p = 2;
+		  printf ("[%f,%f,%f],", ridge (s[X * 4 + 3].x[p], s[X * 4 + 3].x[1]), ridge (s[X * 4 + 3].y[p], s[X * 4 + 3].y[1]), y0 + dy * 3 / 4 + mazestep * (helix + 1) + mazestep * Y / 4 - nubskew);
+		  printf ("[%f,%f,%f],", ridge (s[X * 4].x[p], s[X * 4].x[1]), ridge (s[X * 4].y[p], s[X * 4].y[1]), y0 + mazestep * (helix + 1) + mazestep * Y / 4 - nubskew);
+		}
 	    }
 	  else
 	    {
-	      if (!inside && part < parts)
-		for (X = 0; X < W; X += W / nubs)
-		  printf ("rotate([0,0,%f])translate([0,%f,%f])rotate([90,0,0])park();\n", (double) (X + 1) * 360 / W, r, base + mazestep / 2 + dy);
-	      if (inside && part > 1)
-		for (X = 0; X < W; X += W / nubs)
-		  printf ("rotate([0,0,%f])translate([0,%f,%f])rotate([-90,0,0])park();\n", -(double) (X + 1) * 360 / W, r, base + mazestep / 2 + dy);
+	      for (S = X * 4 + 2; S < X * 4 + 6; S++)
+		{
+		  int p = 1;
+		  if ((S % 4) == 0 || (S % 4) == 3)
+		    p = 2;
+		  printf ("[%f,%f,%f],", ridge (s[S].x[p], s[S].x[1]), ridge (s[S].y[p], s[S].y[1]), y0 + dy * (S % (W * 4 / nubs)) / 4 + mazestep * (helix + 0.5));
+		  printf ("[%f,%f,%f],", ridge (s[S].x[p], s[S].x[1]), ridge (s[S].y[p], s[S].y[1]), y0 + dy * (S % (W * 4 / nubs)) / 4 + mazestep * (helix + 1.5));
+		}
 	    }
-	}
+	printf ("],faces=[");
+	for (N = 0; N < nubs; N++)
+	  {
+	    int P = N * 8;
+	    printf ("[%d,%d,%d,%d],[%d,%d,%d,%d],[%d,%d,%d,%d],[%d,%d,%d,%d],[%d,%d,%d,%d],[%d,%d,%d,%d],", P + 1, P + 0, P + 6, P + 7,	//
+		    P + 1, P + 7, P + 5, P + 3,	//
+		    P + 0, P + 2, P + 4, P + 6,	//
+		    P + 1, P + 3, P + 2, P + 0,	//
+		    P + 3, P + 5, P + 4, P + 2,	//
+		    P + 5, P + 7, P + 6, P + 4);
+	  }
+	printf ("],convexity=4);\n");
+      }
     }
     printf ("translate([%f,0,0]){\n", x + r3);
     // Maze
