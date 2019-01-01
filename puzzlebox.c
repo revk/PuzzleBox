@@ -492,7 +492,7 @@ main (int argc, const char *argv[])
       double h = height - base - mazemargin - mazestep / 4;
       int H = (int) (h / mazestep);
       printf ("// Maze %s %d/%d\n", inside ? "inside" : "outside", W, H);
-      double y0 = base + mazestep / 2 - mazestep * (helix + 1) + mazestep / 8;
+      double y0 = base + mazestep / 2 - mazestep * (helix + 1) + (parkvertical ? mazestep / 8 : 0);
       H += 2 + helix;		// Allow one above, one below and helix below
       if (W < 3 || H < 1)
 	errx (1, "Too small");
