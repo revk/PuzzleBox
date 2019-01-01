@@ -55,6 +55,7 @@ main (int argc, const char *argv[])
   int symmectriccut = 0;
   int coresolid = 0;
   int mime = (getenv ("HTTP_HOST") ? 1 : 0);
+  int webform = 0;
 
   char pathsep = 0;
   char *path = getenv ("PATH_INFO");
@@ -96,6 +97,7 @@ main (int argc, const char *argv[])
     {"text-depth", 'L', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &logodepth, 0, "Logo depth", "mm"},
     {"test", 'Q', POPT_ARG_NONE, &testmaze, 0, "Test pattern instead of maze"},
     {"mime", 0, POPT_ARG_NONE | (mime ? POPT_ARGFLAG_DOC_HIDDEN : 0), &mime, 0, "MIME Header"},
+    {"web-form", 0, POPT_ARG_NONE, &webform, 0, "Web form"},
     POPT_AUTOHELP {}
   };
 
@@ -142,44 +144,113 @@ main (int argc, const char *argv[])
 	      break;
 	    }
 	  if (optionsTable[o].arg)
-	    {
-	      if ((optionsTable[o].argInfo & POPT_ARG_MASK) == POPT_ARG_INT && *path == '=')
+	    switch ((optionsTable[o].argInfo & POPT_ARG_MASK))
+	      {
+	      case POPT_ARG_INT:
+		if (*path != '=')
+		  {
+		    asprintf (&error, "Missing value [%c=]", arg);
+		    break;
+		  }
 		*(int *) optionsTable[o].arg = strtod (path + 1, &path);
-	      else if ((optionsTable[o].argInfo & POPT_ARG_MASK) == POPT_ARG_DOUBLE && *path == '=')
+		break;
+	      case POPT_ARG_DOUBLE:
+		if (*path != '=')
+		  {
+		    asprintf (&error, "Missing value [%c=]", arg);
+		    break;
+		  }
 		*(double *) optionsTable[o].arg = strtod (path + 1, &path);
-	      else if ((optionsTable[o].argInfo & POPT_ARG_MASK) == POPT_ARG_NONE)
-		{
-		  *(int *) optionsTable[o].arg = 1;
-		  if (*path == '=')
-		    {		// Skip =on, etc.
+		break;
+	      case POPT_ARG_NONE:
+		*(int *) optionsTable[o].arg = 1;
+		if (*path == '=')
+		  {		// Skip =on, etc.
+		    path++;
+		    while (*path && *path != pathsep)
 		      path++;
-		      while (*path && *path != pathsep)
-			path++;
-		    }
-		}
-	      else if ((optionsTable[o].argInfo & POPT_ARG_MASK) == POPT_ARG_STRING && *path == '=')
-		{
-		  path++;
-		  *(char **) optionsTable[o].arg = path;
-		  char *o = path;
-		  while (*path && *path != pathsep)
-		    {
-		      if (pathsep == '&' && *path == '+')
-			*o++ = ' ';
-		      else if (pathsep == '&' && *path == '%' && isxdigit (path[1]) && isxdigit (path[2]))
-			{
-			  *o++ = (((isalpha (path[1]) ? 9 : 0) + (path[1] & 0xF)) << 4) + ((isalpha (path[2]) ? 9 : 0) + (path[2] & 0xF));
-			  path += 2;
-			}
-		      else
-			*o++ = *path;
-		      path++;
-		    }
-		  if (o < path)
-		    *o = 0;
-		}
-	    }
+		  }
+		break;
+	      case POPT_ARG_STRING:
+		if (*path != '=')
+		  {
+		    asprintf (&error, "Missing value [%c=]", arg);
+		    break;
+		  }
+		path++;
+		*(char **) optionsTable[o].arg = path;
+		char *o = path;
+		while (*path && *path != pathsep)
+		  {
+		    if (pathsep == '&' && *path == '+')
+		      *o++ = ' ';
+		    else if (pathsep == '&' && *path == '%' && isxdigit (path[1]) && isxdigit (path[2]))
+		      {
+			*o++ = (((isalpha (path[1]) ? 9 : 0) + (path[1] & 0xF)) << 4) + ((isalpha (path[2]) ? 9 : 0) + (path[2] & 0xF));
+			path += 2;
+		      }
+		    else
+		      *o++ = *path;
+		    path++;
+		  }
+		if (o < path)
+		  *o = 0;
+		break;
+	      }
 	}
+    }
+
+  if (webform)
+    {
+      int o;
+      for (o = 0; optionsTable[o].longName; o++)
+	if (optionsTable[o].shortName && optionsTable[o].arg)
+	  {
+	    printf ("<tr>");
+	    printf ("<td><label for='%c'>%c</label></td>", optionsTable[o].shortName, optionsTable[o].shortName);
+	    printf ("<td>");
+	    switch ((optionsTable[o].argInfo & POPT_ARG_MASK))
+	      {
+	      case POPT_ARG_NONE:	// Checkbox
+		printf ("<input type=checkbox id='%c' name='%c'/>", optionsTable[o].shortName, optionsTable[o].shortName);
+		break;
+	      case POPT_ARG_INT:	// Select
+		{
+		  int l = 0, h = 3, v = *(int *) optionsTable[o].arg;
+		  if (optionsTable[o].shortName == 'm')
+		    l = 2;
+		  if (optionsTable[o].shortName == 'n' || optionsTable[o].shortName == 'm')
+		    h = 6;
+		  printf ("<select name='%c' id='%c'>", optionsTable[o].shortName, optionsTable[o].shortName);
+		  for (; l <= h; l++)
+		    printf ("<option value='%d'%s>%d</option>", l, l == v ? " selected" : "", l);
+		  printf ("</select>");
+		}
+		break;
+	      case POPT_ARG_DOUBLE:	// Double
+		{
+		  double v = *(double *) optionsTable[o].arg;
+		  printf ("<input name='%c' id='%c'", optionsTable[o].shortName, optionsTable[o].shortName);
+		  if (v)
+		    printf (" value='%f'", v);
+		  printf ("/>");
+		}
+		break;
+	      case POPT_ARG_STRING:	// String
+		{
+		  char *v = *(char **) optionsTable[o].arg;
+		  printf ("<input name='%c' id='%c'", optionsTable[o].shortName, optionsTable[o].shortName);
+		  if (v)
+		    printf (" value='%s'", v);
+		  printf ("/>");
+		}
+		break;
+	      }
+	    printf ("%s</td>", optionsTable[o].argDescrip);
+	    printf ("<td><label for='%c'>%s</label></td>", optionsTable[o].shortName, optionsTable[o].descrip);
+	    printf ("</tr>\n");
+	  }
+      return 0;
     }
 
   // Sanity checks and adjustments
@@ -229,33 +300,43 @@ main (int argc, const char *argv[])
       int o;
       for (o = 0; optionsTable[o].longName; o++)
 	if (optionsTable[o].shortName && optionsTable[o].arg)
-	  {
-	    if ((optionsTable[o].argInfo & POPT_ARG_MASK) == POPT_ARG_NONE && *(int *) optionsTable[o].arg)
+	  switch (optionsTable[o].argInfo & POPT_ARG_MASK)
+	    {
+	    case POPT_ARG_NONE:
+	      if (!*(int *) optionsTable[o].arg)
+		break;
 	      printf ("-%c", optionsTable[o].shortName);
-	    else if ((optionsTable[o].argInfo & POPT_ARG_MASK) == POPT_ARG_INT && *(int *) optionsTable[o].arg)
+	      break;
+	    case POPT_ARG_INT:
+	      if (!*(int *) optionsTable[o].arg)
+		break;
 	      printf ("-%d%c", *(int *) optionsTable[o].arg, optionsTable[o].shortName);
-	    else if ((optionsTable[o].argInfo & POPT_ARG_MASK) == POPT_ARG_DOUBLE && *(double *) optionsTable[o].arg)
+	      break;
+	    case POPT_ARG_DOUBLE:
+	      if (!*(double *) optionsTable[o].arg)
+		break;
+	      char temp[50], *p;
+	      sprintf (temp, "%f", *(double *) optionsTable[o].arg);
+	      p = temp + strlen (temp) - 1;
+	      while (*p == '0')
+		*p-- = 0;
+	      p = strchr (temp, '.');
+	      if (*p)
+		*p++ = 0;
+	      printf ("-%s%c%s", temp, optionsTable[o].shortName, p);
+	      break;
+	    case POPT_ARG_STRING:
+	      if (!*(char **) optionsTable[o].arg)
+		break;
 	      {
-		char temp[50], *p;
-		sprintf (temp, "%f", *(double *) optionsTable[o].arg);
-		p = temp + strlen (temp) - 1;
-		while (*p == '0')
-		  *p-- = 0;
-		p = strchr (temp, '.');
-		if (*p)
-		  *p++ = 0;
-		printf ("-%s%c%s", temp, optionsTable[o].shortName, p);
-	      }
-	    else if ((optionsTable[o].argInfo & POPT_ARG_MASK) == POPT_ARG_STRING && *(int *) optionsTable[o].arg)
-	      {			// String, but sanity check for filename
 		char *p = strdupa (*(char * *) optionsTable[o].arg), *q;
 		for (q = p; *q; q++)
 		  if (*q <= ' ' || *q == '/' || *q == '\\' || *q == '"' || *q == '\'' || *q == ':')
 		    *q = '_';
 		printf ("-%c%s", optionsTable[o].shortName, p);
 	      }
-
-	  }
+	      break;
+	    }
       printf (".scad\r\n\r\n");	// Used from apache
     }
 
