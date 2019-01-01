@@ -38,7 +38,7 @@ main (int argc, const char *argv[])
   double textdepth = 0.5;
   double logodepth = 0.6;
   double gripdepth = 2;
-  double parkthickness = 0.7;
+  double parkthickness = 0.75;
   char *textend = NULL;
   char *textsides = NULL;
   char *textfont = NULL;
@@ -949,12 +949,15 @@ main (int argc, const char *argv[])
 	for (N = 0; N < nubs; N++)
 	  {
 	    int P = N * 8;
-	    printf ("[%d,%d,%d,%d],[%d,%d,%d,%d],[%d,%d,%d,%d],[%d,%d,%d,%d],[%d,%d,%d,%d],[%d,%d,%d,%d],", P + 1, P + 0, P + 6, P + 7,	//
-		    P + 1, P + 7, P + 5, P + 3,	//
-		    P + 0, P + 2, P + 4, P + 6,	//
-		    P + 1, P + 3, P + 2, P + 0,	//
-		    P + 3, P + 5, P + 4, P + 2,	//
-		    P + 5, P + 7, P + 6, P + 4);
+	    inline void add (int a, int b, int c, int d)
+	    {
+	      printf ("[%d,%d,%d],[%d,%d,%d],", a, b, c, a, c, d);
+	    }
+	    add (P + 1, P + 7, P + 5, P + 3);
+	    add (P + 0, P + 2, P + 4, P + 6);
+	    add (P + 1, P + 3, P + 2, P + 0);
+	    add (P + 3, P + 5, P + 4, P + 2);
+	    add (P + 5, P + 7, P + 6, P + 4);
 	  }
 	printf ("],convexity=4);\n");
       }
