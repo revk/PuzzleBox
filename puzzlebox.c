@@ -35,7 +35,7 @@ main (int argc, const char *argv[])
   double coregap = 0;
   double outerround = 2;
   double mazemargin = 1;
-  double parkheight = 0.4;
+  double parkthickness = 0.4;
   double textdepth = 0.5;
   double logodepth = 0.6;
   double gripdepth = 2;
@@ -56,6 +56,7 @@ main (int argc, const char *argv[])
   int coresolid = 0;
   int mime = (getenv ("HTTP_HOST") ? 1 : 0);
   int webform = 0;
+  int parkvertical = 0;
 
   char pathsep = 0;
   char *path = getenv ("PATH_INFO");
@@ -82,7 +83,8 @@ main (int argc, const char *argv[])
     {"maze-thickness", 't', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &mazethickness, 0, "Maze thickness", "mm"},
     {"maze-step", 'z', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &mazestep, 0, "Maze spacing", "mm"},
     {"maze-margin", 'M', POPT_ARG_DOUBLE | (mazemargin ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &mazemargin, 0, "Maze top margin", "mm"},
-    {"park-height", 'p', POPT_ARG_DOUBLE | (parkheight ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &parkheight, 0, "Height of park ridge to click closed", "mm"},
+    {"park-thickness", 'p', POPT_ARG_DOUBLE | (parkthickness ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &parkthickness, 0, "Thickness of park ridge to click closed", "mm"},
+    {"park-vertical", 'v', POPT_ARG_NONE, &parkvertical, 0, "Park vertically"},
     {"clearance", 'g', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &clearance, 0, "General X/Y clearance", "mm"},
     {"outer-sides", 's', POPT_ARG_INT | (outersides ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &outersides, 0, "Number of outer sides", "N (0=round)"},
     {"outer-round", 'r', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &outerround, 0, "Outer rounding on ends", "mm"},
@@ -391,8 +393,9 @@ main (int argc, const char *argv[])
 
   {				// Modules
     printf ("module nub(){translate([0,0,-0.1])hull(){cube([%f,%f,0.1],center=true);translate([0,%f,%f])cube([%f,%f,0.1],center=true);};}\n", mazestep * 3 / 4, mazestep * 3 / 4, nubskew, mazethickness - clearance / 2, mazestep / 4, mazestep / 4);
-    if (parkheight)
-      printf ("module park(){translate([0,%f,%f])hull(){cube([%f,%f,0.1],center=true);translate([0,0,%f])cube([%f,%f,0.1],center=true);}}\n", -nubskew, mazethickness - parkheight - clearance, mazestep, mazestep / 4, parkheight + clearance, mazestep, mazestep * 3 / 4);
+    if (parkthickness)
+      printf ("module park(){%stranslate([0,%f,%f])hull(){cube([%f,%f,0.1],center=true);translate([0,0,%f])cube([%f,%f,0.1],center=true);}}\n", parkvertical ? "" : "rotate([0,0,90])", -(parkvertical ? nubskew : 0), mazethickness - parkthickness - clearance, mazestep, mazestep / 4,
+	      parkthickness + clearance, mazestep, mazestep * 3 / 4);
     if (textslow)
       {
 	printf ("module cuttext(s,t){translate([0,0,-1])minkowski(){rotate([0,0,45])cylinder(h=%f,d1=%f,d2=0,$fn=4);linear_extrude(height=1,convexity=2)mirror([1,0,0])text(t,valign=\"center\",halign=\"center\",size=s", textdepth, textdepth);
@@ -489,10 +492,10 @@ main (int argc, const char *argv[])
 	base += coregap;	// First one is short...
       if (inside)
 	base += basegap;
-      double h = height - base - mazemargin - mazestep / 8;
+      double h = height - base - mazemargin - mazestep / 4;
       int H = (int) (h / mazestep);
       printf ("// Maze %s %d/%d\n", inside ? "inside" : "outside", W, H);
-      double y0 = base + mazestep / 2 - mazestep * (helix + 1) + (h - (mazestep * H));
+      double y0 = base + mazestep / 2 - mazestep * (helix + 1) + mazestep / 8;
       H += 2 + helix;		// Allow one above, one below and helix below
       if (W < 3 || H < 1)
 	errx (1, "Too small");
@@ -556,11 +559,17 @@ main (int argc, const char *argv[])
 	  for (X = 0; X < W; X++)
 	    if (mazestep * Y + y0 + dy * X < base + mazestep / 2 + mazestep / 8 || mazestep * Y + y0 + dy * X > height - mazestep / 2 - margin - mazestep / 8)
 	      maze[X][Y] |= 0x80;	// To high or low
-	// Final park point, up one, and down off bottom
-	for (N = 0; N < helix + 2; N++)
+	// Final park point
+	if (parkvertical)
+	  for (N = 0; N < helix + 2; N++)	// Down to final
+	    {
+	      maze[0][N] |= U + D;
+	      maze[0][N + 1] |= D;
+	    }
+	else			// Left to final
 	  {
-	    maze[0][N] |= U + D;
-	    maze[0][N + 1] |= D;
+	    maze[0][helix + 1] |= R;
+	    maze[1][helix + 1] |= L;
 	  }
 	// Make maze
 	if (testmaze)
@@ -582,8 +591,8 @@ main (int argc, const char *argv[])
 	else
 	  {			// Actual maze
 	    int x[W * H], y[W * H], p = 0;
-	    x[0] = 0;		// Start at park point of maze as we have done the U/D to get there from below base
-	    y[0] = helix + 2;
+	    x[0] = (parkvertical ? 0 : 1);	// Start point
+	    y[0] = helix + 1 + (parkvertical ? 1 : 0);
 	    p++;
 	    while (p)
 	      {
@@ -912,14 +921,26 @@ main (int argc, const char *argv[])
 	  printf (");\n");
 	}
       }
-      if (parkheight)
+      if (parkthickness)
 	{
-	  if (!inside && part < parts)
-	    for (X = 0; X < W; X += W / nubs)
-	      printf ("rotate([0,0,%f])translate([0,%f,%f])rotate([90,0,0])park();\n", (double) X * 360 / W, r, base + mazestep);
-	  if (inside && part > 1)
-	    for (X = 0; X < W; X += W / nubs)
-	      printf ("rotate([0,0,%f])translate([0,%f,%f])rotate([-90,180,0])park();\n", (double) X * 360 / W, r, base + mazestep);
+	  if (parkvertical)
+	    {
+	      if (!inside && part < parts)
+		for (X = 0; X < W; X += W / nubs)
+		  printf ("rotate([0,0,%f])translate([0,%f,%f])rotate([90,0,0])park();\n", (double) X * 360 / W, r, base + mazestep);
+	      if (inside && part > 1)
+		for (X = 0; X < W; X += W / nubs)
+		  printf ("rotate([0,0,%f])translate([0,%f,%f])rotate([-90,0,0])park();\n", -(double) X * 360 / W, r, base + mazestep);
+	    }
+	  else
+	    {
+	      if (!inside && part < parts)
+		for (X = 0; X < W; X += W / nubs)
+		  printf ("rotate([0,0,%f])translate([0,%f,%f])rotate([90,0,0])park();\n", (double) (X + 0.5) * 360 / W, r, base + mazestep / 2 + dy / 2);
+	      if (inside && part > 1)
+		for (X = 0; X < W; X += W / nubs)
+		  printf ("rotate([0,0,%f])translate([0,%f,%f])rotate([-90,0,0])park();\n", -(double) (X + 0.5) * 360 / W, r, base + mazestep / 2 + dy / 2);
+	    }
 	}
     }
     printf ("translate([%f,0,0]){\n", x + r3);
