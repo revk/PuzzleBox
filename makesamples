@@ -1,52 +1,52 @@
 #!/bin/csh
 rm -f /tmp/*.scad /tmp/*.stl
 # Version box
-./puzzlebox --walls=2 --core-height=85 --core-gap=20 --core-diameter=10 --outer-sides=8 --text-slow --text-depth=1 --text-end='AK' --text-side="Build version date\`date --utc +%FT%TZ`\@TheRealRevK\GitHub revk/PuzzleBox\Thingiverse 2410748\www.me.uk\Test Box\www.me.uk" --text-font=FiveByNineJTD --logo $* > /tmp/version.scad
+./puzzlebox --parts=2 --core-height=85 --core-gap=20 --core-diameter=10 --outer-sides=8 --text-slow --text-depth=1 --text-end='AK' --text-side="Build version date\`date --utc +%FT%TZ`\@TheRealRevK\GitHub revk/PuzzleBox\Thingiverse 2410748\www.me.uk\Test Box\www.me.uk" --text-font=FiveByNineJTD --logo $* > /tmp/version.scad
 openscad -o /tmp/version.stl /tmp/version.scad&
 # Other boxes
 foreach h (0 1 2)
 foreach w (0 1 2)
 	setenv P part-$w
 	if(! $w) setenv P all
-	./puzzlebox --base-height=5 --walls=2 --core-height=15 --core-diameter=10 --outer-sides=3 --wall=$w --text-slow --text-depth=1 --text-end=$h --helix=$h --logo $* > /tmp/small-test-helix-$h-$P.scad
+	./puzzlebox --base-height=5 --parts=2 --core-height=15 --core-diameter=10 --outer-sides=3 --part=$w --text-slow --text-depth=1 --text-end=$h --helix=$h --logo $* > /tmp/small-test-helix-$h-$P.scad
 	openscad -o /tmp/small-test-helix-$h-$P.stl /tmp/small-test-helix-$h-$P.scad&
 end
 end
 foreach w (0 1 2 3)
 	setenv P part-$w
 	if(! $w) setenv P all
-	./puzzlebox --walls=3 --core-height=30 --core-diameter=10 --outer-sides=5 --wall=$w --inside --logo $* > /tmp/small-test-inside-$P.scad
+	./puzzlebox --parts=3 --core-height=30 --core-diameter=10 --outer-sides=5 --part=$w --inside --logo $* > /tmp/small-test-inside-$P.scad
 	openscad -o /tmp/small-test-inside-$P.stl /tmp/small-test-inside-$P.scad&
 end
 foreach w (0 1 2 3)
 	setenv P part-$w
 	if(! $w) setenv P all
-	./puzzlebox --walls=3 --core-height=30 --core-diameter=10 --outer-sides=5 --wall=$w --flip --inside --logo $* > /tmp/small-test-flip-$P.scad
+	./puzzlebox --parts=3 --core-height=30 --core-diameter=10 --outer-sides=5 --part=$w --flip --inside --logo $* > /tmp/small-test-flip-$P.scad
 	openscad -o /tmp/small-test-flip-$P.stl /tmp/small-test-flip-$P.scad&
 end
 foreach w (0 1 2)
 	setenv P part-$w
 	if(! $w) setenv P all
-	./puzzlebox --walls=2 --core-height=85 --core-gap=20 --core-diameter=10 --inside --outer-sides=4 --wall=$w --text-slow --text-depth=1 --text-end='£' --text-side="Good luck\\Prepare to\be amazed!" --text-font="Mountains of Christmas" --logo $* > /tmp/lottery-ticket-hard-$P.scad
+	./puzzlebox --parts=2 --core-height=85 --core-gap=20 --core-diameter=10 --inside --outer-sides=4 --part=$w --text-slow --text-depth=1 --text-end='£' --text-side="Good luck\\Prepare to\be amazed!" --text-font="Mountains of Christmas" --logo $* > /tmp/lottery-ticket-hard-$P.scad
 	openscad -o /tmp/lottery-ticket-hard-$P.stl /tmp/lottery-ticket-hard-$P.scad&
 end
 foreach w (0 1 2)
 	setenv P part-$w
 	if(! $w) setenv P all
-	./puzzlebox --walls=2 --core-height=85 --core-gap=20 --core-diameter=10 --outer-sides=4 --wall=$w --text-slow --text-depth=1 --text-end='£' --text-side="Good luck\\Prepare to\be amazed!" --text-font="Mountains of Christmas" --logo $* > /tmp/lottery-ticket-easy-$P.scad
+	./puzzlebox --parts=2 --core-height=85 --core-gap=20 --core-diameter=10 --outer-sides=4 --part=$w --text-slow --text-depth=1 --text-end='£' --text-side="Good luck\\Prepare to\be amazed!" --text-font="Mountains of Christmas" --logo $* > /tmp/lottery-ticket-easy-$P.scad
 	openscad -o /tmp/lottery-ticket-easy-$P.stl /tmp/lottery-ticket-easy-$P.scad&
 end
 foreach s (30/30 50/20 70/10)
 foreach w (0 1 2 3 4)
 	setenv P part-$w
 	if(! $w) setenv P all
-	./puzzlebox --walls=4 --core-diameter=$s:t --core-height=$s:h --wall=$w --text-slow --text-depth=1 --text-end=☺ --logo $* > /tmp/box-${s:t}x${s:h}mm-$P.scad
+	./puzzlebox --parts=4 --core-diameter=$s:t --core-height=$s:h --part=$w --text-slow --text-depth=1 --text-end=☺ --logo $* > /tmp/box-${s:t}x${s:h}mm-$P.scad
 	openscad -o /tmp/box-${s:t}x${s:h}mm-$P.stl /tmp/box-${s:t}x${s:h}mm-$P.scad&
 end
 foreach w (0 1 2 3 4)
 	setenv P part-$w
 	if(! $w) setenv P all
-	./puzzlebox --walls=4 --core-diameter=$s:t --core-height=$s:h --inside --wall=$w --text-slow --text-depth=1 --text-end=☺ --logo $* > /tmp/box-inside-${s:t}x${s:h}mm-$P.scad
+	./puzzlebox --parts=4 --core-diameter=$s:t --core-height=$s:h --inside --part=$w --text-slow --text-depth=1 --text-end=☺ --logo $* > /tmp/box-inside-${s:t}x${s:h}mm-$P.scad
 	openscad -o /tmp/box-inside-${s:t}x${s:h}mm-$P.stl /tmp/box-inside-${s:t}x${s:h}mm-$P.scad&
 end
 end
