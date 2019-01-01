@@ -225,6 +225,8 @@ main (int argc, const char *argv[])
 		    l = 2;	// Walls
 		  if (optionsTable[o].shortName == 'n' || optionsTable[o].shortName == 'm')
 		    h = 6;	// Walls or part
+		  if (optionsTable[o].shortName == 's')
+		    h = 20;	// Sides
 		  printf ("<select name='%c' id='%c'>", optionsTable[o].shortName, optionsTable[o].shortName);
 		  for (; l <= h; l++)
 		    printf ("<option value='%d'%s>%d</option>", l, l == v ? " selected" : "", l);
@@ -766,7 +768,6 @@ main (int argc, const char *argv[])
 	    }
 	    if (S >= W * 4)
 	      errx (1, "Bad render %d", S);
-	    printf (" // %d: %d,%d\n", S, l, r);
 	    char start = 0;
 	    if (!s[S].l)
 	      {			// New - draw to bottom
