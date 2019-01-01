@@ -936,10 +936,10 @@ main (int argc, const char *argv[])
 	    {
 	      if (!inside && part < parts)
 		for (X = 0; X < W; X += W / nubs)
-		  printf ("rotate([0,0,%f])translate([0,%f,%f])rotate([90,0,0])park();\n", (double) (X + 0.5) * 360 / W, r, base + mazestep / 2 + dy / 2);
+		  printf ("rotate([0,0,%f])translate([0,%f,%f])rotate([90,0,0])park();\n", (double) (X + 1) * 360 / W, r, base + mazestep / 2 + dy);
 	      if (inside && part > 1)
 		for (X = 0; X < W; X += W / nubs)
-		  printf ("rotate([0,0,%f])translate([0,%f,%f])rotate([-90,0,0])park();\n", -(double) (X + 0.5) * 360 / W, r, base + mazestep / 2 + dy / 2);
+		  printf ("rotate([0,0,%f])translate([0,%f,%f])rotate([-90,0,0])park();\n", -(double) (X + 1) * 360 / W, r, base + mazestep / 2 + dy);
 	    }
 	}
     }
