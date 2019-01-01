@@ -39,7 +39,7 @@ end
 foreach w (0 1 2 3)
 	setenv P part-$w
 	if(! $w) setenv P all
-	./puzzlebox --parts=3 --inside --flip --core-solid --core-height=48 --core-gap=28 --core-diameter=24 --outer-sides=12 --part=$w --text-slow --text-depth=1 --text-end='£' --logo $* > /tmp/ten-pound-coins-$P.scad
+	./puzzlebox --parts=3 --inside --flip --core-solid --core-height=50 --core-gap=28 --core-diameter=24 --outer-sides=12 --part=$w --text-slow --text-depth=1 --text-end='£' --logo $* > /tmp/ten-pound-coins-$P.scad
 	openscad -o /tmp/ten-pound-coins-$P.stl /tmp/ten-pound-coins-$P.scad&
 end
 foreach s (30/30 50/20 70/10)
