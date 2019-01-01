@@ -29,6 +29,7 @@ cat << END
 </form>
 <p><i>Some parameters are subject to sanity checks, e.g. nubs set to helix if greater than 1, sides is multiple of nubs, etc. See comments at top of output for parameters actually used.</i></p>
 <p>Source code at <a href='https://github.com/revk/PuzzleBox'>https://github.com/revk/PuzzleBox</a></p>
+<p>Gifts <a href='https://monzo.me/adriankennard'>accepted</a> (just people people have asked how they can do this).</p>
 <hr/>
 <address>By RevK<sup>&reg;</sup> <a href='https://www.me.uk/'>www.me.uk</a> <a href='https://twitter.com/TheRealRevK'>@TheRealRevK</a></address>
 </body>
