@@ -76,7 +76,7 @@ main (int argc, const char *argv[])
     {"core-diameter", 'c', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &corediameter, 0, "Core diameter for content", "mm"},
     {"core-height", 'h', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &coreheight, 0, "Core height for content", "mm"},
     {"core-gap", 'C', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &coregap, 0, "Core gap to allow content to be removed", "mm"},
-    {"core-solid", 'q', POPT_ARG_NONE, &coresolid, 0, "Core solid (core-diameter is set for part 2)"},
+    {"core-solid", 'q', POPT_ARG_NONE, &coresolid, 0, "Core solid (content is in part 2)"},
     {"base-thickness", 'B', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &basethickness, 0, "Base thickness", "mm"},
     {"base-gap", 'G', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &basegap, 0, "Base gap (Z clearance)", "mm"},
     {"part-thickness", 'w', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &wallthickness, 0, "Wall thickness", "mm"},
@@ -312,6 +312,8 @@ main (int argc, const char *argv[])
     textdepth = 0;
   if (basethickness < logodepth + (textend ? textdepth : 0) + 0.4)
     basethickness = logodepth + (textend ? textdepth : 0) + 0.4;
+  if (coresolid && coregap < mazestep * 2)
+    coregap = mazestep * 2;
 
   // MIME header
   if (mime)
@@ -475,9 +477,9 @@ main (int argc, const char *argv[])
     if (outersides && part + 1 >= parts)
       r3 /= cos ((double) M_PIl / outersides);	// Bigger because of number of sides
     printf ("// Part %d (%.2fmm to %.2fmm and %.2fmm/%.2fmm base)\n", part, r0, r1, r2, r3);
-    double height = coreheight + basethickness + (basethickness + basegap) * (part - 1);
+    double height = (coresolid ? coregap + baseheight : 0) + coreheight + basethickness + (basethickness + basegap) * (part - 1);
     if (part == 1)
-      height -= coregap;
+      height -= (coresolid ? coreheight : coregap + baseheight);
     if (part > 1)
       height -= baseheight;	// base from previous unit is added to this
     // Output
@@ -488,7 +490,7 @@ main (int argc, const char *argv[])
       if (inside && part > 2)
 	base += baseheight;	// Nubs don't go all the way to the end
       if (inside && part == 2)
-	base += coregap;	// First one is short...
+	base += (coresolid ? coreheight : coregap + baseheight);	// First one is short...
       if (inside)
 	base += basegap;
       double h = height - base - mazemargin - (parkvertical ? mazestep / 4 : 0) - mazestep / 8;
