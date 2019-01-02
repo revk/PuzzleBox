@@ -38,7 +38,7 @@ main (int argc, const char *argv[])
   double textdepth = 0.5;
   double logodepth = 0.6;
   double gripdepth = 2;
-  double parkthickness = 0.75;
+  double parkthickness = 1;
   char *textend = NULL;
   char *textsides = NULL;
   char *textfont = NULL;
@@ -926,31 +926,14 @@ main (int argc, const char *argv[])
 	    for (Y = 0; Y < 4; Y++)
 	      for (X = 0; X < 4; X++)
 		{
-
-#if 0
-		  double dy = mazestep * helix / W / 4;	// Step per S
-		  double my = mazestep / 8;	// Vertical steps
-		  double y = y0 - dy * 1.5;	// Y vertical centre for S=0
-		  unsigned char v = test (X, Y);
-		  if (!(v & A) || (v & 0x80))
-		    continue;
-		  p[X][Y] = P;
-		  for (S = X * 4; S < X * 4 + 4; S++)
-		    addpoint (S, s[S].x[2], s[S].y[2], y + Y * mazestep + dy * S - my * 3);
-		  for (S = X * 4; S < X * 4 + 4; S++)
-		    addpointr (S, s[S].x[1], s[S].y[1], y + Y * mazestep + dy * S - my - nubskew);
-		  for (S = X * 4; S < X * 4 + 4; S++)
-		    addpointr (S, s[S].x[1], s[S].y[1], y + Y * mazestep + dy * S + my - nubskew);
-#endif
-
 		  int S = N * 4 + X + (parkvertical ? 0 : 2);
 		  double z = y0 - dy * 1.5 / 4 + (helix + 1) * mazestep + Y * mazestep / 4 + dy * X / 4 + (parkvertical ? mazestep / 8 : dy / 2 - mazestep * 3 / 8);
 		  double x = s[S].x[1];
 		  double y = s[S].y[1];
 		  if (parkvertical ? Y == 1 || Y == 2 : X == 1 || X == 2)
 		    {		// ridge height instead or surface
-		      x = (s[S].x[1] * parkthickness + s[S].x[2] * (mazethickness - parkthickness)) / mazethickness;
-		      y = (s[S].y[1] * parkthickness + s[S].y[2] * (mazethickness - parkthickness)) / mazethickness;
+		      x = (s[S].x[1] * (mazethickness - parkthickness) + s[S].x[2] * parkthickness) / mazethickness;
+		      y = (s[S].y[1] * (mazethickness - parkthickness) + s[S].y[2] * parkthickness) / mazethickness;
 		    }
 		  else if (parkvertical)
 		    z -= nubskew;
