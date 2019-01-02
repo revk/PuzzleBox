@@ -1011,7 +1011,7 @@ main (int argc, const char *argv[])
 	printf ("rotate([0,0,%f])translate([0,%f,%f])hull(){rotate([90,0,0])nub();translate([0,0,%f])rotate([90,0,0])nub();}\n", -(double) N * 360 / nubs, r3, -mazestep, baseheight + mazestep);
     printf ("translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);\n", basethickness, r0 + (part > 1 && mazeinside ? mazethickness + clearance : 0) + (!mazeinside && part < parts ? clearance : 0), height, W * 4);	// Hole
     if (textend && part + 1 >= parts)
-      printf ("rotate([0,0,%f])cuttext(%f,\"%s\");\n", (double) 180 / (outersides ? : 100), r2 - outerround, textend);
+      printf ("rotate([0,0,%f])cuttext(%f,\"%s\");\n", (part == parts ? 1 : -1) * (90 + (double) 180 / (outersides ? : 100)), r2 - outerround, textend);
     if (textsides && part == parts && outersides)
       {
 	double a = 90 + 180 / outersides;
