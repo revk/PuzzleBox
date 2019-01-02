@@ -451,7 +451,7 @@ main (int argc, const char *argv[])
     // r3 is outside of base with "sides" adjust
     double r1 = corediameter / 2 + wallthickness + (part - 1) * (wallthickness + mazethickness + clearance);	// Outer
     if (coresolid)
-      r1 -= wallthickness + mazethickness + clearance * 2;	// Core diameter based on 2nd part
+      r1 -= (wallthickness + mazethickness + clearance * 2) / 2;	// Core diameter based on 2nd part
     int W = ((int) (r1 * 2 * M_PIl / mazestep)) / nubs * nubs;	// Default value
     double r0 = r1 - wallthickness;	// Inner
     double r2 = r1;		// Base outer
