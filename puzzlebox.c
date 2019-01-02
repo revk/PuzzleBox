@@ -274,8 +274,6 @@ main (int argc, const char *argv[])
     }
 
   // Sanity checks and adjustments
-  if (coresolid)
-    corediameter -= wallthickness + mazethickness + clearance * 2;	// Core is not the first part is it...
   if (!outersides)
     textsides = NULL;
   if (textfont && !*textfont)
@@ -452,6 +450,8 @@ main (int argc, const char *argv[])
     // r2 is outside of base before "sides" adjust
     // r3 is outside of base with "sides" adjust
     double r1 = corediameter / 2 + wallthickness + (part - 1) * (wallthickness + mazethickness + clearance);	// Outer
+    if (coresolid)
+      r1 -= wallthickness + mazethickness + clearance * 2;	// Core diameter based on 2nd part
     int W = ((int) (r1 * 2 * M_PIl / mazestep)) / nubs * nubs;	// Default value
     double r0 = r1 - wallthickness;	// Inner
     double r2 = r1;		// Base outer
