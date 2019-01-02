@@ -76,7 +76,7 @@ main (int argc, const char *argv[])
     {"core-diameter", 'c', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &corediameter, 0, "Core diameter for content", "mm"},
     {"core-height", 'h', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &coreheight, 0, "Core height for content", "mm"},
     {"core-gap", 'C', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &coregap, 0, "Core gap to allow content to be removed", "mm"},
-    {"core-solid", 'q', POPT_ARG_NONE, &coresolid, 0, "Core solid"},
+    {"core-solid", 'q', POPT_ARG_NONE, &coresolid, 0, "Core solid (core-diameter is set for part 2)"},
     {"base-thickness", 'B', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &basethickness, 0, "Base thickness", "mm"},
     {"base-gap", 'G', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &basegap, 0, "Base gap (Z clearance)", "mm"},
     {"part-thickness", 'w', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &wallthickness, 0, "Wall thickness", "mm"},
@@ -274,6 +274,8 @@ main (int argc, const char *argv[])
     }
 
   // Sanity checks and adjustments
+  if (coresolid)
+    corediameter -= wallthickness + mazethickness + clearance * 2;	// Core is not the first part is it...
   if (!outersides)
     textsides = NULL;
   if (textfont && !*textfont)
