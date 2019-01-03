@@ -479,7 +479,7 @@ main (int argc, const char *argv[])
     printf ("// Part %d (%.2fmm to %.2fmm and %.2fmm/%.2fmm base)\n", part, r0, r1, r2, r3);
     double height = (coresolid ? coregap + baseheight : 0) + coreheight + basethickness + (basethickness + basegap) * (part - 1);
     if (part == 1)
-      height -= (coresolid ? coreheight : coregap + baseheight);
+      height -= (coresolid ? coreheight : coregap);
     if (part > 1)
       height -= baseheight;	// base from previous unit is added to this
     // Output
