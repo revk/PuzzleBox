@@ -591,74 +591,84 @@ main (int argc, const char *argv[])
 	  }
 	else
 	  {			// Actual maze
-	    int x[W * H], y[W * H], p = 0;
-	    x[0] = (parkvertical ? 0 : 1);	// Start point
-	    y[0] = helix + 1 + (parkvertical ? 1 : 0);
-	    p++;
-	    while (p)
+	    int paths = (parkvertical ? 3 : 2);
+	    int x[paths][W * H], y[paths][W * H], p[paths], P;
+	    unsigned int running = 0;
+	    for (P = 0; P < paths; P++)
 	      {
-		X = x[p - 1];
-		Y = y[p - 1];
-		unsigned int v, n = 0;
-		if (read (f, &v, sizeof (v)) != sizeof (v))
-		  err (1, "Read /dev/random");
-		// Some bias for direction
-		if (!test (X + 1, Y))
-		  n += 3;
-		if (!test (X - 1, Y))
-		  n += 3;
-		if (!test (X, Y - 1))
-		  n += 2;
-		if (!test (X, Y + 1))
-		  n++;
-		if (!n)
-		  {
-		    p--;
-		    continue;
-		  }
-		v %= n;
-		if (!test (X + 1, Y) && (!v-- || !v-- || !v--))
-		  {
-		    maze[X][Y] |= R;
-		    X++;
-		    if (X >= W)
-		      {
-			X -= W;
-			Y += helix;
-		      }
-		    maze[X][Y] |= L;
-		  }
-		else if (!test (X - 1, Y) && (!v-- || !v-- || !v--))
-		  {
-		    maze[X][Y] |= L;
-		    X--;
-		    if (X < 0)
-		      {
-			X += W;
-			Y -= helix;
-		      }
-		    maze[X][Y] |= R;
-		  }
-		else if (!test (X, Y - 1) && (!v-- || !v--))
-		  {
-		    maze[X][Y] |= D;
-		    Y--;
-		    maze[X][Y] |= U;
-		  }
-		else if (!test (X, Y + 1) && !v--)
-		  {
-		    maze[X][Y] |= U;
-		    Y++;
-		    maze[X][Y] |= D;
-		  }
-		else
-		  errx (1, "WTF");
-		if (p == W * H)
-		  errx (1, "WTF");
-		x[p] = X;
-		y[p] = Y;
-		p++;
+		x[P][0] = (parkvertical ? 0 : 1);	// Start point
+		y[P][0] = helix + 1 + (parkvertical ? 1 : 0);
+		p[P] = 1;
+		running |= (1 << P);
 	      }
+	    while (running)
+	      for (P = 0; P < paths; P++)
+		if (p[P])
+		  {
+		    X = x[P][p[P] - 1];
+		    Y = y[P][p[P] - 1];
+		    unsigned int v, n = 0;
+		    if (read (f, &v, sizeof (v)) != sizeof (v))
+		      err (1, "Read /dev/random");
+		    // Some bias for direction
+		    if (!test (X + 1, Y))
+		      n += 3;
+		    if (!test (X - 1, Y))
+		      n += 3;
+		    if (!test (X, Y - 1))
+		      n += 2;
+		    if (!test (X, Y + 1))
+		      n++;
+		    if (!n)
+		      {
+			p[P]--;
+			if (!p[P])
+			  running &= ~(1 << P);	// Finished
+			continue;
+		      }
+		    v %= n;
+		    if (!test (X + 1, Y) && (!v-- || !v-- || !v--))
+		      {
+			maze[X][Y] |= R;
+			X++;
+			if (X >= W)
+			  {
+			    X -= W;
+			    Y += helix;
+			  }
+			maze[X][Y] |= L;
+		      }
+		    else if (!test (X - 1, Y) && (!v-- || !v-- || !v--))
+		      {
+			maze[X][Y] |= L;
+			X--;
+			if (X < 0)
+			  {
+			    X += W;
+			    Y -= helix;
+			  }
+			maze[X][Y] |= R;
+		      }
+		    else if (!test (X, Y - 1) && (!v-- || !v--))
+		      {
+			maze[X][Y] |= D;
+			Y--;
+			maze[X][Y] |= U;
+		      }
+		    else if (!test (X, Y + 1) && !v--)
+		      {
+			maze[X][Y] |= U;
+			Y++;
+			maze[X][Y] |= D;
+		      }
+		    else
+		      errx (1, "WTF");
+		    if (p[P] == W * H)
+		      errx (1, "WTF");
+		    x[P][p[P]] = X;
+		    y[P][p[P]] = Y;
+		    p[P]++;
+		  }
 	    close (f);
 	  }
 	// Entry point for maze
