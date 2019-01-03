@@ -605,30 +605,36 @@ main (int argc, const char *argv[])
 	      for (P = 0; P < paths; P++)
 		if (p[P])
 		  {
+		    // Where we are
 		    X = x[P][p[P] - 1];
 		    Y = y[P][p[P] - 1];
 		    unsigned int v, n = 0;
-		    if (read (f, &v, sizeof (v)) != sizeof (v))
-		      err (1, "Read /dev/random");
+		    // Which way can we go
 		    // Some bias for direction
 		    if (!test (X + 1, Y))
-		      n += 3;
+		      n += 3;	// Right
 		    if (!test (X - 1, Y))
-		      n += 3;
+		      n += 3;	// Left
 		    if (!test (X, Y - 1))
-		      n += 2;
+		      n += 2;	// Down
 		    if (!test (X, Y + 1))
-		      n++;
+		      n++;	// Up
 		    if (!n)
-		      {
-			p[P]--;
+		      {		// No way forward
+			p[P]--;	// Move back
 			if (!p[P])
 			  running &= ~(1 << P);	// Finished
+			else
+			  P--;	// Keep going on this path back until we can move forward.
 			continue;
 		      }
+		    // Pick one of the ways randomly
+		    if (read (f, &v, sizeof (v)) != sizeof (v))
+		      err (1, "Read /dev/random");
 		    v %= n;
+		    // Move forward
 		    if (!test (X + 1, Y) && (!v-- || !v-- || !v--))
-		      {
+		      {		// Right
 			maze[X][Y] |= R;
 			X++;
 			if (X >= W)
@@ -639,7 +645,7 @@ main (int argc, const char *argv[])
 			maze[X][Y] |= L;
 		      }
 		    else if (!test (X - 1, Y) && (!v-- || !v-- || !v--))
-		      {
+		      {		// Left
 			maze[X][Y] |= L;
 			X--;
 			if (X < 0)
@@ -650,24 +656,25 @@ main (int argc, const char *argv[])
 			maze[X][Y] |= R;
 		      }
 		    else if (!test (X, Y - 1) && (!v-- || !v--))
-		      {
+		      {		// Down
 			maze[X][Y] |= D;
 			Y--;
 			maze[X][Y] |= U;
 		      }
 		    else if (!test (X, Y + 1) && !v--)
-		      {
+		      {		// Up
 			maze[X][Y] |= U;
 			Y++;
 			maze[X][Y] |= D;
 		      }
 		    else
-		      errx (1, "WTF");
+		      errx (1, "WTF");	// We should have picked a way we can go
 		    if (p[P] == W * H)
-		      errx (1, "WTF");
+		      errx (1, "WTF");	// We should never run out of space
+		    // Record where we got to
 		    x[P][p[P]] = X;
 		    y[P][p[P]] = Y;
-		    p[P]++;
+		    p[P]++;	// Move on
 		  }
 	    close (f);
 	  }
