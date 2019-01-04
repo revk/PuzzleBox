@@ -57,7 +57,7 @@ main (int argc, const char *argv[])
   int mime = (getenv ("HTTP_HOST") ? 1 : 0);
   int webform = 0;
   int parkvertical = 0;
-  int mazecomplexity = 10;
+  int mazecomplexity = 50;
 
   char pathsep = 0;
   char *path = getenv ("PATH_INFO");
