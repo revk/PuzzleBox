@@ -549,12 +549,6 @@ main (int argc, const char *argv[])
 	int f = open ("/dev/urandom", O_RDONLY);
 	if (f < 0)
 	  err (1, "Open /dev/random");
-	if (!flip)
-	  {
-	    if (read (f, &entry, sizeof (entry)) != sizeof (entry))
-	      err (1, "Read /dev/random");
-	    entry = 1 + (entry % (W / nubs - 1));	// Random entry point not matching exit
-	  }
 	// Clear too high/low
 	for (Y = 0; Y < H; Y++)
 	  for (X = 0; X < W; X++)
@@ -594,6 +588,7 @@ main (int argc, const char *argv[])
 	    int paths = (parkvertical ? 3 : 2);
 	    int x[paths][W * H], y[paths][W * H], p[paths], P;
 	    unsigned int running = 0;
+	    int max = 0, maxx = 0;
 	    for (P = 0; P < paths; P++)
 	      {
 		x[P][0] = (parkvertical ? 0 : 1);	// Start point
@@ -675,8 +670,15 @@ main (int argc, const char *argv[])
 		    x[P][p[P]] = X;
 		    y[P][p[P]] = Y;
 		    p[P]++;	// Move on
+		    if (p[P] > max && (test (X, Y + 1) & 0x80))
+		      {		// Longest path that reaches top
+			max = p[P];
+			maxx = X;
+		      }
 		  }
 	    close (f);
+	    if (!flip)
+	      entry = maxx % (W / nubs);
 	  }
 	// Entry point for maze
 	for (X = entry; X < W; X += W / nubs)
