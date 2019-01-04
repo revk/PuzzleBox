@@ -231,6 +231,11 @@ main (int argc, const char *argv[])
 		    h = 6;	// Walls or part
 		  if (optionsTable[o].shortName == 's')
 		    h = 20;	// Sides
+		  if (optionsTable[o].shortName == 'X')
+		    {		// Complexity
+		      l = -100;
+		      h = 100;
+		    }
 		  printf ("<select name='%c' id='%c'>", optionsTable[o].shortName, optionsTable[o].shortName);
 		  for (; l <= h; l++)
 		    printf ("<option value='%d'%s>%d</option>", l, l == v ? " selected" : "", l);
