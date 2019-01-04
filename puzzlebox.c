@@ -84,7 +84,7 @@ main (int argc, const char *argv[])
     {"maze-thickness", 't', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &mazethickness, 0, "Maze thickness", "mm"},
     {"maze-step", 'z', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &mazestep, 0, "Maze spacing", "mm"},
     {"maze-margin", 'M', POPT_ARG_DOUBLE | (mazemargin ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &mazemargin, 0, "Maze top margin", "mm"},
-    {"maze-complexity", 'X', POPT_ARG_INT | (mazecomplexity ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &mazecomplexity, 0, "Maze complextity", "N (-ve is easy)"},
+    {"maze-complexity", 'X', POPT_ARG_INT | (mazecomplexity ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &mazecomplexity, 0, "Maze complextity", "-100 to 100"},
     {"park-thickness", 'p', POPT_ARG_DOUBLE | (parkthickness ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &parkthickness, 0, "Thickness of park ridge to click closed", "mm"},
     {"park-vertical", 'v', POPT_ARG_NONE, &parkvertical, 0, "Park vertically"},
     {"clearance", 'g', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &clearance, 0, "General X/Y clearance", "mm"},
@@ -679,13 +679,11 @@ main (int argc, const char *argv[])
 		next->y = Y;
 		next->n = p->n + 1;
 		next->next = NULL;
+		// How to add points to queue... start or end
 		if (read (f, &v, sizeof (v)) != sizeof (v))
 		  err (1, "Read /dev/random");
-		if (mazecomplexity < 0)
-		  v = (v % (2 - mazecomplexity)) ? 0 : 1;
-		else
-		  v = (v % (mazecomplexity + 2)) ? 1 : 0;
-		if (v)
+		v %= 100;
+		if (v < (mazecomplexity < 0 ? -mazecomplexity : mazecomplexity))
 		  {		// add next point at start - makes for longer path
 		    if (!pos)
 		      last = next;
@@ -700,12 +698,21 @@ main (int argc, const char *argv[])
 		      pos = next;
 		    last = next;
 		  }
-		// add current point again
-		if (last)
-		  last->next = p;
+		if (mazecomplexity <= 0 && v < -mazecomplexity)
+		  {		// current point to start
+		    if (!pos)
+		      last = p;
+		    p->next = pos;
+		    pos = p;
+		  }
 		else
-		  pos = p;
-		last = p;
+		  {
+		    if (last)
+		      last->next = p;
+		    else
+		      pos = p;
+		    last = p;
+		  }
 	      }
 	    if (!flip)
 	      entry = maxx % (W / nubs);
