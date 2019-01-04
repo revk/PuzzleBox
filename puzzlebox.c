@@ -57,7 +57,7 @@ main (int argc, const char *argv[])
   int mime = (getenv ("HTTP_HOST") ? 1 : 0);
   int webform = 0;
   int parkvertical = 0;
-  int mazecomplexity = 50;
+  int mazecomplexity = 5;
 
   char pathsep = 0;
   char *path = getenv ("PATH_INFO");
@@ -84,7 +84,7 @@ main (int argc, const char *argv[])
     {"maze-thickness", 't', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &mazethickness, 0, "Maze thickness", "mm"},
     {"maze-step", 'z', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &mazestep, 0, "Maze spacing", "mm"},
     {"maze-margin", 'M', POPT_ARG_DOUBLE | (mazemargin ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &mazemargin, 0, "Maze top margin", "mm"},
-    {"maze-complexity", 'X', POPT_ARG_INT | (mazecomplexity ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &mazecomplexity, 0, "Maze complextity", "-100 to 100"},
+    {"maze-complexity", 'X', POPT_ARG_INT | (mazecomplexity ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &mazecomplexity, 0, "Maze complexity", "-10 to 10"},
     {"park-thickness", 'p', POPT_ARG_DOUBLE | (parkthickness ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &parkthickness, 0, "Thickness of park ridge to click closed", "mm"},
     {"park-vertical", 'v', POPT_ARG_NONE, &parkvertical, 0, "Park vertically"},
     {"clearance", 'g', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &clearance, 0, "General X/Y clearance", "mm"},
@@ -233,8 +233,8 @@ main (int argc, const char *argv[])
 		    h = 20;	// Sides
 		  if (optionsTable[o].shortName == 'X')
 		    {		// Complexity
-		      l = -100;
-		      h = 100;
+		      l = -10;
+		      h = 10;
 		    }
 		  printf ("<select name='%c' id='%c'>", optionsTable[o].shortName, optionsTable[o].shortName);
 		  for (; l <= h; l++)
@@ -687,7 +687,7 @@ main (int argc, const char *argv[])
 		// How to add points to queue... start or end
 		if (read (f, &v, sizeof (v)) != sizeof (v))
 		  err (1, "Read /dev/random");
-		v %= 100;
+		v %= 10;
 		if (v < (mazecomplexity < 0 ? -mazecomplexity : mazecomplexity))
 		  {		// add next point at start - makes for longer path
 		    if (!pos)
