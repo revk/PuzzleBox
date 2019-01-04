@@ -57,6 +57,7 @@ main (int argc, const char *argv[])
   int mime = (getenv ("HTTP_HOST") ? 1 : 0);
   int webform = 0;
   int parkvertical = 0;
+  int mazecomplexity = 10;
 
   char pathsep = 0;
   char *path = getenv ("PATH_INFO");
@@ -83,6 +84,7 @@ main (int argc, const char *argv[])
     {"maze-thickness", 't', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &mazethickness, 0, "Maze thickness", "mm"},
     {"maze-step", 'z', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &mazestep, 0, "Maze spacing", "mm"},
     {"maze-margin", 'M', POPT_ARG_DOUBLE | (mazemargin ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &mazemargin, 0, "Maze top margin", "mm"},
+    {"maze-complexity", 'X', POPT_ARG_INT | (mazecomplexity ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &mazecomplexity, 0, "Maze complextity", "N (-ve is easy)"},
     {"park-thickness", 'p', POPT_ARG_DOUBLE | (parkthickness ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &parkthickness, 0, "Thickness of park ridge to click closed", "mm"},
     {"park-vertical", 'v', POPT_ARG_NONE, &parkvertical, 0, "Park vertically"},
     {"clearance", 'g', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &clearance, 0, "General X/Y clearance", "mm"},
@@ -585,101 +587,131 @@ main (int argc, const char *argv[])
 	  }
 	else
 	  {			// Actual maze
-	    int paths = (parkvertical ? 3 : 2);
-	    int x[paths][W * H], y[paths][W * H], p[paths], P;
-	    unsigned int running = 0;
 	    int max = 0, maxx = 0;
-	    for (P = 0; P < paths; P++)
+	    typedef struct pos_s pos_t;
+	    struct pos_s
+	    {
+	      pos_t *next;
+	      int x, y, n;
+	    };
+	    pos_t *pos = malloc (sizeof (*pos)), *last = NULL;
+	    pos->x = (parkvertical ? 0 : 1);	// Start point
+	    pos->y = helix + 1 + (parkvertical ? 1 : 0);
+	    pos->n = 0;
+	    pos->next = NULL;
+	    last = pos;
+	    while (pos)
 	      {
-		x[P][0] = (parkvertical ? 0 : 1);	// Start point
-		y[P][0] = helix + 1 + (parkvertical ? 1 : 0);
-		p[P] = 1;
-		running |= (1 << P);
-	      }
-	    while (running)
-	      for (P = 0; P < paths; P++)
-		if (p[P])
-		  {
-		    // Where we are
-		    X = x[P][p[P] - 1];
-		    Y = y[P][p[P] - 1];
-		    unsigned int v, n = 0;
-		    // Which way can we go
-		    // Some bias for direction
-		    if (!test (X + 1, Y))
-		      n += 3;	// Right
-		    if (!test (X - 1, Y))
-		      n += 3;	// Left
-		    if (!test (X, Y - 1))
-		      n += 2;	// Down
-		    if (!test (X, Y + 1))
-		      n++;	// Up
-		    if (!n)
-		      {		// No way forward
-			p[P]--;	// Move back
-			if (!p[P])
-			  running &= ~(1 << P);	// Finished
-			else
-			  P--;	// Keep going on this path back until we can move forward.
-			continue;
-		      }
-		    // Pick one of the ways randomly
-		    if (read (f, &v, sizeof (v)) != sizeof (v))
-		      err (1, "Read /dev/random");
-		    v %= n;
-		    // Move forward
-		    if (!test (X + 1, Y) && (!v-- || !v-- || !v--))
-		      {		// Right
-			maze[X][Y] |= R;
-			X++;
-			if (X >= W)
-			  {
-			    X -= W;
-			    Y += helix;
-			  }
-			maze[X][Y] |= L;
-		      }
-		    else if (!test (X - 1, Y) && (!v-- || !v-- || !v--))
-		      {		// Left
-			maze[X][Y] |= L;
-			X--;
-			if (X < 0)
-			  {
-			    X += W;
-			    Y -= helix;
-			  }
-			maze[X][Y] |= R;
-		      }
-		    else if (!test (X, Y - 1) && (!v-- || !v--))
-		      {		// Down
-			maze[X][Y] |= D;
-			Y--;
-			maze[X][Y] |= U;
-		      }
-		    else if (!test (X, Y + 1) && !v--)
-		      {		// Up
-			maze[X][Y] |= U;
-			Y++;
-			maze[X][Y] |= D;
-		      }
-		    else
-		      errx (1, "WTF");	// We should have picked a way we can go
-		    if (p[P] == W * H)
-		      errx (1, "WTF");	// We should never run out of space
-		    // Record where we got to
-		    x[P][p[P]] = X;
-		    y[P][p[P]] = Y;
-		    p[P]++;	// Move on
-		    if (p[P] > max && (test (X, Y + 1) & 0x80))
-		      {		// Longest path that reaches top
-			max = p[P];
-			maxx = X;
-		      }
+		pos_t *p = pos;
+		pos = p->next;
+		p->next = NULL;
+		if (!pos)
+		  last = NULL;
+		// Where we are
+		X = p->x;
+		Y = p->y;
+		unsigned int v, n = 0;
+		// Which way can we go
+		// Some bias for direction
+		if (!test (X + 1, Y))
+		  n += 3;	// Right
+		if (!test (X - 1, Y))
+		  n += 3;	// Left
+		if (!test (X, Y - 1))
+		  n += 2;	// Down
+		if (!test (X, Y + 1))
+		  n++;		// Up
+		if (!n)
+		  {		// No way forward
+		    free (p);
+		    continue;
 		  }
-	    close (f);
+		// Pick one of the ways randomly
+		if (read (f, &v, sizeof (v)) != sizeof (v))
+		  err (1, "Read /dev/random");
+		v %= n;
+		// Move forward
+		if (!test (X + 1, Y) && (!v-- || !v-- || !v--))
+		  {		// Right
+		    maze[X][Y] |= R;
+		    X++;
+		    if (X >= W)
+		      {
+			X -= W;
+			Y += helix;
+		      }
+		    maze[X][Y] |= L;
+		  }
+		else if (!test (X - 1, Y) && (!v-- || !v-- || !v--))
+		  {		// Left
+		    maze[X][Y] |= L;
+		    X--;
+		    if (X < 0)
+		      {
+			X += W;
+			Y -= helix;
+		      }
+		    maze[X][Y] |= R;
+		  }
+		else if (!test (X, Y - 1) && (!v-- || !v--))
+		  {		// Down
+		    maze[X][Y] |= D;
+		    Y--;
+		    maze[X][Y] |= U;
+		  }
+		else if (!test (X, Y + 1) && !v--)
+		  {		// Up
+		    maze[X][Y] |= U;
+		    Y++;
+		    maze[X][Y] |= D;
+		  }
+		else
+		  errx (1, "WTF");	// We should have picked a way we can go
+		// Entry
+		if (p->n > max && (test (X, Y + 1) & 0x80))
+		  {		// Longest path that reaches top
+		    max = p->n;
+		    maxx = X;
+		  }
+		// Next point to consider
+		pos_t *next = malloc (sizeof (*next));
+		next->x = X;
+		next->y = Y;
+		next->n = p->n + 1;
+		next->next = NULL;
+		if (read (f, &v, sizeof (v)) != sizeof (v))
+		  err (1, "Read /dev/random");
+		if (mazecomplexity < 0)
+		  v = (v % (2 - mazecomplexity)) ? 0 : 1;
+		else
+		  v = (v % (mazecomplexity + 2)) ? 1 : 0;
+		if (v)
+		  {		// add next point at start - makes for longer path
+		    if (!pos)
+		      last = next;
+		    next->next = pos;
+		    pos = next;
+		  }
+		else
+		  {		// add next point at end - makes for multiple paths, which can mean very simple solution
+		    if (last)
+		      last->next = next;
+		    else
+		      pos = next;
+		    last = next;
+		  }
+		// add current point again
+		if (last)
+		  last->next = p;
+		else
+		  pos = p;
+		last = p;
+	      }
 	    if (!flip)
 	      entry = maxx % (W / nubs);
+	    printf ("// Path length %d\n", max);
 	  }
+	close (f);
 	// Entry point for maze
 	for (X = entry; X < W; X += W / nubs)
 	  {
