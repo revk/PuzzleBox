@@ -14,11 +14,18 @@
 #include <fcntl.h>
 #include <time.h>
 
-#define	L 1
-#define R 2
-#define U 4
-#define D 8
-#define	A 15
+// Flags for maze array
+#define	FLAGL 0x01		// Left
+#define FLAGR 0x02		// Right
+#define FLAGU 0x04		// Up
+#define FLAGD 0x08		// Down
+#define	FLAGA 0x0F		// All directions
+#define	FLAGI 0x80		// Invalid
+
+#define	BIASL	1		// Direction bias for random maze choices
+#define	BIASR	1
+#define	BIASU	1
+#define	BIASD	1
 
 int
 main (int argc, const char *argv[])
@@ -532,7 +539,7 @@ main (int argc, const char *argv[])
 	while (n--)
 	  {
 	    if (y < 0 || y >= H)
-	      v |= 0x80;
+	      v |= FLAGI;
 	    else
 	      v |= maze[x][y];
 	    if (!n)
@@ -560,34 +567,34 @@ main (int argc, const char *argv[])
 	for (Y = 0; Y < H; Y++)
 	  for (X = 0; X < W; X++)
 	    if (mazestep * Y + y0 + dy * X < base + mazestep / 2 + mazestep / 8 || mazestep * Y + y0 + dy * X > height - mazestep / 2 - margin - mazestep / 8)
-	      maze[X][Y] |= 0x80;	// To high or low
+	      maze[X][Y] |= FLAGI;	// To high or low
 	// Final park point
 	if (parkvertical)
 	  for (N = 0; N < helix + 2; N++)	// Down to final
 	    {
-	      maze[0][N] |= U + D;
-	      maze[0][N + 1] |= D;
+	      maze[0][N] |= FLAGU + FLAGD;
+	      maze[0][N + 1] |= FLAGD;
 	    }
 	else			// Left to final
 	  {
-	    maze[0][helix + 1] |= R;
-	    maze[1][helix + 1] |= L;
+	    maze[0][helix + 1] |= FLAGR;
+	    maze[1][helix + 1] |= FLAGL;
 	  }
 	// Make maze
 	if (testmaze)
 	  {			// Simple test pattern
 	    for (Y = 0; Y < H; Y++)
 	      for (X = 0; X < W; X++)
-		if (!(test (X, Y) & 0x80) && !(test (X + 1, Y) & 0x80))
+		if (!(test (X, Y) & FLAGI) && !(test (X + 1, Y) & FLAGI))
 		  {
-		    maze[X][Y] |= R;
+		    maze[X][Y] |= FLAGR;
 		    int x = X + 1, y = Y;
 		    if (x >= W)
 		      {
 			x -= W;
 			y += helix;
 		      }
-		    maze[x][y] |= L;
+		    maze[x][y] |= FLAGL;
 		  }
 	  }
 	else
@@ -615,17 +622,17 @@ main (int argc, const char *argv[])
 		// Where we are
 		X = p->x;
 		Y = p->y;
-		unsigned int v, n = 0;
+		int v, n = 0;
 		// Which way can we go
 		// Some bias for direction
 		if (!test (X + 1, Y))
-		  n += 3;	// Right
+		  n += BIASR;	// Right
 		if (!test (X - 1, Y))
-		  n += 3;	// Left
+		  n += BIASL;	// Left
 		if (!test (X, Y - 1))
-		  n += 2;	// Down
+		  n += BIASD;	// Down
 		if (!test (X, Y + 1))
-		  n++;		// Up
+		  n += BIASU;	// Up
 		if (!n)
 		  {		// No way forward
 		    free (p);
@@ -636,44 +643,44 @@ main (int argc, const char *argv[])
 		  err (1, "Read /dev/random");
 		v %= n;
 		// Move forward
-		if (!test (X + 1, Y) && (!v-- || !v-- || !v--))
+		if (!test (X + 1, Y) && (v -= BIASR) < 0)
 		  {		// Right
-		    maze[X][Y] |= R;
+		    maze[X][Y] |= FLAGR;
 		    X++;
 		    if (X >= W)
 		      {
 			X -= W;
 			Y += helix;
 		      }
-		    maze[X][Y] |= L;
+		    maze[X][Y] |= FLAGL;
 		  }
-		else if (!test (X - 1, Y) && (!v-- || !v-- || !v--))
+		else if (!test (X - 1, Y) && (v -= BIASL) < 0)
 		  {		// Left
-		    maze[X][Y] |= L;
+		    maze[X][Y] |= FLAGL;
 		    X--;
 		    if (X < 0)
 		      {
 			X += W;
 			Y -= helix;
 		      }
-		    maze[X][Y] |= R;
+		    maze[X][Y] |= FLAGR;
 		  }
-		else if (!test (X, Y - 1) && (!v-- || !v--))
+		else if (!test (X, Y - 1) && (v -= BIASD) < 0)
 		  {		// Down
-		    maze[X][Y] |= D;
+		    maze[X][Y] |= FLAGD;
 		    Y--;
-		    maze[X][Y] |= U;
+		    maze[X][Y] |= FLAGU;
 		  }
-		else if (!test (X, Y + 1) && !v--)
+		else if (!test (X, Y + 1) && (v -= BIASU) < 0)
 		  {		// Up
-		    maze[X][Y] |= U;
+		    maze[X][Y] |= FLAGU;
 		    Y++;
-		    maze[X][Y] |= D;
+		    maze[X][Y] |= FLAGD;
 		  }
 		else
 		  errx (1, "WTF");	// We should have picked a way we can go
 		// Entry
-		if (p->n > max && (test (X, Y + 1) & 0x80))
+		if (p->n > max && (test (X, Y + 1) & FLAGI))
 		  {		// Longest path that reaches top
 		    max = p->n;
 		    maxx = X;
@@ -728,9 +735,9 @@ main (int argc, const char *argv[])
 	for (X = entry; X < W; X += W / nubs)
 	  {
 	    Y = H - 1;
-	    while (Y && (maze[X][Y] & 0x80))
-	      maze[X][Y--] |= U + D;
-	    maze[X][Y] += U;
+	    while (Y && (maze[X][Y] & FLAGI))
+	      maze[X][Y--] |= FLAGU + FLAGD;
+	    maze[X][Y] += FLAGU;
 	  }
 
 	int MAXY = height / (mazestep / 4) + 10;
@@ -807,7 +814,7 @@ main (int argc, const char *argv[])
 	    for (X = 0; X < W; X++)
 	      {
 		unsigned char v = test (X, Y);
-		if (!(v & A) || (v & 0x80))
+		if (!(v & FLAGA) || (v & FLAGI))
 		  continue;
 		p[X][Y] = P;
 		for (S = X * 4; S < X * 4 + 4; S++)
@@ -912,40 +919,40 @@ main (int argc, const char *argv[])
 	  for (X = 0; X < W; X++)
 	    {
 	      unsigned char v = test (X, Y);
-	      if (!(v & A) || (v & 0x80))
+	      if (!(v & FLAGA) || (v & FLAGI))
 		continue;
 	      S = X * 4;
 	      int P = p[X][Y];
 	      // Left
-	      if (!(v & D))
+	      if (!(v & FLAGD))
 		slice (S + 0, P + 0, P + 1);
 	      slice (S + 0, P + 0, -(P + 5));
-	      if (v & L)
+	      if (v & FLAGL)
 		{
 		  slice (S + 0, -(P + 4), -(P + 5));
 		  slice (S + 0, -(P + 8), -(P + 9));
 		}
 	      slice (S + 0, P + 12, -(P + 9));
-	      if (!(v & U))
+	      if (!(v & FLAGU))
 		slice (S + 0, P + 12, P + 13);
 	      // Middle
-	      if (!(v & D))
+	      if (!(v & FLAGD))
 		slice (S + 1, P + 1, P + 2);
 	      slice (S + 1, -(P + 5), -(P + 6));
 	      slice (S + 1, -(P + 9), -(P + 10));
-	      if (!(v & U))
+	      if (!(v & FLAGU))
 		slice (S + 1, P + 13, P + 14);
 	      // Right
-	      if (!(v & D))
+	      if (!(v & FLAGD))
 		slice (S + 2, P + 2, P + 3);
 	      slice (S + 2, -(P + 6), P + 3);
-	      if (v & R)
+	      if (v & FLAGR)
 		{
 		  slice (S + 2, -(P + 6), -(P + 7));
 		  slice (S + 2, -(P + 10), -(P + 11));
 		}
 	      slice (S + 2, -(P + 10), P + 15);
-	      if (!(v & U))
+	      if (!(v & FLAGU))
 		slice (S + 2, P + 14, P + 15);
 	      {			// Joining to right
 		int x = X + 1, y = Y;
@@ -960,7 +967,7 @@ main (int argc, const char *argv[])
 		    if (PR)
 		      {
 			slice (S + 3, P + 3, PR + 0);
-			if (v & R)
+			if (v & FLAGR)
 			  {
 			    slice (S + 3, -(P + 7), -(PR + 4));
 			    slice (S + 3, -(P + 11), -(PR + 8));
