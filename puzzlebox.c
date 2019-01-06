@@ -504,7 +504,7 @@ main (int argc, const char *argv[])
       if (inside && part > 2)
 	base += baseheight;	// Nubs don't go all the way to the end
       if (inside && part == 2)
-	base += (coresolid ? coreheight : coregap + baseheight);	// First one is short...
+	base += (coresolid ? coreheight : coregap);	// First one is short...
       if (inside)
 	base += basegap;
       double h = height - base - mazemargin - (parkvertical ? mazestep / 4 : 0) - mazestep / 8;
