@@ -311,6 +311,8 @@ main (int argc, const char *argv[])
 	if (*p == '"')
 	  *p = '\'';
     }
+  char *textend1 = textend;
+  char *textend2 = textend;
   if (textend)
     {
       char *p;
@@ -318,7 +320,15 @@ main (int argc, const char *argv[])
 	if (*p == '"')
 	  *p = '\'';
 	else if (*p == '\\')
-	  *p = '/';
+	  {
+	    if (textend1 == textend2)
+	      {
+		textend2 = p + 1;
+		*p = 0;
+	      }
+	    else
+	      *p = '/';
+	  }
     }
   if (!logo)
     logodepth = 0;
@@ -1063,8 +1073,10 @@ main (int argc, const char *argv[])
       for (N = 0; N < nubs; N++)
 	printf ("rotate([0,0,%f])translate([0,%f,%f])hull(){rotate([90,0,0])nub();translate([0,0,%f])rotate([90,0,0])nub();}\n", -(double) N * 360 / nubs, r3, -mazestep, baseheight + mazestep);
     printf ("translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);\n", basethickness, r0 + (part > 1 && mazeinside ? mazethickness + clearance : 0) + (!mazeinside && part < parts ? clearance : 0), height, W * 4);	// Hole
-    if (textend && part + 1 >= parts)
-      printf ("rotate([0,0,%f])cuttext(%f,\"%s\");\n", (part == parts ? 1 : -1) * (90 + (double) 180 / (outersides ? : 100)), r2 - outerround, textend);
+    if (textend1 && part + 1 == parts)
+      printf ("rotate([0,0,%f])cuttext(%f,\"%s\");\n", (part == parts ? 1 : -1) * (90 + (double) 180 / (outersides ? : 100)), r2 - outerround, textend1);
+    if (textend2 && part == parts)
+      printf ("rotate([0,0,%f])cuttext(%f,\"%s\");\n", (part == parts ? 1 : -1) * (90 + (double) 180 / (outersides ? : 100)), r2 - outerround, textend2);
     if (textsides && part == parts && outersides)
       {
 	double a = 90 + 180 / outersides;
