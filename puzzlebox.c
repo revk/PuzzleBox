@@ -96,7 +96,7 @@ main (int argc, const char *argv[])
     {"park-thickness", 'p', POPT_ARG_DOUBLE | (parkthickness ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &parkthickness, 0, "Thickness of park ridge to click closed", "mm"},
     {"park-vertical", 'v', POPT_ARG_NONE, &parkvertical, 0, "Park vertically"},
     {"clearance", 'g', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &clearance, 0, "General X/Y clearance", "mm"},
-    {"outer-sides", 's', POPT_ARG_INT | (outersides ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &outersides, 0, "Number of outer sides", "N (0=round)"},
+    {"outer-sides", 's', POPT_ARG_INT | (outersides ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &outersides, 0, "Number of outer sides", "N (0=round, suggest multiple of nubs)"},
     {"outer-round", 'r', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &outerround, 0, "Outer rounding on ends", "mm"},
     {"grip-depth", 'R', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &gripdepth, 0, "Grip depth", "mm"},
     {"text-depth", 'D', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &textdepth, 0, "Text depth", "mm"},
@@ -305,8 +305,6 @@ main (int argc, const char *argv[])
     nubs = helix / (helix / nubs);
   if (helix && nubs > helix)
     nubs = helix;
-  if (outersides)
-    outersides = (outersides + nubs - 1) / nubs * nubs;
   if (gripdepth > (baseheight - outerround) / 6)
     gripdepth = (baseheight - outerround) / 6;
   if (textsides)
