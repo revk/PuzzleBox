@@ -1113,7 +1113,7 @@ main (int argc, const char *argv[])
       for (X = entry; X < W; X += W / nubs)
 	printf ("rotate([0,0,%f])translate([0,%f,%f])rotate([-90,180,0])nub();\n", (double) X * 360 / W, r1, height - mazestep / 2 - (parkvertical ? 0 : mazestep / 8));
     printf ("}\n");
-    x += r3 * 2 + 10;
+    x += r3 * 2 + 5;
   }
 
   if (part)
