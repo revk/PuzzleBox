@@ -46,6 +46,7 @@ main (int argc, const char *argv[])
   double logodepth = 0.6;
   double gripdepth = 2;
   double parkthickness = 1;
+  double textsidescale = 1;
   char *textend = NULL;
   char *textsides = NULL;
   char *textfont = NULL;
@@ -103,6 +104,7 @@ main (int argc, const char *argv[])
     {"text-side", 'S', POPT_ARG_STRING | (textsides ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &textsides, 0, "Text on sides", "Line1\\Line2..."},
     {"text-font", 'F', POPT_ARG_STRING | (textfont ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &textfont, 0, "Text font (optional)", "Font"},
     {"text-slow", 'Z', POPT_ARG_NONE, &textslow, 0, "Text has diagonal edges (very slow)"},
+    {"text-side-scale", 'T', POPT_ARG_DOUBLE, &textsidescale, 0, "Scale side text (i.e. if too long)", "N"},
     {"symmetric-cut", 'V', POPT_ARG_NONE, &symmectriccut, 0, "Symmetric maze cut"},
     {"logo", 'A', POPT_ARG_NONE, &logo, 0, "Include A&A logo in last lid"},
     {"text-depth", 'L', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &logodepth, 0, "Logo cut depth", "mm"},
@@ -295,7 +297,10 @@ main (int argc, const char *argv[])
   if (textend && !*textend)
     textend = NULL;
   if (textsides && !*textsides)
-    textsides = NULL;
+    {
+      textsidescale = 0;
+      textsides = NULL;
+    }
   if (helix && nubs && nubs < helix)
     nubs = helix / (helix / nubs);
   if (helix && nubs > helix)
@@ -1080,7 +1085,7 @@ main (int argc, const char *argv[])
     if (textsides && part == parts && outersides)
       {
 	double a = 90 + 180 / outersides;
-	double h = r3 * sin (M_PIl / outersides);
+	double h = r3 * sin (M_PIl / outersides) * textsidescale;
 	char *p = strdupa (textsides);
 	while (p)
 	  {
