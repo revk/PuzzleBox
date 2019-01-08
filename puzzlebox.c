@@ -67,6 +67,7 @@ main (int argc, const char *argv[])
   int parkvertical = 0;
   int mazecomplexity = 5;
   int markpos0 = 0;
+  int mirrorinside = 1;		// Clockwise lock on inside
 
   char pathsep = 0;
   char *path = getenv ("PATH_INFO");
@@ -787,6 +788,8 @@ main (int argc, const char *argv[])
 		s[S].y[2] = r * ca;
 	      }
 	  }
+	if (inside && mirrorinside)
+	  printf ("mirror([1,0,0])");
 	printf ("polyhedron(");
 	// Make points
 	printf ("points=[");
@@ -997,52 +1000,55 @@ main (int argc, const char *argv[])
 	printf (",convexity=10");
 	// Done
 	printf (");\n");
-	{			// Park ridge
-	  printf ("polyhedron(points=[");
-	  for (N = 0; N < W; N += W / nubs)
-	    for (Y = 0; Y < 4; Y++)
-	      for (X = 0; X < 4; X++)
-		{
-		  int S = N * 4 + X + (parkvertical ? 0 : 2);
-		  double z = y0 - dy * 1.5 / 4 + (helix + 1) * mazestep + Y * mazestep / 4 + dy * X / 4 + (parkvertical ? mazestep / 8 : dy / 2 - mazestep * 3 / 8);
-		  double x = s[S].x[1];
-		  double y = s[S].y[1];
-		  if (parkvertical ? Y == 1 || Y == 2 : X == 1 || X == 2)
-		    {		// ridge height instead or surface
-		      x = (s[S].x[1] * (mazethickness - parkthickness) + s[S].x[2] * parkthickness) / mazethickness;
-		      y = (s[S].y[1] * (mazethickness - parkthickness) + s[S].y[2] * parkthickness) / mazethickness;
-		    }
-		  else if (parkvertical)
-		    z -= nubskew;
-		  printf ("[%f,%f,%f],", s[S].x[0], s[S].y[0], z);
-		  printf ("[%f,%f,%f],", x, y, z);
-		}
-	  printf ("],faces=[");
-	  for (N = 0; N < nubs; N++)
-	    {
-	      int P = N * 32;
-	      inline void add (int a, int b, int c, int d)
+	if (parkthickness)
+	  {			// Park ridge
+	    if (inside && mirrorinside)
+	      printf ("mirror([1,0,0])");
+	    printf ("polyhedron(points=[");
+	    for (N = 0; N < W; N += W / nubs)
+	      for (Y = 0; Y < 4; Y++)
+		for (X = 0; X < 4; X++)
+		  {
+		    int S = N * 4 + X + (parkvertical ? 0 : 2);
+		    double z = y0 - dy * 1.5 / 4 + (helix + 1) * mazestep + Y * mazestep / 4 + dy * X / 4 + (parkvertical ? mazestep / 8 : dy / 2 - mazestep * 3 / 8);
+		    double x = s[S].x[1];
+		    double y = s[S].y[1];
+		    if (parkvertical ? Y == 1 || Y == 2 : X == 1 || X == 2)
+		      {		// ridge height instead or surface
+			x = (s[S].x[1] * (mazethickness - parkthickness) + s[S].x[2] * parkthickness) / mazethickness;
+			y = (s[S].y[1] * (mazethickness - parkthickness) + s[S].y[2] * parkthickness) / mazethickness;
+		      }
+		    else if (parkvertical)
+		      z -= nubskew;
+		    printf ("[%f,%f,%f],", s[S].x[0], s[S].y[0], z);
+		    printf ("[%f,%f,%f],", x, y, z);
+		  }
+	    printf ("],faces=[");
+	    for (N = 0; N < nubs; N++)
 	      {
-		printf ("[%d,%d,%d],[%d,%d,%d],", P + a, P + b, P + c, P + a, P + c, P + d);
+		int P = N * 32;
+		inline void add (int a, int b, int c, int d)
+		{
+		  printf ("[%d,%d,%d],[%d,%d,%d],", P + a, P + b, P + c, P + a, P + c, P + d);
+		}
+		for (X = 0; X < 6; X += 2)
+		  {
+		    add (X + 0, X + 1, X + 3, X + 2);
+		    for (Y = 0; Y < 24; Y += 8)
+		      {
+			add (X + 0 + Y, X + 2 + Y, X + 10 + Y, X + 8 + Y);
+			add (X + 1 + Y, X + 9 + Y, X + 11 + Y, X + 3 + Y);
+		      }
+		    add (X + 25, X + 24, X + 26, X + 27);
+		  }
+		for (Y = 0; Y < 24; Y += 8)
+		  {
+		    add (Y + 0, Y + 8, Y + 9, Y + 1);
+		    add (Y + 6, Y + 7, Y + 15, Y + 14);
+		  }
 	      }
-	      for (X = 0; X < 6; X += 2)
-		{
-		  add (X + 0, X + 1, X + 3, X + 2);
-		  for (Y = 0; Y < 24; Y += 8)
-		    {
-		      add (X + 0 + Y, X + 2 + Y, X + 10 + Y, X + 8 + Y);
-		      add (X + 1 + Y, X + 9 + Y, X + 11 + Y, X + 3 + Y);
-		    }
-		  add (X + 25, X + 24, X + 26, X + 27);
-		}
-	      for (Y = 0; Y < 24; Y += 8)
-		{
-		  add (Y + 0, Y + 8, Y + 9, Y + 1);
-		  add (Y + 6, Y + 7, Y + 15, Y + 14);
-		}
-	    }
-	  printf ("],convexity=10);\n");
-	}
+	    printf ("],convexity=10);\n");
+	  }
       }
     }
     printf ("translate([%f,0,0])\n", x + (outersides & 1 ? r3 : r2));
@@ -1136,7 +1142,7 @@ main (int argc, const char *argv[])
     if (markpos0 && part == parts)
       {
 	if (mazeinside)
-	  printf ("rotate([0,0,%f])translate([0,%f,%f])cylinder(d=%f,h=%f,center=true,$fn=100);\n", -(double) (entry + 0.5) * 360 / W, r1 - wallthickness / 2, height, wallthickness / 2, mazestep);	// mark position 0
+	  printf ("rotate([0,0,%f])translate([0,%f,%f])cylinder(d=%f,h=%f,center=true,$fn=100);\n", (double) ((mirrorinside ? 1 : -1) * entry - 0.5) * 360 / W, r1 - wallthickness / 2, height, wallthickness / 2, mazestep);	// mark position 0
 	else
 	  printf ("rotate([0,0,%f])translate([0,%f,%f])cylinder(d=%f,h=%f,center=true,$fn=100);\n", -0.5 * 360 / W, r1 - wallthickness / 2, height, wallthickness / 2, mazestep);	// mark position 0
       }
