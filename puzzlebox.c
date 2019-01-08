@@ -728,12 +728,12 @@ main (int argc, const char *argv[])
 		  }
 	      }
 	    if (!flip)
-	      entry = maxx % (W / nubs);
+	      entry = maxx;
 	    printf ("// Path length %d\n", max);
 	  }
 	close (f);
 	// Entry point for maze
-	for (X = entry; X < W; X += W / nubs)
+	for (X = entry % (W / nubs); X < W; X += W / nubs)
 	  {
 	    Y = H - 1;
 	    while (Y && (maze[X][Y] & FLAGI))
@@ -1093,7 +1093,7 @@ main (int argc, const char *argv[])
 	    if (q)
 	      *q++ = 0;
 	    if (*p)
-	      printf ("rotate([0,0,%f])translate([0,-%f,%f])rotate([-90,90,0])cuttext(%f,\"%s\");", a, r2, outerround + (height - outerround) / 2, h, p);
+	      printf ("rotate([0,0,%f])translate([0,-%f,%f])rotate([-90,90,0])cuttext(%f,\"%s\");\n", a, r2, outerround + (height - outerround) / 2, h, p);
 	    a += 360 / outersides;
 	    p = q;
 	  }
@@ -1107,10 +1107,10 @@ main (int argc, const char *argv[])
     if (mazeinside && part + 1 >= parts)
       entry = 0;		// Nubs needs to align for outside to align when closed
     if (!mazeinside && part > 1)
-      for (X = entry; X < W; X += W / nubs)
+      for (X = entry % (W / nubs); X < W; X += W / nubs)
 	printf ("rotate([0,0,%f])translate([0,%f,%f])rotate([90,0,0])nub();\n", (double) X * 360 / W, r0, height - mazestep / 2 - (parkvertical ? 0 : mazestep / 8));
     if (!mazeoutside && part < parts)
-      for (X = entry; X < W; X += W / nubs)
+      for (X = entry % (W / nubs); X < W; X += W / nubs)
 	printf ("rotate([0,0,%f])translate([0,%f,%f])rotate([-90,180,0])nub();\n", (double) X * 360 / W, r1, height - mazestep / 2 - (parkvertical ? 0 : mazestep / 8));
     printf ("}\n");
     x += (outersides & 1 ? r3 : r2) + r2 + 5;
