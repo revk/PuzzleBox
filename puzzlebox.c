@@ -1084,7 +1084,7 @@ main (int argc, const char *argv[])
       }
     if (textsides && part == parts && outersides)
       {
-	double a = 90 + 180 / outersides;
+	double a = 90 + (double) 180 / outersides;
 	double h = r3 * sin (M_PIl / outersides) * textsidescale;
 	char *p = strdupa (textsides);
 	while (p)
@@ -1093,7 +1093,7 @@ main (int argc, const char *argv[])
 	    if (q)
 	      *q++ = 0;
 	    if (*p)
-	      printf ("rotate([0,0,%f])translate([0,%f,%f])rotate([90,90,0])cuttext(%f,\"%s\");", a, r2, outerround + (height - outerround) / 2, h, p);
+	      printf ("rotate([0,0,%f])translate([0,-%f,%f])rotate([-90,90,0])cuttext(%f,\"%s\");", a, r2, outerround + (height - outerround) / 2, h, p);
 	    a += 360 / outersides;
 	    p = q;
 	  }
