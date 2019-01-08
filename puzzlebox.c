@@ -424,7 +424,8 @@ main (int argc, const char *argv[])
     else
       {
 	printf ("module cuttext(s,t){linear_extrude(height=%f,convexity=10,center=true)mirror([1,0,0])text(t,valign=\"center\",halign=\"center\",size=s", textdepth, textdepth, textdepth * 2);
-	printf (",font=\"%s\"", textfont);
+	if (textfont)
+	  printf (",font=\"%s\"", textfont);
 	printf (");}\n");
       }
     // You can use the A&A logo on your maze print providing it is tasteful and not in any way derogatory to A&A or any staff/officers.
