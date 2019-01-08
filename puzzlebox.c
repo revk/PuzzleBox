@@ -66,6 +66,7 @@ main (int argc, const char *argv[])
   int webform = 0;
   int parkvertical = 0;
   int mazecomplexity = 5;
+  int markpos0 = 0;
 
   char pathsep = 0;
   char *path = getenv ("PATH_INFO");
@@ -329,6 +330,8 @@ main (int argc, const char *argv[])
     basethickness = logodepth + (textend ? textdepth : 0) + 0.4;
   if (coresolid && coregap < mazestep * 2)
     coregap = mazestep * 2;
+  if (outersides && outersides / nubs * nubs != outersides)
+    markpos0 = 1;
 
   // MIME header
   if (mime)
@@ -412,14 +415,14 @@ main (int argc, const char *argv[])
     printf ("module nub(){translate([0,0,-0.1])hull(){cube([%f,%f,0.1],center=true);translate([0,%f,%f])cube([%f,%f,0.1],center=true);};}\n", mazestep * 3 / 4, mazestep * 3 / 4, nubskew, mazethickness - clearance / 2, mazestep / 4, mazestep / 4);
     if (textslow)
       {
-	printf ("module cuttext(s,t){translate([0,0,-1])minkowski(){rotate([0,0,45])cylinder(h=%f,d1=%f,d2=0,$fn=4);linear_extrude(height=1,convexity=2)mirror([1,0,0])text(t,valign=\"center\",halign=\"center\",size=s", textdepth, textdepth);
+	printf ("module cuttext(s,t){translate([0,0,-1])minkowski(){rotate([0,0,45])cylinder(h=%f,d1=%f,d2=0,$fn=4);linear_extrude(height=1,convexity=10)mirror([1,0,0])text(t,valign=\"center\",halign=\"center\",size=s", textdepth, textdepth);
 	if (textfont)
 	  printf (",font=\"%s\"", textfont);
 	printf (");}}\n");
       }
     else
       {
-	printf ("module cuttext(s,t){linear_extrude(height=%f,convexity=2,center=true)mirror([1,0,0])text(t,valign=\"center\",halign=\"center\",size=s", textdepth, textdepth, textdepth * 2);
+	printf ("module cuttext(s,t){linear_extrude(height=%f,convexity=10,center=true)mirror([1,0,0])text(t,valign=\"center\",halign=\"center\",size=s", textdepth, textdepth, textdepth * 2);
 	printf (",font=\"%s\"", textfont);
 	printf (");}\n");
       }
@@ -767,8 +770,8 @@ main (int argc, const char *argv[])
 	    double sa = sin (a), ca = cos (a);
 	    if (inside)
 	      {
-		s[S].x[0] = (r + mazethickness + (part < parts ? wallthickness : clearance * 2)) * sa;
-		s[S].y[0] = (r + mazethickness + (part < parts ? wallthickness : clearance * 2)) * ca;
+		s[S].x[0] = (r + mazethickness + (part < parts ? wallthickness : clearance + 0.01)) * sa;
+		s[S].y[0] = (r + mazethickness + (part < parts ? wallthickness : clearance + 0.01)) * ca;
 		s[S].x[1] = (r + mazethickness) * sa;
 		s[S].y[1] = (r + mazethickness) * ca;
 		s[S].x[2] = r * sa;
@@ -991,7 +994,7 @@ main (int argc, const char *argv[])
 	    slice (S, bottom + S, bottom + (S + 1) % (W * 4));
 	  }
 	printf ("]");
-	printf (",convexity=4");
+	printf (",convexity=10");
 	// Done
 	printf (");\n");
 	{			// Park ridge
@@ -1038,7 +1041,7 @@ main (int argc, const char *argv[])
 		  add (Y + 6, Y + 7, Y + 15, Y + 14);
 		}
 	    }
-	  printf ("],convexity=4);\n");
+	  printf ("],convexity=10);\n");
 	}
       }
     }
@@ -1048,11 +1051,38 @@ main (int argc, const char *argv[])
     printf ("{\n");
     // Maze
     if (mazeinside)
-      makemaze (r0, 1);
+      {
+	if (markpos0 && !mazeoutside && part + 1 == parts)
+	  printf ("difference(){union(){\n");
+	makemaze (r0, 1);
+	if (markpos0 && !mazeoutside && part + 1 == parts)
+	  {
+	    printf ("}\n");
+	    printf ("rotate([0,0,%f])translate([0,%f,%f])cylinder(d=%f,h=%f,center=true,$fn=100);\n", 0.5 * 360 / W, r1 - wallthickness / 2, height, wallthickness / 2, mazestep);	// mark position 0
+	    printf ("}\n");
+	  }
+      }
     if (mazeoutside)
-      makemaze (r1, 0);
+      {
+	if (markpos0 && part + 1 == parts)
+	  printf ("difference(){union(){\n");
+	makemaze (r1, 0);
+	if (markpos0 && part + 1 == parts)
+	  {
+	    printf ("}\n");
+	    printf ("rotate([0,0,%f])translate([0,%f,%f])cylinder(d=%f,h=%f,center=true,$fn=100);\n", (double) 360 * (entry + 0.5) / W, r1 - wallthickness / 2, height, wallthickness / 2, mazestep);	// mark position 0
+	    printf ("}\n");
+	  }
+      }
     if (!mazeinside && !mazeoutside && part < parts)
-      printf ("difference(){translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);}\n", basethickness / 2, r1, height - basethickness / 2, W * 4, basethickness, r0, height, W * 4);	// Non maze
+      {
+	printf ("difference(){\n");
+	printf ("translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);\n", basethickness / 2, r1, height - basethickness / 2, W * 4, basethickness, r0, height, W * 4);	// Non maze
+	if (markpos0 && part + 1 == parts)
+	  printf ("rotate([0,0,%f])translate([0,%f,%f])cylinder(d=%f,h=%f,center=true,$fn=100);\n", 0.5 * 360 / W, r1 - wallthickness / 2, height, wallthickness / 2, mazestep);	// mark position 0
+
+	printf ("}\n");
+      }
     // Base
     printf ("difference(){\n");
     if (part == parts)
@@ -1063,9 +1093,9 @@ main (int argc, const char *argv[])
       printf ("hull(){cylinder(r=%f,h=%f,$fn=%d);translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);}\n", r3 - mazethickness, baseheight, W * 4, mazemargin, r3, baseheight - mazemargin, W * 4);
     // Cut outs
     if (gripdepth && part + 1 < parts)
-      printf ("translate([0,0,%f])rotate_extrude(convexity=4,$fn=%d)translate([%f,0,0])circle(r=%f,$fn=100);\n", mazemargin + (baseheight - mazemargin) / 2, W * 4, r3 + gripdepth, gripdepth * 2);
+      printf ("translate([0,0,%f])rotate_extrude(convexity=10,$fn=%d)translate([%f,0,0])circle(r=%f,$fn=100);\n", mazemargin + (baseheight - mazemargin) / 2, W * 4, r3 + gripdepth, gripdepth * 2);
     else if (gripdepth && part + 1 == parts)
-      printf ("translate([0,0,%f])rotate_extrude(convexity=4,$fn=%d)translate([%f,0,0])circle(r=%f,$fn=100);\n", outerround + (baseheight - outerround) / 2, outersides ? : 100, r3 + gripdepth, gripdepth * 2);
+      printf ("translate([0,0,%f])rotate_extrude(convexity=10,$fn=%d)translate([%f,0,0])circle(r=%f,$fn=100);\n", outerround + (baseheight - outerround) / 2, outersides ? : 100, r3 + gripdepth, gripdepth * 2);
     if (nextoutside && part + 1 < parts)	// Connect endpoints over base
       for (N = 0; N < nubs; N++)
 	printf ("rotate([0,0,%f])translate([0,%f,%f])hull(){rotate([90,0,0])nub();translate([0,0,%f])rotate([90,0,0])nub();}\n", -(double) N * 360 / nubs, r3, -mazestep, baseheight + mazestep);
@@ -1102,7 +1132,14 @@ main (int argc, const char *argv[])
 	  }
       }
     if (logo && part == parts)
-      printf ("translate([0,0,%f])linear_extrude(height=%f,convexity=4)aa(%f,white=true);\n", basethickness - logodepth, basethickness, r0 * 1.8);
+      printf ("translate([0,0,%f])linear_extrude(height=%f,convexity=10)aa(%f,white=true);\n", basethickness - logodepth, basethickness, r0 * 1.8);
+    if (markpos0 && part == parts)
+      {
+	if (mazeinside)
+	  printf ("rotate([0,0,%f])translate([0,%f,%f])cylinder(d=%f,h=%f,center=true,$fn=100);\n", -(double) (entry + 0.5) * 360 / W, r1 - wallthickness / 2, height, wallthickness / 2, mazestep);	// mark position 0
+	else
+	  printf ("rotate([0,0,%f])translate([0,%f,%f])cylinder(d=%f,h=%f,center=true,$fn=100);\n", -0.5 * 360 / W, r1 - wallthickness / 2, height, wallthickness / 2, mazestep);	// mark position 0
+      }
     printf ("}\n");
     if (coresolid && part == 1)
       printf ("translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);\n", basethickness, r0 + clearance + (!mazeinside && part < parts ? clearance : 0), height - basethickness, W * 4);	// Solid core
