@@ -597,6 +597,9 @@ main (int argc, const char *argv[])
 		      }
 		    maze[x][y] |= FLAGL;
 		  }
+	    if (helix)
+	      while (entry + 1 < W && !(test (entry + 1, H - 2) & FLAGI))
+		entry++;
 	  }
 	else
 	  {			// Actual maze
