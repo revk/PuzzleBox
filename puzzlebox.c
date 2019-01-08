@@ -96,12 +96,12 @@ main (int argc, const char *argv[])
     {"park-thickness", 'p', POPT_ARG_DOUBLE | (parkthickness ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &parkthickness, 0, "Thickness of park ridge to click closed", "mm"},
     {"park-vertical", 'v', POPT_ARG_NONE, &parkvertical, 0, "Park vertically"},
     {"clearance", 'g', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &clearance, 0, "General X/Y clearance", "mm"},
-    {"outer-sides", 's', POPT_ARG_INT | (outersides ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &outersides, 0, "Number of outer sides", "N (0=round, suggest multiple of nubs)"},
+    {"outer-sides", 's', POPT_ARG_INT | (outersides ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &outersides, 0, "Number of outer sides (suggest multiple of nubs)", "N (0=round)"},
     {"outer-round", 'r', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &outerround, 0, "Outer rounding on ends", "mm"},
     {"grip-depth", 'R', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &gripdepth, 0, "Grip depth", "mm"},
     {"text-depth", 'D', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &textdepth, 0, "Text depth", "mm"},
-    {"text-end", 'E', POPT_ARG_STRING | (textend ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &textend, 0, "Text (initials) on end", "X"},
-    {"text-side", 'S', POPT_ARG_STRING | (textsides ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &textsides, 0, "Text on sides", "Line1\\Line2..."},
+    {"text-end", 'E', POPT_ARG_STRING | (textend ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &textend, 0, "Text (initials) on end", "X{\\X...}"},
+    {"text-side", 'S', POPT_ARG_STRING | (textsides ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &textsides, 0, "Text on sides", "Text{\\Text...}"},
     {"text-font", 'F', POPT_ARG_STRING | (textfont ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &textfont, 0, "Text font (optional)", "Font"},
     {"text-slow", 'Z', POPT_ARG_NONE, &textslow, 0, "Text has diagonal edges (very slow)"},
     {"text-side-scale", 'T', POPT_ARG_DOUBLE, &textsidescale, 0, "Scale side text (i.e. if too long)", "N"},
@@ -314,24 +314,12 @@ main (int argc, const char *argv[])
 	if (*p == '"')
 	  *p = '\'';
     }
-  char *textend1 = textend;
-  char *textend2 = textend;
   if (textend)
     {
       char *p;
       for (p = textend; *p; p++)
 	if (*p == '"')
 	  *p = '\'';
-	else if (*p == '\\')
-	  {
-	    if (textend1 == textend2)
-	      {
-		textend2 = p + 1;
-		*p = 0;
-	      }
-	    else
-	      *p = '/';
-	  }
     }
   if (!logo)
     logodepth = 0;
@@ -1079,10 +1067,21 @@ main (int argc, const char *argv[])
       for (N = 0; N < nubs; N++)
 	printf ("rotate([0,0,%f])translate([0,%f,%f])hull(){rotate([90,0,0])nub();translate([0,0,%f])rotate([90,0,0])nub();}\n", -(double) N * 360 / nubs, r3, -mazestep, baseheight + mazestep);
     printf ("translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);\n", basethickness, r0 + (part > 1 && mazeinside ? mazethickness + clearance : 0) + (!mazeinside && part < parts ? clearance : 0), height, W * 4);	// Hole
-    if (textend1 && part + 1 == parts)
-      printf ("rotate([0,0,%f])cuttext(%f,\"%s\");\n", (part == parts ? 1 : -1) * (90 + (double) 180 / (outersides ? : 100)), r2 - outerround, textend1);
-    if (textend2 && part == parts)
-      printf ("rotate([0,0,%f])cuttext(%f,\"%s\");\n", (part == parts ? 1 : -1) * (90 + (double) 180 / (outersides ? : 100)), r2 - outerround, textend2);
+    if (textend)
+      {
+	int n = 0;
+	char *p = strdupa (textend);
+	while (p)
+	  {
+	    char *q = strchr (p, '\\');
+	    if (q)
+	      *q++ = 0;
+	    if (*p && n == (parts - part))
+	      printf ("rotate([0,0,%f])cuttext(%f,\"%s\");\n", (part == parts ? 1 : -1) * (90 + (double) 180 / (outersides ? : 100)), r2 - outerround, p);
+	    p = q;
+	    n++;
+	  }
+      }
     if (textsides && part == parts && outersides)
       {
 	double a = 90 + 180 / outersides;
