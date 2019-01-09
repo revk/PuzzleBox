@@ -28,25 +28,25 @@ end
 foreach w (0 1 2)
 	setenv F lottery-ticket-hard-part-$w-of-2
 	if(! $w) setenv F all-lottery-ticket-hard
-	./puzzlebox --parts=2 --core-height=85 --core-gap=20 --core-diameter=10 --inside --outer-sides=4 --part=$w --text-slow --text-depth=1 --text-end='£' --text-side="Good luck\\Prepare to\be amazed!" --text-font="Mountains of Christmas" --logo $* > /tmp/$F.scad
+	./puzzlebox --parts=2 --core-height=85 --core-gap=20 --core-diameter=10 --inside --outer-sides=4 --part=$w --text-slow --text-depth=1 --text-end=' £ ' --text-side="Good luck\\Prepare to\be amazed!" --text-font="Mountains of Christmas" --logo $* > /tmp/$F.scad
 	openscad -o /tmp/$F.stl /tmp/$F.scad&
 end
 foreach w (0 1 2)
 	setenv F lottery-ticket-easy-part-$w-of-2
 	if(! $w) setenv F all-lottery-ticket-easy
-	./puzzlebox --parts=2 --core-height=85 --core-gap=20 --core-diameter=10 --outer-sides=4 --part=$w --text-slow --text-depth=1 --text-end='£' --text-side="Good luck\\Prepare to\be amazed!" --text-font="Mountains of Christmas" --logo $* > /tmp/$F.scad
+	./puzzlebox --parts=2 --core-height=85 --core-gap=20 --core-diameter=10 --outer-sides=4 --part=$w --text-slow --text-depth=1 --text-end=' £ ' --text-side="Good luck\\Prepare to\be amazed!" --text-font="Mountains of Christmas" --logo $* > /tmp/$F.scad
 	openscad -o /tmp/$F.stl /tmp/$F.scad&
 end
 foreach w (0 1 2 3)
 	setenv F five-pound-coins-part-$w-of-3
 	if(! $w) setenv F all-five-pound-coin
-	./puzzlebox --parts=3 --inside --flip --core-solid --core-gap=10 --core-height=14 --core-diameter=24 --outer-sides=12 --part=$w --text-slow --text-depth=1 --text-end='£' --logo $* > /tmp/$F.scad
+	./puzzlebox --parts=3 --inside --flip --core-solid --core-gap=10 --core-height=14 --core-diameter=24 --outer-sides=12 --part=$w --text-slow --text-depth=1 --text-end=' £ ' --logo $* > /tmp/$F.scad
 	openscad -o /tmp/$F.stl /tmp/$F.scad&
 end
 foreach w (0 1 2 3)
 	setenv F ten-pound-coins-part-$w-of-3
 	if(! $w) setenv F all-ten-pound-coin
-	./puzzlebox --parts=3 --inside --flip --core-solid --core-gap=10 --core-height=28 --core-diameter=24 --outer-sides=12 --part=$w --text-slow --text-depth=1 --text-end='£' --logo $* > /tmp/$F.scad
+	./puzzlebox --parts=3 --inside --flip --core-solid --core-gap=10 --core-height=28 --core-diameter=24 --outer-sides=12 --part=$w --text-slow --text-depth=1 --text-end=' £ ' --logo $* > /tmp/$F.scad
 	openscad -o /tmp/$F.stl /tmp/$F.scad&
 end
 foreach s (30/30 50/20 70/10)
