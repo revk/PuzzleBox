@@ -303,8 +303,13 @@ main (int argc, const char *argv[])
       textsidescale = 0;
       textsides = NULL;
     }
-  if (helix && nubs && nubs < helix)
-    nubs = helix;
+  if (helix && nubs > 1 && nubs < helix)
+    {
+      if (!(helix % 2) && nubs <= helix / 2)
+	nubs = helix / 2;
+      else
+	nubs = helix;
+    }
   if (helix && nubs > helix)
     nubs = helix;
   if (gripdepth > (baseheight - outerround) / 6)
