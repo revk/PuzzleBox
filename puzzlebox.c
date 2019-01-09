@@ -304,7 +304,7 @@ main (int argc, const char *argv[])
       textsides = NULL;
     }
   if (helix && nubs && nubs < helix)
-    nubs = helix / (helix / nubs);
+    nubs = helix;
   if (helix && nubs > helix)
     nubs = helix;
   if (gripdepth > (baseheight - outerround) / 6)
@@ -410,11 +410,7 @@ main (int argc, const char *argv[])
       printf ("// ** %s **\n", error);
       return 1;
     }
-
-
   {				// Modules
-    // TODO nub should be worked out for skew and size properly per layer
-    printf ("module nub(){translate([0,0,-0.1])hull(){cube([%f,%f,0.1],center=true);translate([0,%f,%f])cube([%f,%f,0.1],center=true);};}\n", mazestep * 3 / 4, mazestep * 3 / 4, nubskew, mazethickness - clearance / 2, mazestep / 4, mazestep / 4);
     if (textslow)
       printf ("module cuttext(){translate([0,0,-1])minkowski(){rotate([0,0,45])cylinder(h=%f,d1=%f,d2=0,$fn=4);linear_extrude(height=1,convexity=10)mirror([1,0,0])children();}}\n", textdepth, textdepth);
     else
@@ -1107,8 +1103,7 @@ main (int argc, const char *argv[])
     else if (gripdepth && part + 1 == parts)
       printf ("translate([0,0,%f])rotate_extrude(convexity=10,$fn=%d)translate([%f,0,0])circle(r=%f,$fn=100);\n", outerround + (baseheight - outerround) / 2, outersides ? : 100, r3 + gripdepth, gripdepth * 2);
     if (nextoutside && part + 1 < parts)	// Connect endpoints over base
-      for (N = 0; N < nubs; N++)
-	printf ("rotate([0,0,%f])translate([0,%f,%f])hull(){rotate([90,0,0])nub();translate([0,0,%f])rotate([90,0,0])nub();}\n", -(double) N * 360 / nubs, r3, -mazestep, baseheight + mazestep);
+      printf ("for(a=[0:%f:359])rotate([0,0,a])translate([0,%f,0])hull(){cube([%f,%f,%f],center=true);cube([%f,0.01,%f],center=true);}\n", (double) 360 / nubs, r2, mazestep / 4, mazethickness * 2, baseheight * 2 + clearance, mazestep * 3 / 4, baseheight * 2 + clearance);
     printf ("translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);\n", basethickness, r0 + (part > 1 && mazeinside ? mazethickness + clearance : 0) + (!mazeinside && part < parts ? clearance : 0), height, W * 4);	// Hole
     if (textend)
       {
@@ -1162,12 +1157,39 @@ main (int argc, const char *argv[])
     // Nubs
     if (mazeinside && part + 1 >= parts)
       entry = 0;		// Nubs needs to align for outside to align when closed
+    void addnub (double r, int inside)
+    {
+      double ri = r + (inside ? -mazethickness : mazethickness);
+      double da = (double) 1 / (ri * 4 / mazestep);	// x angle per 1/4 maze step
+      double dy = mazestep / 4;
+      double my = mazestep * da * helix / (r * 2 * M_PIl);
+      if (inside)
+	da = -da;
+      else
+	my = -my;
+      double a = -da * 1.5;	// Centre A
+      double z = height - mazestep / 2 - (parkvertical ? 0 : mazestep / 8) - mazestep / 4 * 1.5 - my * 1.5;	// Centre Z
+      r += (inside ? clearance : -clearance);
+      printf ("for(a=[0:%f:359])rotate([0,0,a])polyhedron(points=[", (double) 360 / nubs);
+      for (Y = 0; Y < 4; Y++)
+	for (X = 0; X < 4; X++)
+	  printf ("[%f,%f,%f],", r * sin (a + da * X), r * cos (a + da * X), z + Y * dy + X * my + (Y == 1 || Y == 2 ? nubskew : 0));
+      for (Y = 1; Y < 3; Y++)
+	for (X = 1; X < 3; X++)
+	  printf ("[%f,%f,%f],", ri * sin (a + da * X), ri * cos (a + da * X), z + Y * dy + X * my + nubskew);
+      printf ("],faces=[");
+      for (Y = 0; Y < 3; Y++)
+	for (X = 0; X < 3; X++)
+	  printf ("[%d,%d,%d],[%d,%d,%d],", Y * 4 + X + 0, Y * 4 + X + 4, Y * 4 + X + 5, Y * 4 + X + 0, Y * 4 + X + 5, Y * 4 + X + 1);
+      printf ("[0,1,16],[0,16,4],[4,16,18],[4,18,8],[8,18,12],[18,13,12],");
+      printf ("[1,2,17],[1,17,16],[16,17,19],[16,19,18],[18,19,14],[18,14,13],");
+      printf ("[2,3,17],[3,7,17],[17,7,11],[17,11,19],[19,11,15],[19,15,14],");
+      printf ("]);\n");
+    }
     if (!mazeinside && part > 1)
-      for (X = entry % (W / nubs); X < W; X += W / nubs)
-	printf ("rotate([0,0,%f])translate([0,%f,%f])rotate([90,0,0])nub();\n", (double) X * 360 / W, r0, height - mazestep / 2 - (parkvertical ? 0 : mazestep / 8));
+      addnub (r0, 1);
     if (!mazeoutside && part < parts)
-      for (X = entry % (W / nubs); X < W; X += W / nubs)
-	printf ("rotate([0,0,%f])translate([0,%f,%f])rotate([-90,180,0])nub();\n", (double) X * 360 / W, r1, height - mazestep / 2 - (parkvertical ? 0 : mazestep / 8));
+      addnub (r1, 0);
     printf ("}\n");
     x += (outersides & 1 ? r3 : r2) + r2 + 5;
   }
