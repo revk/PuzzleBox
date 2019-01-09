@@ -416,9 +416,9 @@ main (int argc, const char *argv[])
     // TODO nub should be worked out for skew and size properly per layer
     printf ("module nub(){translate([0,0,-0.1])hull(){cube([%f,%f,0.1],center=true);translate([0,%f,%f])cube([%f,%f,0.1],center=true);};}\n", mazestep * 3 / 4, mazestep * 3 / 4, nubskew, mazethickness - clearance / 2, mazestep / 4, mazestep / 4);
     if (textslow)
-      printf ("module cuttext(){translate([0,0,-1])minkowski(){rotate([0,0,45])cylinder(h=%f,d1=%f,d2=0,$fn=4);linear_extrude(height=1,convexity=10)mirror([1,0,0])children();}}\n");
+      printf ("module cuttext(){translate([0,0,-1])minkowski(){rotate([0,0,45])cylinder(h=%f,d1=%f,d2=0,$fn=4);linear_extrude(height=1,convexity=10)mirror([1,0,0])children();}}\n", textdepth, textdepth);
     else
-      printf ("module cuttext(){linear_extrude(height=%f,convexity=10,center=true)mirror([1,0,0])children();}\n");
+      printf ("module cuttext(){linear_extrude(height=%f,convexity=10,center=true)mirror([1,0,0])children();}\n", textdepth);
     // You can use the A&A logo on your maze print providing it is tasteful and not in any way derogatory to A&A or any staff/officers.
     if (logo)
       printf
@@ -508,7 +508,7 @@ main (int argc, const char *argv[])
     // Output
     void makemaze (double r, int inside)
     {				// Make the maze
-      W = ((int) ((r - mazethickness) * 2 * M_PIl / mazestep)) / nubs * nubs;	// Update W for actual maze
+      W = ((int) ((r + (inside ? mazethickness : -mazethickness)) * 2 * M_PIl / mazestep)) / nubs * nubs;	// Update W for actual maze
       double base = (inside ? basethickness : baseheight);
       if (inside && part > 2)
 	base += baseheight;	// Nubs don't go all the way to the end
