@@ -1160,7 +1160,8 @@ main (int argc, const char *argv[])
     void addnub (double r, int inside)
     {
       double ri = r + (inside ? -mazethickness : mazethickness);
-      double da = (double) 1 / (ri * 4 / mazestep);	// x angle per 1/4 maze step
+      int W = ((int) (ri * 2 * M_PIl / mazestep)) / nubs * nubs;
+      double da = (double) 2 * M_PIl / W / 4;	// x angle per 1/4 maze step
       double dy = mazestep / 4;
       double my = mazestep * da * helix / (r * 2 * M_PIl);
       if (inside)
@@ -1185,6 +1186,7 @@ main (int argc, const char *argv[])
       printf ("[1,2,17],[1,17,16],[16,17,19],[16,19,18],[18,19,14],[18,14,13],");
       printf ("[2,3,17],[3,7,17],[17,7,11],[17,11,19],[19,11,15],[19,15,14],");
       printf ("]);\n");
+      // TODO nub should not be stretched to clearance back but have second set of points like the park ridge.
     }
     if (!mazeinside && part > 1)
       addnub (r0, 1);
