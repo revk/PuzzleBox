@@ -98,7 +98,7 @@ main (int argc, const char *argv[])
     {"park-thickness", 'p', POPT_ARG_DOUBLE | (parkthickness ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &parkthickness, 0, "Thickness of park ridge to click closed", "mm"},
     {"park-vertical", 'v', POPT_ARG_NONE, &parkvertical, 0, "Park vertically"},
     {"clearance", 'g', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &clearance, 0, "General X/Y clearance", "mm"},
-    {"outer-sides", 's', POPT_ARG_INT | (outersides ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &outersides, 0, "Number of outer sides (suggest multiple of nubs)", "N (0=round)"},
+    {"outer-sides", 's', POPT_ARG_INT | (outersides ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &outersides, 0, "Number of outer sides", "N (0=round)"},
     {"outer-round", 'r', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &outerround, 0, "Outer rounding on ends", "mm"},
     {"grip-depth", 'R', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &gripdepth, 0, "Grip depth", "mm"},
     {"text-depth", 'D', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &textdepth, 0, "Text depth", "mm"},
@@ -1175,23 +1175,26 @@ main (int argc, const char *argv[])
 	my = -my;
       double a = -da * 1.5;	// Centre A
       double z = height - mazestep / 2 - (parkvertical ? 0 : mazestep / 8) - mazestep / 4 * 1.5 - my * 1.5;	// Centre Z
-      r += (inside ? clearance : -clearance);
       printf ("for(a=[0:%f:359])rotate([0,0,a])polyhedron(points=[", (double) 360 / nubs);
       for (Y = 0; Y < 4; Y++)
 	for (X = 0; X < 4; X++)
+	  printf ("[%f,%f,%f],", ((X == 1 || X == 2) && (Y == 1 || Y == 2) ? ri : r) * sin (a + da * X), ((X == 1 || X == 2) && (Y == 1 || Y == 2) ? ri : r) * cos (a + da * X), z + Y * dy + X * my + (Y == 1 || Y == 2 ? nubskew : 0));
+      r += (inside ? clearance : -clearance);
+      for (Y = 0; Y < 4; Y++)
+	for (X = 0; X < 4; X++)
 	  printf ("[%f,%f,%f],", r * sin (a + da * X), r * cos (a + da * X), z + Y * dy + X * my + (Y == 1 || Y == 2 ? nubskew : 0));
-      for (Y = 1; Y < 3; Y++)
-	for (X = 1; X < 3; X++)
-	  printf ("[%f,%f,%f],", ri * sin (a + da * X), ri * cos (a + da * X), z + Y * dy + X * my + nubskew);
       printf ("],faces=[");
       for (Y = 0; Y < 3; Y++)
 	for (X = 0; X < 3; X++)
-	  printf ("[%d,%d,%d],[%d,%d,%d],", Y * 4 + X + 0, Y * 4 + X + 4, Y * 4 + X + 5, Y * 4 + X + 0, Y * 4 + X + 5, Y * 4 + X + 1);
-      printf ("[0,1,16],[0,16,4],[4,16,18],[4,18,8],[8,18,12],[18,13,12],");
-      printf ("[1,2,17],[1,17,16],[16,17,19],[16,19,18],[18,19,14],[18,14,13],");
-      printf ("[2,3,17],[3,7,17],[17,7,11],[17,11,19],[19,11,15],[19,15,14],");
+	  printf ("[%d,%d,%d],[%d,%d,%d],", Y * 4 + X + 20, Y * 4 + X + 21, Y * 4 + X + 17, Y * 4 + X + 20, Y * 4 + X + 17, Y * 4 + X + 16);
+      for (Y = 0; Y < 3; Y++)
+	printf ("[%d,%d,%d],[%d,%d,%d],[%d,%d,%d],[%d,%d,%d],", Y * 4 + 4, Y * 4 + 20, Y * 4 + 16, Y * 4 + 4, Y * 4 + 16, Y * 4 + 0, Y * 4 + 23, Y * 4 + 7, Y * 4 + 3, Y * 4 + 23, Y * 4 + 3, Y * 4 + 19);
+      for (X = 0; X < 3; X++)
+	printf ("[%d,%d,%d],[%d,%d,%d],[%d,%d,%d],[%d,%d,%d],", X + 28, X + 12, X + 13, X + 28, X + 13, X + 29, X + 0, X + 16, X + 17, X + 0, X + 17, X + 1);
+      printf ("[0,1,5],[0,5,4],[4,5,9],[4,9,8],[8,9,12],[9,13,12],");
+      printf ("[1,2,6],[1,6,5],[5,6,10],[5,10,9],[9,10,14],[9,14,13],");
+      printf ("[2,3,6],[3,7,6],[6,7,11],[6,11,10],[10,11,15],[10,15,14],");
       printf ("]);\n");
-      // TODO nub should not be stretched to clearance back but have second set of points like the park ridge.
     }
     if (!mazeinside && part > 1)
       addnub (r0, 1);
