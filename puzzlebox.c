@@ -333,6 +333,7 @@ main (int argc, const char *argv[])
     coregap = mazestep * 2;
   if (outersides && outersides / nubs * nubs != outersides)
     markpos0 = 1;
+  double nubskew = (symmectriccut ? 0 : mazestep / 8);	// Skew the shape of the cut
 
   // MIME header
   if (mime)
@@ -410,28 +411,30 @@ main (int argc, const char *argv[])
       return 1;
     }
 
-  double nubskew = (symmectriccut ? 0 : mazestep / 8);	// Skew the shape of the cut
 
   {				// Modules
+    // TODO nub should be worked out for skew and size properly per layer
     printf ("module nub(){translate([0,0,-0.1])hull(){cube([%f,%f,0.1],center=true);translate([0,%f,%f])cube([%f,%f,0.1],center=true);};}\n", mazestep * 3 / 4, mazestep * 3 / 4, nubskew, mazethickness - clearance / 2, mazestep / 4, mazestep / 4);
     if (textslow)
-      {
-	printf ("module cuttext(s,t){translate([0,0,-1])minkowski(){rotate([0,0,45])cylinder(h=%f,d1=%f,d2=0,$fn=4);linear_extrude(height=1,convexity=10)mirror([1,0,0])text(t,valign=\"center\",halign=\"center\",size=s", textdepth, textdepth);
-	if (textfont)
-	  printf (",font=\"%s\"", textfont);
-	printf (");}}\n");
-      }
+      printf ("module cuttext(){translate([0,0,-1])minkowski(){rotate([0,0,45])cylinder(h=%f,d1=%f,d2=0,$fn=4);linear_extrude(height=1,convexity=10)mirror([1,0,0])children();}}\n");
     else
-      {
-	printf ("module cuttext(s,t){linear_extrude(height=%f,convexity=10,center=true)mirror([1,0,0])text(t,valign=\"center\",halign=\"center\",size=s", textdepth, textdepth, textdepth * 2);
-	if (textfont)
-	  printf (",font=\"%s\"", textfont);
-	printf (");}\n");
-      }
+      printf ("module cuttext(){linear_extrude(height=%f,convexity=10,center=true)mirror([1,0,0])children();}\n");
     // You can use the A&A logo on your maze print providing it is tasteful and not in any way derogatory to A&A or any staff/officers.
     if (logo)
       printf
 	("module aa(w=100,white=0,$fn=100){scale(w/100){if(!white)difference(){circle(d=100.5);circle(d=99.5);}difference(){if(white)circle(d=100);difference(){circle(d=92);for(m=[0,1])mirror([m,0,0]){difference(){translate([24,0,0])circle(r=22.5);translate([24,0,0])circle(r=15);}polygon([[1.5,22],[9,22],[9,-18.5],[1.5,-22]]);}}}}} // A&A Logo is copyright (c) 2013 and trademark Andrews & Arnold Ltd\n");
+  }
+  void cuttext (double s, char *t)
+  {
+    printf ("cuttext()text(\"%s\"", t);
+    printf (",halign=\"center\"");
+    printf (",valign=\"center\"");
+    printf (",size=%f", s);
+    if (*t & 0x80)
+      printf (",font=\"Noto Emoji\"");	// Assume emoji - not clean - TODO needs fontconfig stuff really
+    else if (textfont)
+      printf (",font=\"%s\"", textfont);
+    printf (");\n");
   }
   // The base
   printf ("module outer(h,r){e=%f;minkowski(){cylinder(r1=0,r2=e,h=e,$fn=100);cylinder(h=h-e,r=r,$fn=%d);}}\n", outerround, outersides ? : 100);
@@ -1117,7 +1120,10 @@ main (int argc, const char *argv[])
 	    if (q)
 	      *q++ = 0;
 	    if (*p && n == (parts - part))
-	      printf ("rotate([0,0,%f])cuttext(%f,\"%s\");\n", (part == parts ? 1 : -1) * (90 + (double) 180 / (outersides ? : 100)), r2 - outerround, p);
+	      {
+		printf ("rotate([0,0,%f])", (part == parts ? 1 : -1) * (90 + (double) 180 / (outersides ? : 100)));
+		cuttext (r2 - outerround, p);
+	      }
 	    p = q;
 	    n++;
 	  }
@@ -1133,7 +1139,10 @@ main (int argc, const char *argv[])
 	    if (q)
 	      *q++ = 0;
 	    if (*p)
-	      printf ("rotate([0,0,%f])translate([0,-%f,%f])rotate([-90,90,0])cuttext(%f,\"%s\");\n", a, r2, outerround + (height - outerround) / 2, h, p);
+	      {
+		printf ("rotate([0,0,%f])translate([0,-%f,%f])rotate([-90,90,0])", a, r2, outerround + (height - outerround) / 2);
+		cuttext (h, p);
+	      }
 	    a += 360 / outersides;
 	    p = q;
 	  }
