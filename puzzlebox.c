@@ -22,10 +22,10 @@
 #define	FLAGA 0x0F		// All directions
 #define	FLAGI 0x80		// Invalid
 
-#define	BIASL	1		// Direction bias for random maze choices
-#define	BIASR	1
+#define	BIASL	2		// Direction bias for random maze choices
+#define	BIASR	2
 #define	BIASU	1
-#define	BIASD	1
+#define	BIASD	4
 
 int
 main (int argc, const char *argv[])
