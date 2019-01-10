@@ -339,6 +339,7 @@ main (int argc, const char *argv[])
   if (outersides && outersides / nubs * nubs != outersides)
     markpos0 = 1;
   double nubskew = (symmectriccut ? 0 : mazestep / 8);	// Skew the shape of the cut
+  double nubclearance = clearance / 4;	// Extra clearance for nub
 
   // MIME header
   if (mime)
@@ -1168,18 +1169,21 @@ main (int argc, const char *argv[])
       int W = ((int) (ri * 2 * M_PIl / mazestep)) / nubs * nubs;
       double da = (double) 2 * M_PIl / W / 4;	// x angle per 1/4 maze step
       double dy = mazestep / 4;
-      double my = mazestep * da * helix / (r * 2 * M_PIl);
+      double my = -mazestep * da * helix / (r * 2 * M_PIl);
       if (inside)
-	da = -da;
-      else
-	my = -my;
+	{
+	  da = -da;
+	  if (mirrorinside)
+	    my = -my;
+	}
       double a = -da * 1.5;	// Centre A
       double z = height - mazestep / 2 - (parkvertical ? 0 : mazestep / 8) - mazestep / 4 * 1.5 - my * 1.5;	// Centre Z
       printf ("for(a=[0:%f:359])rotate([0,0,a])polyhedron(points=[", (double) 360 / nubs);
+      r += (inside ? nubclearance : -nubclearance);	// Extra gap
       for (Y = 0; Y < 4; Y++)
 	for (X = 0; X < 4; X++)
 	  printf ("[%f,%f,%f],", ((X == 1 || X == 2) && (Y == 1 || Y == 2) ? ri : r) * sin (a + da * X), ((X == 1 || X == 2) && (Y == 1 || Y == 2) ? ri : r) * cos (a + da * X), z + Y * dy + X * my + (Y == 1 || Y == 2 ? nubskew : 0));
-      r += (inside ? clearance : -clearance);
+      r += (inside ? clearance - nubclearance : -clearance + nubclearance);	// Back in to wall
       for (Y = 0; Y < 4; Y++)
 	for (X = 0; X < 4; X++)
 	  printf ("[%f,%f,%f],", r * sin (a + da * X), r * cos (a + da * X), z + Y * dy + X * my + (Y == 1 || Y == 2 ? nubskew : 0));
