@@ -41,7 +41,7 @@ main (int argc, const char *argv[])
   double clearance = 0.3;	// General X/Y clearance for parts
   double nubrclearance = 0.1;	// Extra radius clearance for nub, should be less than clearance, can be -ve
   double nubzclearance = 0.2;	// Extra Z clearance (per /4 maze step)
-  double parkthickness = 0.75;
+  double parkthickness = 0.7;
   double coregap = 0;
   double outerround = 2;
   double mazemargin = 1;
@@ -68,6 +68,7 @@ main (int argc, const char *argv[])
   int webform = 0;
   int parkvertical = 0;
   int mazecomplexity = 5;
+  int mirrorinside = 0;		// Clockwise lock on inside - may be unwise as more likely to come undone with outer.
 
   char pathsep = 0;
   char *path = getenv ("PATH_INFO");
@@ -345,7 +346,6 @@ main (int argc, const char *argv[])
     coregap = mazestep * 2;
 
   int markpos0 = (outersides && outersides / nubs * nubs != outersides);	// Mark on position zero for alignment
-  int mirrorinside = 1;		// Clockwise lock on inside
   double nubskew = (symmectriccut ? 0 : mazestep / 8);	// Skew the shape of the cut
 
   // MIME header
@@ -1115,14 +1115,19 @@ main (int argc, const char *argv[])
     else if (part + 1 >= parts)
       printf ("mirror([1,0,0])outer(%f,%f);\n", baseheight, (r2 - outerround) / cos ((double) M_PI / (outersides ? : 100)));
     else
-      printf ("hull(){cylinder(r=%f,h=%f,$fn=%d);translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);}\n", r3 - mazethickness, baseheight, W * 4, mazemargin, r3, baseheight - mazemargin, W * 4);
+      printf ("hull(){cylinder(r=%f,h=%f,$fn=%d);translate([0,0,%f])cylinder(r1=%f,r2=%f,h=%f,$fn=%d);}\n", r3 - mazethickness, baseheight, W * 4, mazemargin, r3 - mazethickness / 2, r3, baseheight - mazemargin, W * 4);
     // Cut outs
     if (gripdepth && part + 1 < parts)
       printf ("translate([0,0,%f])rotate_extrude(convexity=10,$fn=%d)translate([%f,0,0])circle(r=%f,$fn=100);\n", mazemargin + (baseheight - mazemargin) / 2, W * 4, r3 + gripdepth, gripdepth * 2);
     else if (gripdepth && part + 1 == parts)
       printf ("translate([0,0,%f])rotate_extrude(convexity=10,$fn=%d)translate([%f,0,0])circle(r=%f,$fn=100);\n", outerround + (baseheight - outerround) / 2, outersides ? : 100, r3 + gripdepth, gripdepth * 2);
     if (nextoutside && part + 1 < parts)	// Connect endpoints over base
-      printf ("for(a=[0:%f:359])rotate([0,0,a])translate([0,%f,0])hull(){cube([%f,%f,%f],center=true);cube([%f,0.01,%f],center=true);}\n", (double) 360 / nubs, r2, mazestep / 4, mazethickness * 2, baseheight * 2 + clearance, mazestep * 3 / 4, baseheight * 2 + clearance);
+      {
+	int W = ((int) ((r2 - mazethickness) * 2 * M_PI / mazestep)) / nubs * nubs;
+	double wi = (r2 - mazethickness) * 2 * M_PI / W / 4;
+	double wo = r2 * 2 * M_PI * 3 / W / 4;
+	printf ("for(a=[0:%f:359])rotate([0,0,a])translate([0,%f,0])hull(){cube([%f,%f,%f],center=true);cube([%f,0.01,%f],center=true);}\n", (double) 360 / nubs, r2, wi, mazethickness * 2, baseheight * 2 + clearance, wo, baseheight * 2 + clearance);
+      }
     printf ("translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);\n", basethickness, r0 + (part > 1 && mazeinside ? mazethickness + clearance : 0) + (!mazeinside && part < parts ? clearance : 0), height, W * 4);	// Hole
     if (textend)
       {
