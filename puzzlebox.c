@@ -35,17 +35,18 @@ main (int argc, const char *argv[])
   double baseheight = 10;
   double corediameter = 10;
   double coreheight = 50;
-  double wallthickness = 1.75;
-  double mazethickness = 1.75;
+  double wallthickness = 1;
+  double mazethickness = 2;
   double mazestep = 3;
-  double clearance = 0.35;
+  double clearance = 0.35;	// General X/Y clearance for parts
+  double nubclearance = 0;	// Extra clearance for nub, should be less than clearance, can be -ve
+  double parkthickness = 1;
   double coregap = 0;
   double outerround = 2;
   double mazemargin = 1;
   double textdepth = 0.5;
   double logodepth = 0.6;
   double gripdepth = 2;
-  double parkthickness = 1;
   double textsidescale = 1;
   char *textend = NULL;
   char *textsides = NULL;
@@ -338,7 +339,6 @@ main (int argc, const char *argv[])
   int markpos0 = (outersides && outersides / nubs * nubs != outersides);	// Mark on position zero for alignment
   int mirrorinside = 1;		// Clockwise lock on inside
   double nubskew = (symmectriccut ? 0 : mazestep / 8);	// Skew the shape of the cut
-  double nubclearance = clearance / 4;	// Extra clearance for nub
 
   // MIME header
   if (mime)
