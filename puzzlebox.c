@@ -286,7 +286,7 @@ main (int argc, const char *argv[])
 	      }
 	    if (optionsTable[o].argDescrip)
 	      printf ("%s", optionsTable[o].argDescrip);
-	    printf ("</td>", optionsTable[o].argDescrip);
+	    printf ("</td>");
 	    printf ("<td><label for='%c'>%s</label></td>", optionsTable[o].shortName, optionsTable[o].descrip);
 	    printf ("</tr>\n");
 	  }
