@@ -38,8 +38,9 @@ main (int argc, const char *argv[])
   double wallthickness = 1.2;
   double mazethickness = 2;
   double mazestep = 3;
-  double clearance = 0.35;	// General X/Y clearance for parts
-  double nubclearance = 0;	// Extra clearance for nub, should be less than clearance, can be -ve
+  double clearance = 0.4;	// General X/Y clearance for parts
+  double nubrclearance = 0;	// Extra clearance for nub, should be less than clearance, can be -ve
+  double nubzclearance = 0.2;	// Extra Z clearance on nub (per /4 maze step)
   double parkthickness = 1;
   double coregap = 0;
   double outerround = 2;
@@ -442,7 +443,7 @@ main (int argc, const char *argv[])
   double x = 0;
   int box (int part)
   {				// Make the box - part 1 in inside
-    int N, X, Y, S;
+    int N, X, Y, Z, S;
     int entry = 0;		// Entry point and pips
     int mazeinside = inside;	// This part has maze inside
     int mazeoutside = !inside;	// This part has maze outside
@@ -1167,29 +1168,29 @@ main (int argc, const char *argv[])
       double ri = r + (inside ? -mazethickness : mazethickness);
       int W = ((int) (ri * 2 * M_PIl / mazestep)) / nubs * nubs;
       double da = (double) 2 * M_PIl / W / 4;	// x angle per 1/4 maze step
-      double dy = mazestep / 4;
+      double dz = mazestep / 4 - nubzclearance;
       double my = mazestep * da * 4 * helix / (r * 2 * M_PIl);
       if (inside)
 	da = -da;
       else if (mirrorinside)
 	my = -my;		// This is nub outside which is for inside maze
       double a = -da * 1.5;	// Centre A
-      double z = height - mazestep / 2 - (parkvertical ? 0 : mazestep / 8) - mazestep / 4 * 1.5 - my * 1.5;	// Centre Z
+      double z = height - mazestep / 2 - (parkvertical ? 0 : mazestep / 8) - dz * 1.5 - my * 1.5;	// Centre Z
       printf ("for(a=[0:%f:359])rotate([0,0,a])polyhedron(points=[", (double) 360 / nubs);
-      r += (inside ? nubclearance : -nubclearance);	// Extra gap
-      for (Y = 0; Y < 4; Y++)
+      r += (inside ? nubrclearance : -nubrclearance);	// Extra gap
+      for (Z = 0; Z < 4; Z++)
 	for (X = 0; X < 4; X++)
-	  printf ("[%f,%f,%f],", ((X == 1 || X == 2) && (Y == 1 || Y == 2) ? ri : r) * sin (a + da * X), ((X == 1 || X == 2) && (Y == 1 || Y == 2) ? ri : r) * cos (a + da * X), z + Y * dy + X * my + (Y == 1 || Y == 2 ? nubskew : 0));
-      r += (inside ? clearance - nubclearance : -clearance + nubclearance);	// Back in to wall
-      for (Y = 0; Y < 4; Y++)
+	  printf ("[%f,%f,%f],", ((X == 1 || X == 2) && (Z == 1 || Z == 2) ? ri : r) * sin (a + da * X), ((X == 1 || X == 2) && (Z == 1 || Z == 2) ? ri : r) * cos (a + da * X), z + Z * dz + X * my + (Z == 1 || Z == 2 ? nubskew : 0));
+      r += (inside ? clearance - nubrclearance : -clearance + nubrclearance);	// Back in to wall
+      for (Z = 0; Z < 4; Z++)
 	for (X = 0; X < 4; X++)
-	  printf ("[%f,%f,%f],", r * sin (a + da * X), r * cos (a + da * X), z + Y * dy + X * my + (Y == 1 || Y == 2 ? nubskew : 0));
+	  printf ("[%f,%f,%f],", r * sin (a + da * X), r * cos (a + da * X), z + Z * dz + X * my + (Z == 1 || Z == 2 ? nubskew : 0));
       printf ("],faces=[");
-      for (Y = 0; Y < 3; Y++)
+      for (Z = 0; Z < 3; Z++)
 	for (X = 0; X < 3; X++)
-	  printf ("[%d,%d,%d],[%d,%d,%d],", Y * 4 + X + 20, Y * 4 + X + 21, Y * 4 + X + 17, Y * 4 + X + 20, Y * 4 + X + 17, Y * 4 + X + 16);
-      for (Y = 0; Y < 3; Y++)
-	printf ("[%d,%d,%d],[%d,%d,%d],[%d,%d,%d],[%d,%d,%d],", Y * 4 + 4, Y * 4 + 20, Y * 4 + 16, Y * 4 + 4, Y * 4 + 16, Y * 4 + 0, Y * 4 + 23, Y * 4 + 7, Y * 4 + 3, Y * 4 + 23, Y * 4 + 3, Y * 4 + 19);
+	  printf ("[%d,%d,%d],[%d,%d,%d],", Z * 4 + X + 20, Z * 4 + X + 21, Z * 4 + X + 17, Z * 4 + X + 20, Z * 4 + X + 17, Z * 4 + X + 16);
+      for (Z = 0; Z < 3; Z++)
+	printf ("[%d,%d,%d],[%d,%d,%d],[%d,%d,%d],[%d,%d,%d],", Z * 4 + 4, Z * 4 + 20, Z * 4 + 16, Z * 4 + 4, Z * 4 + 16, Z * 4 + 0, Z * 4 + 23, Z * 4 + 7, Z * 4 + 3, Z * 4 + 23, Z * 4 + 3, Z * 4 + 19);
       for (X = 0; X < 3; X++)
 	printf ("[%d,%d,%d],[%d,%d,%d],[%d,%d,%d],[%d,%d,%d],", X + 28, X + 12, X + 13, X + 28, X + 13, X + 29, X + 0, X + 16, X + 17, X + 0, X + 17, X + 1);
       printf ("[0,1,5],[0,5,4],[4,5,9],[4,9,8],[8,9,12],[9,13,12],");

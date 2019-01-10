@@ -9,7 +9,7 @@ foreach h (0 1 2 3)
 foreach w (0 1 2)
 	setenv F test-helix-$h-part-$w-of-2
 	if(! $w) setenv F all-test-helix-$h
-	./puzzlebox --base-height=5 --parts=2 --core-height=15 --core-diameter=10 --outer-sides=3 --part=$w --text-end="$h\$h" --helix=$h --logo $* > /tmp/$F.scad
+	./puzzlebox --base-height=5 --parts=2 --core-height=15 --core-diameter=10 --part=$w --text-end="$h\$h" --helix=$h --logo $* > /tmp/$F.scad
 	openscad -o /tmp/$F.stl /tmp/$F.scad&
 end
 end
