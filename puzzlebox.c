@@ -481,7 +481,7 @@ main (int argc, const char *argv[])
     double r1 = corediameter / 2 + wallthickness + (part - 1) * (wallthickness + mazethickness + clearance);	// Outer
     if (coresolid)
       r1 -= (wallthickness + mazethickness + clearance * 2) / 2;	// Core diameter based on 2nd part
-    int W = ((int) (r1 * 2 * M_PIl / mazestep)) / nubs * nubs;	// Default value
+    int W = ((int) (r1 * 2 * M_PI / mazestep)) / nubs * nubs;	// Default value
     double r0 = r1 - wallthickness;	// Inner
     double r2 = r1;		// Base outer
     if (part < parts)
@@ -502,7 +502,7 @@ main (int argc, const char *argv[])
       r0 -= mazethickness;	// Maze on inside
     double r3 = r2;
     if (outersides && part + 1 >= parts)
-      r3 /= cos ((double) M_PIl / outersides);	// Bigger because of number of sides
+      r3 /= cos ((double) M_PI / outersides);	// Bigger because of number of sides
     printf ("// Part %d (%.2fmm to %.2fmm and %.2fmm/%.2fmm base)\n", part, r0, r1, r2, r3);
     double height = (coresolid ? coregap + baseheight : 0) + coreheight + basethickness + (basethickness + basegap) * (part - 1);
     if (part == 1)
@@ -512,7 +512,7 @@ main (int argc, const char *argv[])
     // Output
     void makemaze (double r, int inside)
     {				// Make the maze
-      W = ((int) ((r + (inside ? mazethickness : -mazethickness)) * 2 * M_PIl / mazestep)) / nubs * nubs;	// Update W for actual maze
+      W = ((int) ((r + (inside ? mazethickness : -mazethickness)) * 2 * M_PI / mazestep)) / nubs * nubs;	// Update W for actual maze
       double base = (inside ? basethickness : baseheight);
       if (inside && part > 2)
 	base += baseheight;	// Nubs don't go all the way to the end
@@ -530,7 +530,7 @@ main (int argc, const char *argv[])
       double a = 0, dy = 0;
       if (helix)
 	{
-	  a = atan (mazestep * helix / r / 2 / M_PIl) * 180 / M_PIl;
+	  a = atan (mazestep * helix / r / 2 / M_PI) * 180 / M_PI;
 	  dy = mazestep * helix / W;
 	}
       unsigned char maze[W][H];
@@ -773,9 +773,9 @@ main (int argc, const char *argv[])
 	// Work out pre-sets
 	for (S = 0; S < W * 4; S++)
 	  {
-	    double a = M_PIl * 2 * (S - 1.5) / W / 4;
+	    double a = M_PI * 2 * (S - 1.5) / W / 4;
 	    if (!inside)
-	      a = M_PIl * 2 - a;
+	      a = M_PI * 2 - a;
 	    double sa = sin (a), ca = cos (a);
 	    if (inside)
 	      {
@@ -806,7 +806,7 @@ main (int argc, const char *argv[])
 	{
 	  printf ("[%f,%f,%f],", x, y, z);
 	  if (s[S].n >= MAXY)
-	    errx (1, "WTF points 5d", S);
+	    errx (1, "WTF points %d", S);
 	  s[S].p[s[S].n++] = P++;
 	}
 	void addpointr (int S, double x, double y, double z)
@@ -1106,9 +1106,9 @@ main (int argc, const char *argv[])
     // Base
     printf ("difference(){\n");
     if (part == parts)
-      printf ("outer(%f,%f);\n", height, (r2 - outerround) / cos ((double) M_PIl / (outersides ? : 100)));
+      printf ("outer(%f,%f);\n", height, (r2 - outerround) / cos ((double) M_PI / (outersides ? : 100)));
     else if (part + 1 >= parts)
-      printf ("mirror([1,0,0])outer(%f,%f);\n", baseheight, (r2 - outerround) / cos ((double) M_PIl / (outersides ? : 100)));
+      printf ("mirror([1,0,0])outer(%f,%f);\n", baseheight, (r2 - outerround) / cos ((double) M_PI / (outersides ? : 100)));
     else
       printf ("hull(){cylinder(r=%f,h=%f,$fn=%d);translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);}\n", r3 - mazethickness, baseheight, W * 4, mazemargin, r3, baseheight - mazemargin, W * 4);
     // Cut outs
@@ -1140,7 +1140,7 @@ main (int argc, const char *argv[])
     if (textsides && part == parts && outersides)
       {
 	double a = 90 + (double) 180 / outersides;
-	double h = r3 * sin (M_PIl / outersides) * textsidescale;
+	double h = r3 * sin (M_PI / outersides) * textsidescale;
 	char *p = strdupa (textsides);
 	while (p)
 	  {
@@ -1169,10 +1169,10 @@ main (int argc, const char *argv[])
     void addnub (double r, int inside)
     {
       double ri = r + (inside ? -mazethickness : mazethickness);
-      int W = ((int) (ri * 2 * M_PIl / mazestep)) / nubs * nubs;
-      double da = (double) 2 * M_PIl / W / 4;	// x angle per 1/4 maze step
+      int W = ((int) (ri * 2 * M_PI / mazestep)) / nubs * nubs;
+      double da = (double) 2 * M_PI / W / 4;	// x angle per 1/4 maze step
       double dz = mazestep / 4 - nubzclearance;
-      double my = mazestep * da * 4 * helix / (r * 2 * M_PIl);
+      double my = mazestep * da * 4 * helix / (r * 2 * M_PI);
       if (inside)
 	da = -da;
       else if (mirrorinside)
