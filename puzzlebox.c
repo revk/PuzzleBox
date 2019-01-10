@@ -38,7 +38,7 @@ main (int argc, const char *argv[])
   double wallthickness = 1.75;
   double mazethickness = 1.75;
   double mazestep = 3;
-  double clearance = 0.3;
+  double clearance = 0.35;
   double coregap = 0;
   double outerround = 2;
   double mazemargin = 1;
@@ -56,8 +56,8 @@ main (int argc, const char *argv[])
   int flip = 0;
   int outersides = 7;
   int testmaze = 0;
-  int helix = 2;
-  int nubs = 2;
+  int helix = 3;
+  int nubs = helix;
   int logo = 0;
   int textslow = 0;
   int symmectriccut = 0;
