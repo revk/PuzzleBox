@@ -1201,6 +1201,7 @@ main (int argc, const char *argv[])
       double z = height - mazestep / 2 - (parkvertical ? 0 : mazestep / 8) - dz * 1.5 - my * 1.5;	// Centre Z
       printf ("for(a=[0:%f:359])rotate([0,0,a])polyhedron(points=[", (double) 360 / nubs);
       r += (inside ? nubrclearance : -nubrclearance);	// Extra gap
+      ri += (inside ? nubrclearance : -nubrclearance);	// Extra gap
       for (Z = 0; Z < 4; Z++)
 	for (X = 0; X < 4; X++)
 	  printf ("[%f,%f,%f],", ((X == 1 || X == 2) && (Z == 1 || Z == 2) ? ri : r) * sin (a + da * X), ((X == 1 || X == 2) && (Z == 1 || Z == 2) ? ri : r) * cos (a + da * X), z + Z * dz + X * my + (Z == 1 || Z == 2 ? nubskew : 0));
