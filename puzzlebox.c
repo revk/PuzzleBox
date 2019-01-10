@@ -38,10 +38,10 @@ main (int argc, const char *argv[])
   double wallthickness = 1.2;
   double mazethickness = 2;
   double mazestep = 3;
-  double clearance = 0.4;	// General X/Y clearance for parts
-  double nubrclearance = 0;	// Extra clearance for nub, should be less than clearance, can be -ve
+  double clearance = 0.3;	// General X/Y clearance for parts
+  double nubrclearance = 0.1;	// Extra radius clearance for nub, should be less than clearance, can be -ve
   double nubzclearance = 0.2;	// Extra Z clearance (per /4 maze step)
-  double parkthickness = 1;
+  double parkthickness = 0.75;
   double coregap = 0;
   double outerround = 2;
   double mazemargin = 1;
