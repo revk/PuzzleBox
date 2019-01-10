@@ -149,7 +149,8 @@ main (int argc, const char *argv[])
 	    }
 	  if (!isalpha (*path))
 	    {
-	      asprintf (&error, "Path error [%s]\n", path);
+	      if (asprintf (&error, "Path error [%s]\n", path) < 0)
+		errx (1, "malloc");
 	      break;
 	    }
 	  char arg = *path++;
@@ -157,7 +158,8 @@ main (int argc, const char *argv[])
 	  for (o = 0; optionsTable[o].longName && optionsTable[o].shortName != arg; o++);
 	  if (!optionsTable[o].shortName)
 	    {
-	      asprintf (&error, "Unknown arg [%c]", arg);
+	      if (asprintf (&error, "Unknown arg [%c]", arg) < 0)
+		errx (1, "malloc");
 	      break;
 	    }
 	  if (optionsTable[o].arg)
@@ -166,7 +168,8 @@ main (int argc, const char *argv[])
 	      case POPT_ARG_INT:
 		if (*path != '=')
 		  {
-		    asprintf (&error, "Missing value [%c=]", arg);
+		    if (asprintf (&error, "Missing value [%c=]", arg) < 0)
+		      errx (1, "malloc");
 		    break;
 		  }
 		if (path[1])
@@ -175,7 +178,8 @@ main (int argc, const char *argv[])
 	      case POPT_ARG_DOUBLE:
 		if (*path != '=')
 		  {
-		    asprintf (&error, "Missing value [%c=]", arg);
+		    if (asprintf (&error, "Missing value [%c=]", arg) < 0)
+		      errx (1, "malloc");
 		    break;
 		  }
 		if (path[1])
@@ -193,7 +197,8 @@ main (int argc, const char *argv[])
 	      case POPT_ARG_STRING:
 		if (*path != '=')
 		  {
-		    asprintf (&error, "Missing value [%c=]", arg);
+		    if (asprintf (&error, "Missing value [%c=]", arg) < 0)
+		      errx (1, "malloc");
 		    break;
 		  }
 		path++;
