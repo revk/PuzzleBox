@@ -35,7 +35,7 @@ main (int argc, const char *argv[])
   double baseheight = 10;
   double corediameter = 10;
   double coreheight = 50;
-  double wallthickness = 1;
+  double wallthickness = 1.2;
   double mazethickness = 2;
   double mazestep = 3;
   double clearance = 0.35;	// General X/Y clearance for parts
