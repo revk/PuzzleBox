@@ -451,7 +451,7 @@ main (int argc, const char *argv[])
   int box (int part)
   {				// Make the box - part 1 in inside
     int N, X, Y, Z, S;
-    int entry = 0;		// Entry point and pips
+    double entrya = 0;		// Entry angle
     int mazeinside = inside;	// This part has maze inside
     int mazeoutside = !inside;	// This part has maze outside
     int nextinside = inside;	// Next part has maze inside
@@ -599,6 +599,7 @@ main (int argc, const char *argv[])
 	    maze[1][helix + 1] |= FLAGL;
 	  }
 	// Make maze
+	int maxx = 0;
 	if (testmaze)
 	  {			// Simple test pattern
 	    for (Y = 0; Y < H; Y++)
@@ -615,12 +616,12 @@ main (int argc, const char *argv[])
 		    maze[x][y] |= FLAGL;
 		  }
 	    if (helix)
-	      while (entry + 1 < W && !(test (entry + 1, H - 2) & FLAGI))
-		entry++;
+	      while (maxx + 1 < W && !(test (maxx + 1, H - 2) & FLAGI))
+		maxx++;
 	  }
 	else
 	  {			// Actual maze
-	    int max = 0, maxx = 0;
+	    int max = 0;
 	    typedef struct pos_s pos_t;
 	    struct pos_s
 	    {
@@ -747,13 +748,14 @@ main (int argc, const char *argv[])
 		    last = p;
 		  }
 	      }
-	    if (!flip)
-	      entry = maxx;
 	    printf ("// Path length %d\n", max);
 	  }
 	close (f);
+	if (flip)
+	  maxx = 0;
+	entrya = (double) 360 *maxx / W;
 	// Entry point for maze
-	for (X = entry % (W / nubs); X < W; X += W / nubs)
+	for (X = maxx % (W / nubs); X < W; X += W / nubs)
 	  {
 	    Y = H - 1;
 	    while (Y && (maze[X][Y] & FLAGI))
@@ -1068,34 +1070,45 @@ main (int argc, const char *argv[])
     if (outersides)
       printf ("rotate([0,0,%f])", (double) 180 / outersides + (part + 1 == parts ? 180 : 0));
     printf ("{\n");
+    void mark (void)
+    {				// Marking position 0
+      if (!markpos0 || part + 1 < parts)
+	return;
+      double a = 0, r = r0;
+      if (mazeinside)
+	r = r0 + mazethickness + wallthickness / 2;
+      else if (mazeoutside)
+	r = r1 - mazethickness - wallthickness / 2;
+      else
+	r = r0 + wallthickness / 2;
+      if (part == parts && mazeinside)
+	a = (mirrorinside ? 1 : -1) * entrya;
+      if (part + 1 == parts && mazeoutside)
+	a = entrya;
+      printf ("rotate([0,0,%f])translate([0,%f,%f])cylinder(d=%f,h=%f,center=true,$fn=100);\n", a, r, height, wallthickness, mazestep / 2);
+    }
     // Maze
     if (mazeinside)
       {
-	int diff = (markpos0 && (!mazeoutside && part + 1 == parts) || part == parts);
-	if (diff)
+	if (markpos0 && part + 1 >= parts)
 	  printf ("difference(){union(){");
 	makemaze (r0, 1);
-	if (diff)
+	if (markpos0 && part + 1 >= parts)
 	  {
 	    printf ("}\n");
-	    if (markpos0 && !mazeoutside && part + 1 == parts)
-	      printf ("translate([0,%f,%f])cylinder(d=%f,h=%f,center=true,$fn=100);\n", r1 - wallthickness, height, wallthickness, mazestep / 2);	// mark position 0
-	    if (markpos0 && part == parts)
-	      printf ("rotate([0,0,%f])translate([0,%f,%f])cylinder(d=%f,h=%f,center=true,$fn=100);\n", (double) ((mirrorinside ? 1 : -1) * entry - 1) * 360 / W, r0 + mazethickness / 2, height, wallthickness, mazestep);	// mark position 0
+	    mark ();
 	    printf ("}\n");
 	  }
       }
     if (mazeoutside)
       {
-	int diff = (markpos0 && part + 1 == parts);
-	if (diff)
+	if (markpos0 && part + 1 >= parts)
 	  printf ("difference(){union(){");
 	makemaze (r1, 0);
-	if (diff)
+	if (markpos0 && part + 1 >= parts)
 	  {
 	    printf ("}\n");
-	    if (markpos0 && part + 1 == parts)
-	      printf ("rotate([0,0,%f])translate([0,%f,%f])cylinder(d=%f,h=%f,center=true,$fn=100);\n", (double) 360 * (entry + 1) / W, r1 - wallthickness, height, wallthickness, mazestep);	// mark position 0
+	    mark ();
 	    printf ("}\n");
 	  }
       }
@@ -1103,9 +1116,8 @@ main (int argc, const char *argv[])
       {
 	printf ("difference(){\n");
 	printf ("translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);\n", basethickness / 2, r1, height - basethickness / 2, W * 4, basethickness, r0, height, W * 4);	// Non maze
-	if (markpos0 && part + 1 == parts)
-	  printf ("translate([0,%f,%f])cylinder(d=%f,h=%f,center=true,$fn=100);\n", r1 - wallthickness, height, wallthickness, mazestep / 2);	// mark position 0
-
+	if (markpos0 && part + 1 >= parts)
+	  mark ();
 	printf ("}\n");
       }
     // Base
@@ -1168,18 +1180,16 @@ main (int argc, const char *argv[])
       }
     if (logo && part == parts)
       printf ("translate([0,0,%f])linear_extrude(height=%f,convexity=10)aa(%f,white=true);\n", basethickness - logodepth, basethickness, r0 * 1.8);
-    if (markpos0 && !mazeinside && part == parts)
-      printf ("translate([0,%f,%f])cylinder(d=%f,h=%f,center=true,$fn=100);\n", r1 - wallthickness, height, wallthickness, mazestep / 2);	// mark position 0
+    if (markpos0 && part + 1 >= parts)
+      mark ();
     printf ("}\n");
     if (coresolid && part == 1)
       printf ("translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);\n", basethickness, r0 + clearance + (!mazeinside && part < parts ? clearance : 0), height - basethickness, W * 4);	// Solid core
     // Nubs
-    if (mazeinside && part + 1 >= parts)
-      entry = 0;		// Nubs needs to align for outside to align when closed
     void addnub (double r, int inside)
     {
-      double ri = r + (inside ? -mazethickness - clearance : mazethickness + clearance);
-      int W = ((int) (ri * 2 * M_PI / mazestep)) / nubs * nubs;
+      double ri = r + (inside ? -mazethickness : mazethickness);
+      int W = ((int) ((ri + (inside ? -clearance : clearance)) * 2 * M_PI / mazestep)) / nubs * nubs;
       double da = (double) 2 * M_PI / W / 4;	// x angle per 1/4 maze step
       double dz = mazestep / 4 - nubzclearance;
       double my = mazestep * da * 4 * helix / (r * 2 * M_PI);
