@@ -38,7 +38,7 @@ main (int argc, const char *argv[])
   double wallthickness = 1.2;
   double mazethickness = 2;
   double mazestep = 3;
-  double clearance = 0.3;	// General X/Y clearance for parts
+  double clearance = 0.5;	// General X/Y clearance for parts
   double nubrclearance = 0.1;	// Extra radius clearance for nub, should be less than clearance, can be -ve
   double nubzclearance = 0.2;	// Extra Z clearance (per /4 maze step)
   double parkthickness = 0.7;
@@ -1115,7 +1115,7 @@ main (int argc, const char *argv[])
     else if (part + 1 >= parts)
       printf ("mirror([1,0,0])outer(%f,%f);\n", baseheight, (r2 - outerround) / cos ((double) M_PI / (outersides ? : 100)));
     else
-      printf ("hull(){cylinder(r=%f,h=%f,$fn=%d);translate([0,0,%f])cylinder(r1=%f,r2=%f,h=%f,$fn=%d);}\n", r3 - mazethickness, baseheight, W * 4, mazemargin, r3 - mazethickness / 2, r3, baseheight - mazemargin, W * 4);
+      printf ("hull(){cylinder(r=%f,h=%f,$fn=%d);translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);}\n", r3 - mazethickness, baseheight, W * 4, mazemargin, r3 - mazethickness / 2, baseheight - mazemargin, W * 4);
     // Cut outs
     if (gripdepth && part + 1 < parts)
       printf ("translate([0,0,%f])rotate_extrude(convexity=10,$fn=%d)translate([%f,0,0])circle(r=%f,$fn=100);\n", mazemargin + (baseheight - mazemargin) / 2, W * 4, r3 + gripdepth, gripdepth * 2);
@@ -1124,8 +1124,8 @@ main (int argc, const char *argv[])
     if (nextoutside && part + 1 < parts)	// Connect endpoints over base
       {
 	int W = ((int) ((r2 - mazethickness) * 2 * M_PI / mazestep)) / nubs * nubs;
-	double wi = (r2 - mazethickness) * 2 * M_PI / W / 4;
-	double wo = r2 * 2 * M_PI * 3 / W / 4;
+	double wi = 2 * (r2 - mazethickness) * 2 * M_PI / W / 4;
+	double wo = 2 * r2 * 2 * M_PI * 3 / W / 4;
 	printf ("for(a=[0:%f:359])rotate([0,0,a])translate([0,%f,0])hull(){cube([%f,%f,%f],center=true);cube([%f,0.01,%f],center=true);}\n", (double) 360 / nubs, r2, wi, mazethickness * 2, baseheight * 2 + clearance, wo, baseheight * 2 + clearance);
       }
     printf ("translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);\n", basethickness, r0 + (part > 1 && mazeinside ? mazethickness + clearance : 0) + (!mazeinside && part < parts ? clearance : 0), height, W * 4);	// Hole

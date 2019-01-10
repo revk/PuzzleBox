@@ -22,7 +22,7 @@ end
 foreach w (0 1 2 3)
 	setenv F test-flip-part-$w-of-3
 	if(! $w) setenv F all-test-flip
-	./puzzlebox --parts=3 --core-height=30 --core-diameter=10 --outer-sides=5 --part=$w --flip --inside --logo $* > /tmp/$F.scad
+	./puzzlebox --parts=3 --base-height=5 --core-height=20 --core-diameter=10 --outer-sides=5 --part=$w --flip --inside --logo $* > /tmp/$F.scad
 	openscad -o /tmp/$F.stl /tmp/$F.scad&
 end
 foreach w (0 1 2)
