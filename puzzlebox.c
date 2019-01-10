@@ -1178,7 +1178,7 @@ main (int argc, const char *argv[])
       entry = 0;		// Nubs needs to align for outside to align when closed
     void addnub (double r, int inside)
     {
-      double ri = r + (inside ? -mazethickness : mazethickness);
+      double ri = r + (inside ? -mazethickness - clearance : mazethickness + clearance);
       int W = ((int) (ri * 2 * M_PI / mazestep)) / nubs * nubs;
       double da = (double) 2 * M_PI / W / 4;	// x angle per 1/4 maze step
       double dz = mazestep / 4 - nubzclearance;
