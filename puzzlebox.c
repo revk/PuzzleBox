@@ -66,8 +66,6 @@ main (int argc, const char *argv[])
   int webform = 0;
   int parkvertical = 0;
   int mazecomplexity = 5;
-  int markpos0 = 0;
-  int mirrorinside = 1;		// Clockwise lock on inside
 
   char pathsep = 0;
   char *path = getenv ("PATH_INFO");
@@ -336,8 +334,9 @@ main (int argc, const char *argv[])
     basethickness = logodepth + (textend ? textdepth : 0) + 0.4;
   if (coresolid && coregap < mazestep * 2)
     coregap = mazestep * 2;
-  if (outersides && outersides / nubs * nubs != outersides)
-    markpos0 = 1;
+
+  int markpos0 = (outersides && outersides / nubs * nubs != outersides);	// Mark on position zero for alignment
+  int mirrorinside = 1;		// Clockwise lock on inside
   double nubskew = (symmectriccut ? 0 : mazestep / 8);	// Skew the shape of the cut
   double nubclearance = clearance / 4;	// Extra clearance for nub
 
@@ -1169,13 +1168,11 @@ main (int argc, const char *argv[])
       int W = ((int) (ri * 2 * M_PIl / mazestep)) / nubs * nubs;
       double da = (double) 2 * M_PIl / W / 4;	// x angle per 1/4 maze step
       double dy = mazestep / 4;
-      double my = -mazestep * da * helix / (r * 2 * M_PIl);
+      double my = mazestep * da * 4 * helix / (r * 2 * M_PIl);
       if (inside)
-	{
-	  da = -da;
-	  if (mirrorinside)
-	    my = -my;
-	}
+	da = -da;
+      else if (mirrorinside)
+	my = -my;		// This is nub outside which is for inside maze
       double a = -da * 1.5;	// Centre A
       double z = height - mazestep / 2 - (parkvertical ? 0 : mazestep / 8) - mazestep / 4 * 1.5 - my * 1.5;	// Centre Z
       printf ("for(a=[0:%f:359])rotate([0,0,a])polyhedron(points=[", (double) 360 / nubs);
