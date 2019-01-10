@@ -40,7 +40,7 @@ main (int argc, const char *argv[])
   double mazestep = 3;
   double clearance = 0.4;	// General X/Y clearance for parts
   double nubrclearance = 0;	// Extra clearance for nub, should be less than clearance, can be -ve
-  double nubzclearance = 0.2;	// Extra Z clearance on nub (per /4 maze step)
+  double nubzclearance = 0.2;	// Extra Z clearance (per /4 maze step)
   double parkthickness = 1;
   double coregap = 0;
   double outerround = 2;
@@ -107,9 +107,11 @@ main (int argc, const char *argv[])
     {"text-font", 'F', POPT_ARG_STRING | (textfont ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &textfont, 0, "Text font (optional)", "Font"},
     {"text-slow", 'Z', POPT_ARG_NONE, &textslow, 0, "Text has diagonal edges (very slow)"},
     {"text-side-scale", 'T', POPT_ARG_DOUBLE, &textsidescale, 0, "Scale side text (i.e. if too long)", "N"},
-    {"symmetric-cut", 'V', POPT_ARG_NONE, &symmectriccut, 0, "Symmetric maze cut"},
-    {"logo", 'A', POPT_ARG_NONE, &logo, 0, "Include A&A logo in last lid"},
     {"text-depth", 'L', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &logodepth, 0, "Logo cut depth", "mm"},
+    {"symmetric-cut", 'V', POPT_ARG_NONE, &symmectriccut, 0, "Symmetric maze cut"},
+    {"nub-r-clearance", 'y', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &nubrclearance, 0, "Extra clearance on radius for nub", "mm"},
+    {"nub-z-clearance", 'Z', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &nubzclearance, 0, "Extra clearance on height of nub", "mm"},
+    {"logo", 'A', POPT_ARG_NONE, &logo, 0, "Include A&A logo in last lid"},
     {"test", 'Q', POPT_ARG_NONE, &testmaze, 0, "Test pattern instead of maze"},
     {"mime", 0, POPT_ARG_NONE | (mime ? POPT_ARGFLAG_DOC_HIDDEN : 0), &mime, 0, "MIME Header"},
     {"web-form", 0, POPT_ARG_NONE, &webform, 0, "Web form"},
@@ -1064,25 +1066,31 @@ main (int argc, const char *argv[])
     // Maze
     if (mazeinside)
       {
-	if (markpos0 && !mazeoutside && part + 1 == parts)
-	  printf ("difference(){union(){\n");
+	int diff = (markpos0 && (!mazeoutside && part + 1 == parts) || part == parts);
+	if (diff)
+	  printf ("difference(){union(){");
 	makemaze (r0, 1);
-	if (markpos0 && !mazeoutside && part + 1 == parts)
+	if (diff)
 	  {
 	    printf ("}\n");
-	    printf ("rotate([0,0,%f])translate([0,%f,%f])cylinder(d=%f,h=%f,center=true,$fn=100);\n", 0.5 * 360 / W, r1 - wallthickness / 2, height, wallthickness / 2, mazestep);	// mark position 0
+	    if (markpos0 && !mazeoutside && part + 1 == parts)
+	      printf ("translate([0,%f,%f])cylinder(d=%f,h=%f,center=true,$fn=100);\n", r1 - wallthickness, height, wallthickness, mazestep / 2);	// mark position 0
+	    if (markpos0 && part == parts)
+	      printf ("rotate([0,0,%f])translate([0,%f,%f])cylinder(d=%f,h=%f,center=true,$fn=100);\n", (double) ((mirrorinside ? 1 : -1) * entry - 1) * 360 / W, r0 + mazethickness / 2, height, wallthickness, mazestep);	// mark position 0
 	    printf ("}\n");
 	  }
       }
     if (mazeoutside)
       {
-	if (markpos0 && part + 1 == parts)
-	  printf ("difference(){union(){\n");
+	int diff = (markpos0 && part + 1 == parts);
+	if (diff)
+	  printf ("difference(){union(){");
 	makemaze (r1, 0);
-	if (markpos0 && part + 1 == parts)
+	if (diff)
 	  {
 	    printf ("}\n");
-	    printf ("rotate([0,0,%f])translate([0,%f,%f])cylinder(d=%f,h=%f,center=true,$fn=100);\n", (double) 360 * (entry + 0.5) / W, r1 - wallthickness / 2, height, wallthickness / 2, mazestep);	// mark position 0
+	    if (markpos0 && part + 1 == parts)
+	      printf ("rotate([0,0,%f])translate([0,%f,%f])cylinder(d=%f,h=%f,center=true,$fn=100);\n", (double) 360 * (entry + 1) / W, r1 - wallthickness, height, wallthickness, mazestep);	// mark position 0
 	    printf ("}\n");
 	  }
       }
@@ -1091,7 +1099,7 @@ main (int argc, const char *argv[])
 	printf ("difference(){\n");
 	printf ("translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);\n", basethickness / 2, r1, height - basethickness / 2, W * 4, basethickness, r0, height, W * 4);	// Non maze
 	if (markpos0 && part + 1 == parts)
-	  printf ("rotate([0,0,%f])translate([0,%f,%f])cylinder(d=%f,h=%f,center=true,$fn=100);\n", 0.5 * 360 / W, r1 - wallthickness / 2, height, wallthickness / 2, mazestep);	// mark position 0
+	  printf ("translate([0,%f,%f])cylinder(d=%f,h=%f,center=true,$fn=100);\n", r1 - wallthickness, height, wallthickness, mazestep / 2);	// mark position 0
 
 	printf ("}\n");
       }
@@ -1150,13 +1158,8 @@ main (int argc, const char *argv[])
       }
     if (logo && part == parts)
       printf ("translate([0,0,%f])linear_extrude(height=%f,convexity=10)aa(%f,white=true);\n", basethickness - logodepth, basethickness, r0 * 1.8);
-    if (markpos0 && part == parts)
-      {
-	if (mazeinside)
-	  printf ("rotate([0,0,%f])translate([0,%f,%f])cylinder(d=%f,h=%f,center=true,$fn=100);\n", (double) ((mirrorinside ? 1 : -1) * entry - 0.5) * 360 / W, r1 - wallthickness / 2, height, wallthickness / 2, mazestep);	// mark position 0
-	else
-	  printf ("rotate([0,0,%f])translate([0,%f,%f])cylinder(d=%f,h=%f,center=true,$fn=100);\n", -0.5 * 360 / W, r1 - wallthickness / 2, height, wallthickness / 2, mazestep);	// mark position 0
-      }
+    if (markpos0 && !mazeinside && part == parts)
+      printf ("translate([0,%f,%f])cylinder(d=%f,h=%f,center=true,$fn=100);\n", r1 - wallthickness, height, wallthickness, mazestep / 2);	// mark position 0
     printf ("}\n");
     if (coresolid && part == 1)
       printf ("translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);\n", basethickness, r0 + clearance + (!mazeinside && part < parts ? clearance : 0), height - basethickness, W * 4);	// Solid core
