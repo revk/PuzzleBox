@@ -1085,7 +1085,7 @@ main (int argc, const char *argv[])
 	a = (mirrorinside ? 1 : -1) * entrya;
       if (part + 1 == parts && mazeoutside)
 	a = entrya;
-      printf ("rotate([0,0,%f])translate([0,%f,%f])cylinder(d=%f,h=%f,center=true,$fn=100);\n", a, r, height, wallthickness, mazestep / 3);
+      printf ("rotate([0,0,%f])translate([0,%f,%f])cylinder(d=%f,h=%f,center=true,$fn=100);\n", a, r, height, wallthickness * 2 / 3, mazestep / 2);
     }
     // Maze
     if (mazeinside)
