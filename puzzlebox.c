@@ -615,7 +615,7 @@ main (int argc, const char *argv[])
 		      }
 		    maze[x][y] |= FLAGL;
 		  }
-	    if (helix)
+	    if (!flip || inside)
 	      while (maxx + 1 < W && !(test (maxx + 1, H - 2) & FLAGI))
 		maxx++;
 	  }
@@ -702,7 +702,8 @@ main (int argc, const char *argv[])
 		else
 		  errx (1, "WTF");	// We should have picked a way we can go
 		// Entry
-		if (p->n > max && (test (X, Y + 1) & FLAGI))
+		if (p->n > max && (test (X, Y + 1) & FLAGI)	//
+		    && (!flip || inside || !(X ^ (W / nubs))))
 		  {		// Longest path that reaches top
 		    max = p->n;
 		    maxx = X;
@@ -751,8 +752,6 @@ main (int argc, const char *argv[])
 	    printf ("// Path length %d\n", max);
 	  }
 	close (f);
-	if (flip)
-	  maxx = 0;
 	entrya = (double) 360 *maxx / W;
 	// Entry point for maze
 	for (X = maxx % (W / nubs); X < W; X += W / nubs)
@@ -1088,36 +1087,22 @@ main (int argc, const char *argv[])
       printf ("rotate([0,0,%f])translate([0,%f,%f])cylinder(d=%f,h=%f,center=true,$fn=100);\n", a, r, height, wallthickness * 2 / 3, mazestep / 2);
     }
     // Maze
+    if (markpos0 && part + 1 >= parts && (mazeinside || mazeoutside || part < parts))
+      printf ("difference(){union(){");
     if (mazeinside)
-      {
-	if (markpos0 && part + 1 >= parts)
-	  printf ("difference(){union(){");
-	makemaze (r0, 1);
-	if (markpos0 && part + 1 >= parts)
-	  {
-	    printf ("}\n");
-	    mark ();
-	    printf ("}\n");
-	  }
-      }
+      makemaze (r0, 1);
     if (mazeoutside)
-      {
-	if (markpos0 && part + 1 >= parts)
-	  printf ("difference(){union(){");
-	makemaze (r1, 0);
-	if (markpos0 && part + 1 >= parts)
-	  {
-	    printf ("}\n");
-	    mark ();
-	    printf ("}\n");
-	  }
-      }
+      makemaze (r1, 0);
     if (!mazeinside && !mazeoutside && part < parts)
       {
 	printf ("difference(){\n");
 	printf ("translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);\n", basethickness / 2, r1, height - basethickness / 2, W * 4, basethickness, r0, height, W * 4);	// Non maze
-	if (markpos0 && part + 1 >= parts)
-	  mark ();
+	printf ("}\n");
+      }
+    if (markpos0 && part + 1 >= parts && (mazeinside || mazeoutside || part < parts))
+      {
+	printf ("}\n");
+	mark ();
 	printf ("}\n");
       }
     // Base
@@ -1185,6 +1170,8 @@ main (int argc, const char *argv[])
     printf ("}\n");
     if (coresolid && part == 1)
       printf ("translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);\n", basethickness, r0 + clearance + (!mazeinside && part < parts ? clearance : 0), height - basethickness, W * 4);	// Solid core
+    if ((mazeoutside && !flip) || (!mazeoutside && part + 1 == parts))
+      entrya = 0;		// Has to line up for grooved lid to align
     // Nubs
     void addnub (double r, int inside)
     {
@@ -1197,7 +1184,7 @@ main (int argc, const char *argv[])
 	da = -da;
       else if (mirrorinside)
 	my = -my;		// This is nub outside which is for inside maze
-      double a = -da * 1.5;	// Centre A
+      double a = entrya - da * 1.5;	// Centre A
       double z = height - mazestep / 2 - (parkvertical ? 0 : mazestep / 8) - dz * 1.5 - my * 1.5;	// Centre Z
       printf ("for(a=[0:%f:359])rotate([0,0,a])polyhedron(points=[", (double) 360 / nubs);
       r += (inside ? nubrclearance : -nubrclearance);	// Extra gap
