@@ -1073,18 +1073,22 @@ main (int argc, const char *argv[])
     {				// Marking position 0
       if (!markpos0 || part + 1 < parts)
 	return;
-      double a = 0, r = r0;
+      double a = 0, r = r0 + wallthickness / 2, t = wallthickness * 2;
       if (mazeinside)
 	r = r0 + mazethickness + wallthickness / 2;
       else if (mazeoutside)
 	r = r1 - mazethickness - wallthickness / 2;
-      else
-	r = r0 + wallthickness / 2;
+      if (!mazeoutside)
+	{			// Try not to cut outside of box
+	  r -= wallthickness / 2;
+	  t = wallthickness * 3 / 2;
+	}
       if (part == parts && mazeinside)
 	a = (mirrorinside ? 1 : -1) * entrya;
       if (part + 1 == parts && mazeoutside)
 	a = entrya;
-      printf ("rotate([0,0,%f])translate([0,%f,%f])cylinder(d=%f,h=%f,center=true,$fn=100);\n", a, r, height, wallthickness * 2 / 3, mazestep / 2);
+      //printf ("rotate([0,0,%f])translate([0,%f,%f])cylinder(d=%f,h=%f,center=true,$fn=100);\n", a, r, height, wallthickness * 2 / 3, mazestep / 2);
+      printf ("rotate([0,0,%f])translate([0,%f,%f])cylinder(d=%f,h=%f,center=true,$fn=4);\n", a, r, height, t, mazestep / 2);
     }
     // Maze
     if (markpos0 && part + 1 >= parts && (mazeinside || mazeoutside || part < parts))
