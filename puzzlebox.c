@@ -407,16 +407,42 @@ main (int argc, const char *argv[])
     int o;
     for (o = 0; optionsTable[o].longName; o++)
       if (optionsTable[o].shortName && optionsTable[o].arg)
-	{
-	  if ((optionsTable[o].argInfo & POPT_ARG_MASK) == POPT_ARG_NONE && *(int *) optionsTable[o].arg)
-	    printf ("// %s: %c\n", optionsTable[o].descrip, optionsTable[o].shortName);
-	  else if ((optionsTable[o].argInfo & POPT_ARG_MASK) == POPT_ARG_INT && *(int *) optionsTable[o].arg)
-	    printf ("// %s: %c=%d\n", optionsTable[o].descrip, optionsTable[o].shortName, *(int *) optionsTable[o].arg);
-	  else if ((optionsTable[o].argInfo & POPT_ARG_MASK) == POPT_ARG_DOUBLE && *(double *) optionsTable[o].arg)
-	    printf ("// %s: %c=%f\n", optionsTable[o].descrip, optionsTable[o].shortName, *(double *) optionsTable[o].arg);
-	  else if ((optionsTable[o].argInfo & POPT_ARG_MASK) == POPT_ARG_STRING && *(int *) optionsTable[o].arg)
-	    printf ("// %s: %c=%s\n", optionsTable[o].descrip, optionsTable[o].shortName, *(char * *) optionsTable[o].arg);
-	}
+	switch (optionsTable[o].argInfo & POPT_ARG_MASK)
+	  {
+	  case POPT_ARG_NONE:
+	    if (*(int *) optionsTable[o].arg)
+	      printf ("// %s: %c\n", optionsTable[o].descrip, optionsTable[o].shortName);
+	    break;
+	  case POPT_ARG_INT:
+	    {
+	      int v = *(int *) optionsTable[o].arg;
+	      if (v)
+		printf ("// %s: %c=%d\n", optionsTable[o].descrip, optionsTable[o].shortName, v);
+	    }
+	    break;
+	  case POPT_ARG_DOUBLE:
+	    {
+	      double v = *(double *) optionsTable[o].arg;
+	      if (v)
+		{
+		  char temp[50], *p;
+		  sprintf (temp, "%f", v);
+		  for (p = temp + strlen (temp); p > temp && p[-1] == '0'; p--);
+		  if (p > temp && p[-1] == '.')
+		    p--;
+		  *p = 0;
+		  printf ("// %s: %c=%s\n", optionsTable[o].descrip, optionsTable[o].shortName, temp);
+		}
+	    }
+	    break;
+	  case POPT_ARG_STRING:
+	    {
+	      char *v = *(char * *) optionsTable[o].arg;
+	      if (v && *v)
+		printf ("// %s: %c=%s\n", optionsTable[o].descrip, optionsTable[o].shortName, v);
+	    }
+	    break;
+	  }
   }
   if (error)
     {				// Problem
