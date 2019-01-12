@@ -451,7 +451,7 @@ main (int argc, const char *argv[])
     }
   {				// Modules
     if (textslow)
-      printf ("module cuttext(){translate([0,0,-1])minkowski(){rotate([0,0,45])cylinder(h=%f,d1=%f,d2=0,$fn=4);linear_extrude(height=1,convexity=10)mirror([1,0,0])children();}}\n", textdepth, textdepth);
+      printf ("module cuttext(){translate([0,0,-1])minkowski(){rotate([0,0,45])cylinder(h=%f,r1=%f,r2=0,$fn=4);linear_extrude(height=1,convexity=10)mirror([1,0,0])children();}}\n", textdepth, textdepth);
     else
       printf ("module cuttext(){linear_extrude(height=%f,convexity=10,center=true)mirror([1,0,0])children();}\n", textdepth);
     // You can use the A&A logo on your maze print providing it is tasteful and not in any way derogatory to A&A or any staff/officers.
