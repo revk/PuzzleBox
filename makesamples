@@ -2,7 +2,7 @@
 rm -f /tmp/*.scad /tmp/*.stl
 # Version box
 setenv F version
-./puzzlebox --parts=2 --core-height=100 --core-diameter=12 --outer-sides=7 --text-slow --text-depth=1 --text-end='AK' --text-side=" Test box $*\www.me.uk\@TheRealRevK\Build version date :-\`date --utc +%FT%TZ`\GitHub revk/PuzzleBox\Thingiverse 2410748" --text-font=FiveByNineJTD:style=ExtraLight --logo --text-side-scale=0.85 --maze-complexity=8 $* > /tmp/$F.scad
+./puzzlebox --parts=2 --core-height=100 --core-diameter=12 --outer-sides=7 --text-slow --text-depth=0.8 --text-end='AK' --text-side=" Test box $*\www.me.uk\@TheRealRevK\Build version date :-\`date --utc +%FT%TZ`\GitHub revk/PuzzleBox\Thingiverse 2410748" --text-font=FiveByNineJTD:style=ExtraLight --logo --text-side-scale=0.85 --maze-complexity=8 $* > /tmp/$F.scad
 # Other boxes
 foreach h (0 1 2 3)
 foreach w (0 1 2)
