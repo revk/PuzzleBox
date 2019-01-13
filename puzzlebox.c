@@ -52,6 +52,7 @@ main (int argc, const char *argv[])
   char *textend = NULL;
   char *textsides = NULL;
   char *textfont = NULL;
+  char *textfontend = NULL;
   int parts = 4;
   int part = 0;
   int inside = 0;
@@ -106,6 +107,7 @@ main (int argc, const char *argv[])
     {"text-end", 'E', POPT_ARG_STRING | (textend ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &textend, 0, "Text (initials) on end", "X{\\X...}"},
     {"text-side", 'S', POPT_ARG_STRING | (textsides ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &textsides, 0, "Text on sides", "Text{\\Text...}"},
     {"text-font", 'F', POPT_ARG_STRING | (textfont ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &textfont, 0, "Text font (optional)", "Font"},
+    {"text-font-end", 'e', POPT_ARG_STRING | (textfontend ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &textfontend, 0, "Text font for end (optional)", "Font"},
     {"text-slow", 'Z', POPT_ARG_NONE, &textslow, 0, "Text has diagonal edges (very slow)"},
     {"text-side-scale", 'T', POPT_ARG_DOUBLE, &textsidescale, 0, "Scale side text (i.e. if too long)", "N"},
     {"text-depth", 'L', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &logodepth, 0, "Logo cut depth", "mm"},
@@ -304,6 +306,8 @@ main (int argc, const char *argv[])
     textsides = NULL;
   if (textfont && !*textfont)
     textfont = NULL;
+  if (textfont && !textfontend)
+    textfontend = textfont;
   if (textend && !*textend)
     textend = NULL;
   if (textsides && !*textsides)
@@ -459,7 +463,7 @@ main (int argc, const char *argv[])
       printf
 	("module aa(w=100,white=0,$fn=24){scale(w/100){if(!white)difference(){circle(d=100.5);circle(d=99.5);}difference(){if(white)circle(d=100);difference(){circle(d=92);for(m=[0,1])mirror([m,0,0]){difference(){translate([24,0,0])circle(r=22.5);translate([24,0,0])circle(r=15);}polygon([[1.5,22],[9,22],[9,-18.5],[1.5,-22]]);}}}}} // A&A Logo is copyright (c) 2013 and trademark Andrews & Arnold Ltd\n");
   }
-  void cuttext (double s, char *t)
+  void cuttext (double s, char *t, char *f)
   {
     printf ("cuttext()text(\"%s\"", t);
     printf (",halign=\"center\"");
@@ -467,8 +471,8 @@ main (int argc, const char *argv[])
     printf (",size=%f", s);
     if (*t & 0x80)
       printf (",font=\"Noto Emoji\"");	// Assume emoji - not clean - TODO needs fontconfig stuff really
-    else if (textfont)
-      printf (",font=\"%s\"", textfont);
+    else if (f)
+      printf (",font=\"%s\"", f);
     printf (");\n");
   }
   // The base
@@ -511,7 +515,7 @@ main (int argc, const char *argv[])
     // r3 is outside of base with "sides" adjust
     double r1 = corediameter / 2 + wallthickness + (part - 1) * (wallthickness + mazethickness + clearance);	// Outer
     if (coresolid)
-      r1 -= (wallthickness + mazethickness + clearance * 2) / 2;	// Core diameter based on 2nd part
+      r1 -= wallthickness + mazethickness + clearance - (inside ? mazethickness : 0);	// Adjust to make part 2 the core diameter
     int W = ((int) (r1 * 2 * M_PI / mazestep)) / nubs * nubs;	// Default value
     double r0 = r1 - wallthickness;	// Inner
     double r2 = r1;		// Base outer
@@ -1167,7 +1171,7 @@ main (int argc, const char *argv[])
 	    if (*p && n == (parts - part))
 	      {
 		printf ("rotate([0,0,%f])", (part == parts ? 1 : -1) * (90 + (double) 180 / (outersides ? : 100)));
-		cuttext (r2 - outerround, p);
+		cuttext (r2 - outerround, p, textfontend);
 	      }
 	    p = q;
 	    n++;
@@ -1186,7 +1190,7 @@ main (int argc, const char *argv[])
 	    if (*p)
 	      {
 		printf ("rotate([0,0,%f])translate([0,-%f,%f])rotate([-90,-90,0])", a, r2, outerround + (height - outerround) / 2);
-		cuttext (h, p);
+		cuttext (h, p, textfont);
 	      }
 	    a += 360 / outersides;
 	    p = q;
