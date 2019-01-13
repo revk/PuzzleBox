@@ -1203,7 +1203,7 @@ main (int argc, const char *argv[])
     printf ("}\n");
     if (coresolid && part == 1)
       printf ("translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);\n", basethickness, r0 + clearance + (!mazeinside && part < parts ? clearance : 0), height - basethickness, W * 4);	// Solid core
-    if ((mazeoutside && !flip) || (!mazeoutside && part + 1 == parts))
+    if ((mazeoutside && !flip && part == parts) || (!mazeoutside && part + 1 == parts))
       entrya = 0;		// Has to line up for grooved lid to align
     // Nubs
     void addnub (double r, int inside)
@@ -1217,9 +1217,9 @@ main (int argc, const char *argv[])
 	da = -da;
       else if (mirrorinside)
 	my = -my;		// This is nub outside which is for inside maze
-      double a = entrya - da * 1.5;	// Centre A
+      double a = - da * 1.5;	// Centre A
       double z = height - mazestep / 2 - (parkvertical ? 0 : mazestep / 8) - dz * 1.5 - my * 1.5;	// Centre Z
-      printf ("for(a=[0:%f:359])rotate([0,0,a])polyhedron(points=[", (double) 360 / nubs);
+      printf ("rotate([0,0,%f])for(a=[0:%f:359])rotate([0,0,a])polyhedron(points=[", entrya,(double) 360 / nubs);
       r += (inside ? nubrclearance : -nubrclearance);	// Extra gap
       ri += (inside ? nubrclearance : -nubrclearance);	// Extra gap
       for (Z = 0; Z < 4; Z++)
