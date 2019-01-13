@@ -23,7 +23,7 @@
 #define	FLAGI 0x80		// Invalid
 
 #define	BIASL	2		// Direction bias for random maze choices
-#define	BIASR	2
+#define	BIASR	1
 #define	BIASU	1
 #define	BIASD	4
 
