@@ -1189,10 +1189,10 @@ main (int argc, const char *argv[])
 	      *q++ = 0;
 	    if (*p)
 	      {
-		printf ("rotate([0,0,%f])translate([0,-%f,%f])rotate([-90,-90,0])", -a, r2, outerround + (height - outerround) / 2);
+		printf ("rotate([0,0,%f])translate([0,-%f,%f])rotate([-90,-90,0])", a, r2, outerround + (height - outerround) / 2);
 		cuttext (h, p, textfont);
 	      }
-	    a += 360 / outersides;
+	    a -= 360 / outersides;
 	    p = q;
 	  }
       }
