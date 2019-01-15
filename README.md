@@ -10,4 +10,4 @@ And, for the avoidance of doubt, obviously, this is normally built using "make"
 
 When built, use --help for options, or see https://www.me.uk/puzzlebox
 
-Does not build on Mac - but if anyone knows how to get gcc extensions working on a Mac, that would be a great update which I'd be happy to apply.
+On macOS, this requires gcc, so "brew install gcc" first and change the makefile to use another compiler, like /usr/local/opt/gcc/bin/gcc-8
