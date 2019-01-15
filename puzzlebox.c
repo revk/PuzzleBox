@@ -49,6 +49,7 @@ main (int argc, const char *argv[])
   double logodepth = 0.6;
   double gripdepth = 2;
   double textsidescale = 1;
+  char *textinside = NULL;
   char *textend = NULL;
   char *textsides = NULL;
   char *textfont = NULL;
@@ -105,6 +106,7 @@ main (int argc, const char *argv[])
     {"grip-depth", 'R', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &gripdepth, 0, "Grip depth", "mm"},
     {"text-depth", 'D', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &textdepth, 0, "Text depth", "mm"},
     {"text-end", 'E', POPT_ARG_STRING | (textend ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &textend, 0, "Text (initials) on end", "X{\\X...}"},
+    {"text-inside", 'I', POPT_ARG_STRING | (textinside ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &textinside, 0, "Text (initials) inside end", "X{\\X...}"},
     {"text-side", 'S', POPT_ARG_STRING | (textsides ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &textsides, 0, "Text on sides", "Text{\\Text...}"},
     {"text-font", 'F', POPT_ARG_STRING | (textfont ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &textfont, 0, "Text font (optional)", "Font"},
     {"text-font-end", 'e', POPT_ARG_STRING | (textfontend ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &textfontend, 0, "Text font for end (optional)", "Font"},
@@ -302,6 +304,22 @@ main (int argc, const char *argv[])
     }
 
   // Sanity checks and adjustments
+  char *normalise (char *t)
+  {				// Simple text normalise
+    if (!t || !*t)
+      return NULL;
+    char *text = t;
+    while (*t)
+      {
+	if (*t == '"')
+	  *t == '\'';
+	t++;
+      }
+    return text;
+  }
+  textend = normalise (textend);
+  textsides = normalise (textsides);
+  textinside = normalise (textinside);
   if (!outersides)
     textsides = NULL;
   if (textfont && !*textfont)
@@ -310,6 +328,8 @@ main (int argc, const char *argv[])
     textfontend = textfont;
   if (textend && !*textend)
     textend = NULL;
+  if (textinside && !*textinside)
+    textinside = NULL;
   if (textsides && !*textsides)
     {
       textsidescale = 0;
@@ -326,23 +346,9 @@ main (int argc, const char *argv[])
     nubs = helix;
   if (gripdepth > (baseheight - outerround) / 6)
     gripdepth = (baseheight - outerround) / 6;
-  if (textsides)
-    {
-      char *p;
-      for (p = textsides; *p; p++)
-	if (*p == '"')
-	  *p = '\'';
-    }
-  if (textend)
-    {
-      char *p;
-      for (p = textend; *p; p++)
-	if (*p == '"')
-	  *p = '\'';
-    }
-  if (!logo)
+  if (!logo && !textinside)
     logodepth = 0;
-  if (!textsides && !textend)
+  if (!textsides && !textend && !textinside)
     textdepth = 0;
   if (basethickness < logodepth + (textend ? textdepth : 0) + 0.4)
     basethickness = logodepth + (textend ? textdepth : 0) + 0.4;
@@ -1198,6 +1204,8 @@ main (int argc, const char *argv[])
       }
     if (logo && part == parts)
       printf ("translate([0,0,%f])linear_extrude(height=%f,convexity=10)aa(%f,white=true);\n", basethickness - logodepth, basethickness, r0 * 1.8);
+    else if (textinside)
+	printf ("translate([0,0,%f])linear_extrude(height=%f,convexity=10)text(\"%s\",font=\"%s\",size=%f,halign=\"center\",valign=\"center\");\n", basethickness - logodepth, basethickness,textinside,textfontend,r0);
     if (markpos0 && part + 1 >= parts)
       mark ();
     printf ("}\n");
@@ -1217,9 +1225,9 @@ main (int argc, const char *argv[])
 	da = -da;
       else if (mirrorinside)
 	my = -my;		// This is nub outside which is for inside maze
-      double a = - da * 1.5;	// Centre A
+      double a = -da * 1.5;	// Centre A
       double z = height - mazestep / 2 - (parkvertical ? 0 : mazestep / 8) - dz * 1.5 - my * 1.5;	// Centre Z
-      printf ("rotate([0,0,%f])for(a=[0:%f:359])rotate([0,0,a])polyhedron(points=[", entrya,(double) 360 / nubs);
+      printf ("rotate([0,0,%f])for(a=[0:%f:359])rotate([0,0,a])polyhedron(points=[", entrya, (double) 360 / nubs);
       r += (inside ? nubrclearance : -nubrclearance);	// Extra gap
       ri += (inside ? nubrclearance : -nubrclearance);	// Extra gap
       for (Z = 0; Z < 4; Z++)
