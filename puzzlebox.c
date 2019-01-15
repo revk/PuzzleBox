@@ -13,6 +13,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <time.h>
+#include "apple-strdupa.h"
 
 // Flags for maze array
 #define	FLAGL 0x01		// Left
