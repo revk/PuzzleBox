@@ -67,6 +67,7 @@ main (int argc, const char *argv[])
   int nubs = helix;
   int logo = 0;
   int textslow = 0;
+  int textoutset = 0;
   int symmectriccut = 0;
   int coresolid = 0;
   int mime = (getenv ("HTTP_HOST") ? 1 : 0);
@@ -117,6 +118,7 @@ main (int argc, const char *argv[])
     {"text-slow", 'Z', POPT_ARG_NONE, &textslow, 0, "Text has diagonal edges (very slow)"},
     {"text-side-scale", 'T', POPT_ARG_DOUBLE, &textsidescale, 0, "Scale side text (i.e. if too long)", "N"},
     {"text-depth", 'L', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &logodepth, 0, "Logo cut depth", "mm"},
+    {"text-outset", 'O', POPT_ARG_NONE, &textoutset, 0, "Text on sides is outset not embossed"},
     {"symmetric-cut", 'V', POPT_ARG_NONE, &symmectriccut, 0, "Symmetric maze cut"},
     {"nub-r-clearance", 'y', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &nubrclearance, 0, "Extra clearance on radius for nub", "mm"},
     {"nub-z-clearance", 'Z', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &nubzclearance, 0, "Extra clearance on height of nub", "mm"},
@@ -474,9 +476,12 @@ main (int argc, const char *argv[])
       printf
 	("module aa(w=100,white=0,$fn=24){scale(w/100){if(!white)difference(){circle(d=100.5);circle(d=99.5);}difference(){if(white)circle(d=100);difference(){circle(d=92);for(m=[0,1])mirror([m,0,0]){difference(){translate([24,0,0])circle(r=22.5);translate([24,0,0])circle(r=15);}polygon([[1.5,22],[9,22],[9,-18.5],[1.5,-22]]);}}}}} // A&A Logo is copyright (c) 2013 and trademark Andrews & Arnold Ltd\n");
   }
-  void cuttext (double s, char *t, char *f)
+  void cuttext (double s, char *t, char *f, int outset)
   {
-    printf ("cuttext()text(\"%s\"", t);
+    if (outset)
+      printf ("mirror([0,0,1])");
+    printf ("cuttext()");
+    printf ("text(\"%s\"", t);
     printf (",halign=\"center\"");
     printf (",valign=\"center\"");
     printf (",size=%f", s);
@@ -536,7 +541,7 @@ main (int argc, const char *argv[])
       r2 += mazethickness;
     if (nextoutside)
       r2 += mazethickness;
-    if (part + 1 >= parts && textsides)
+    if (part + 1 >= parts && textsides && !textoutset)
       r2 += textdepth;
     if (mazeoutside && part < parts)
       {				// Allow for maze on outside
@@ -1204,31 +1209,33 @@ main (int argc, const char *argv[])
 	    if (*p && n == (parts - part))
 	      {
 		printf ("rotate([0,0,%f])", (part == parts ? 1 : -1) * (90 + (double) 180 / (outersides ? : 100)));
-		cuttext (r2 - outerround, p, textfontend);
+		cuttext (r2 - outerround, p, textfontend, 0);
 	      }
 	    p = q;
 	    n++;
 	  }
       }
-    if (textsides && part == parts && outersides)
-      {
-	double a = 90 + (double) 180 / outersides;
-	double h = r3 * sin (M_PI / outersides) * textsidescale;
-	char *p = strdupa (textsides);
-	while (p)
-	  {
-	    char *q = strchr (p, '\\');
-	    if (q)
-	      *q++ = 0;
-	    if (*p)
-	      {
-		printf ("rotate([0,0,%f])translate([0,-%f,%f])rotate([-90,-90,0])", a, r2, outerround + (height - outerround) / 2);
-		cuttext (h, p, textfont);
-	      }
-	    a -= 360 / outersides;
-	    p = q;
-	  }
-      }
+    void textside (int outset)
+    {
+      double a = 90 + (double) 180 / outersides;
+      double h = r3 * sin (M_PI / outersides) * textsidescale;
+      char *p = strdupa (textsides);
+      while (p)
+	{
+	  char *q = strchr (p, '\\');
+	  if (q)
+	    *q++ = 0;
+	  if (*p)
+	    {
+	      printf ("rotate([0,0,%f])translate([0,-%f,%f])rotate([-90,-90,0])", a, r2, outerround + (height - outerround) / 2);
+	      cuttext (h, p, textfont, outset);
+	    }
+	  a -= 360 / outersides;
+	  p = q;
+	}
+    }
+    if (textsides && part == parts && outersides && !textoutset)
+      textside (0);
     if (logo && part == parts)
       printf ("translate([0,0,%f])linear_extrude(height=%f,convexity=10)aa(%f,white=true);\n", basethickness - logodepth, basethickness, r0 * 1.8);
     else if (textinside)
@@ -1236,6 +1243,8 @@ main (int argc, const char *argv[])
     if (markpos0 && part + 1 >= parts)
       mark ();
     printf ("}\n");
+    if (textsides && part == parts && outersides && textoutset)
+      textside (1);
     if (coresolid && part == 1)
       printf ("translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);\n", basethickness, r0 + clearance + (!mazeinside && part < parts ? clearance : 0), height - basethickness, W * 4);	// Solid core
     if ((mazeoutside && !flip && part == parts) || (!mazeoutside && part + 1 == parts))
