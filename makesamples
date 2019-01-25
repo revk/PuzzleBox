@@ -45,12 +45,12 @@ foreach s (30/30 50/20 70/10)
 foreach w (0 1 2 3 4)
 	setenv F easy-${s:t}x${s:h}mm-part-$w-of-4
 	if(! $w) setenv F all-easy-${s:t}x${s:h}mm
-	./puzzlebox --parts=4 --core-diameter=$s:t --core-height=$s:h --part=$w --text-slow --text-depth=1 --text-end="☺" --logo $* > /tmp/$F.scad
+	./puzzlebox --parts=4 --core-gap=10 --core-diameter=$s:t --core-height=$s:h --part=$w --text-slow --text-depth=1 --text-end="☺" --logo $* > /tmp/$F.scad
 end
 foreach w (0 1 2 3 4)
 	setenv F hard-${s:t}x${s:h}mm-part-$w-of-4
 	if(! $w) setenv F all-hard-${s:t}x${s:h}mm
-	./puzzlebox --parts=4 --core-diameter=$s:t --core-height=$s:h --inside --part=$w --text-slow --text-depth=1 --text-end="☺" --logo $* > /tmp/$F.scad
+	./puzzlebox --parts=4 --core-gap=10 --core-diameter=$s:t --core-height=$s:h --inside --part=$w --text-slow --text-depth=1 --text-end="☺" --logo $* > /tmp/$F.scad
 end
 end
 
