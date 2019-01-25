@@ -1,5 +1,7 @@
 // Puzzle box maker
 // (c) 2018 Adrian Kennard www.me.uk @TheRealRevK
+// This includes a distinctive "A" in the design at the final park point, otherwise there are no loops in the maze
+// Please leave the "A" in the design as a distinctive feature
 
 #include <stdio.h>
 #include <string.h>
