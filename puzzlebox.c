@@ -72,6 +72,7 @@ main (int argc, const char *argv[])
   int parkvertical = 0;
   int mazecomplexity = 5;
   int mirrorinside = 0;		// Clockwise lock on inside - may be unwise as more likely to come undone with outer.
+  int noa = 0;
 
   char pathsep = 0;
   char *path = getenv ("PATH_INFO");
@@ -120,6 +121,7 @@ main (int argc, const char *argv[])
     {"logo", 'A', POPT_ARG_NONE, &logo, 0, "Include A&A logo in last lid"},
     {"test", 'Q', POPT_ARG_NONE, &testmaze, 0, "Test pattern instead of maze"},
     {"mime", 0, POPT_ARG_NONE | (mime ? POPT_ARGFLAG_DOC_HIDDEN : 0), &mime, 0, "MIME Header"},
+    {"no-a", 0, POPT_ARG_NONE | (noa ? POPT_ARGFLAG_DOC_HIDDEN : 0), &noa, 0, "No A"},
     {"web-form", 0, POPT_ARG_NONE, &webform, 0, "Web form"},
     POPT_AUTOHELP {}
   };
@@ -625,15 +627,37 @@ main (int argc, const char *argv[])
 	      maze[X][Y] |= FLAGI;	// To high or low
 	// Final park point
 	if (parkvertical)
-	  for (N = 0; N < helix + 2; N++)	// Down to final
-	    {
-	      maze[0][N] |= FLAGU + FLAGD;
-	      maze[0][N + 1] |= FLAGD;
-	    }
+	  {
+	    for (N = 0; N < helix + 2; N++)	// Down to final
+	      {
+		maze[0][N] |= FLAGU + FLAGD;
+		maze[X = 0][Y = N + 1] |= FLAGD;
+	      }
+	    if (!inside && !noa && W / nubs > 2 && H > helix + 4)
+	      {			// An "A" at finish
+		maze[X][Y] |= FLAGD | FLAGU | FLAGR;
+		maze[X][Y + 1] |= FLAGD | FLAGR;
+		maze[X + 1][Y] |= FLAGD | FLAGU | FLAGL;
+		maze[X + 1][Y + 1] |= FLAGD | FLAGL;
+		maze[X + 1][Y - 1] |= FLAGU;
+		X++;
+		Y--;
+	      }
+	  }
 	else			// Left to final
 	  {
 	    maze[0][helix + 1] |= FLAGR;
-	    maze[1][helix + 1] |= FLAGL;
+	    maze[X = 1][Y = helix + 1] |= FLAGL;
+	    if (!inside && !noa && W / nubs > 3 && H > helix + 3)
+	      {			// An "A" at finish
+		maze[X][Y] |= FLAGL | FLAGR | FLAGU;
+		maze[X + 1][Y] |= FLAGL | FLAGU;
+		maze[X + 1][Y + 1] |= FLAGL | FLAGD;
+		maze[X][Y + 1] |= FLAGL | FLAGR | FLAGD;
+		maze[X - 1][Y + 1] |= FLAGR;
+		X--;
+		Y++;
+	      }
 	  }
 	// Make maze
 	int maxx = 0;
@@ -666,8 +690,8 @@ main (int argc, const char *argv[])
 	      int x, y, n;
 	    };
 	    pos_t *pos = malloc (sizeof (*pos)), *last = NULL;
-	    pos->x = (parkvertical ? 0 : 1);	// Start point
-	    pos->y = helix + 1 + (parkvertical ? 1 : 0);
+	    pos->x = X;
+	    pos->y = Y;
 	    pos->n = 0;
 	    pos->next = NULL;
 	    last = pos;
@@ -1206,7 +1230,7 @@ main (int argc, const char *argv[])
     if (logo && part == parts)
       printf ("translate([0,0,%f])linear_extrude(height=%f,convexity=10)aa(%f,white=true);\n", basethickness - logodepth, basethickness, r0 * 1.8);
     else if (textinside)
-	printf ("translate([0,0,%f])linear_extrude(height=%f,convexity=10)text(\"%s\",font=\"%s\",size=%f,halign=\"center\",valign=\"center\");\n", basethickness - logodepth, basethickness,textinside,textfontend,r0);
+      printf ("translate([0,0,%f])linear_extrude(height=%f,convexity=10)text(\"%s\",font=\"%s\",size=%f,halign=\"center\",valign=\"center\");\n", basethickness - logodepth, basethickness, textinside, textfontend, r0);
     if (markpos0 && part + 1 >= parts)
       mark ();
     printf ("}\n");
