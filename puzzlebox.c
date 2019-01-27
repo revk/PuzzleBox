@@ -538,10 +538,8 @@ main (int argc, const char *argv[])
     double r0 = r1 - wallthickness;	// Inner
     double r2 = r1;		// Base outer
     if (part < parts)
-      r2 += wallthickness + clearance;
+      r2 += clearance;
     if (nextinside || part + 1 == parts)
-      r2 += mazethickness;
-    if (nextoutside)
       r2 += mazethickness;
     if (part + 1 >= parts && textsides && !textoutset)
       r2 += textdepth;
@@ -554,8 +552,12 @@ main (int argc, const char *argv[])
     if (mazeinside && part > 1)
       r0 -= mazethickness;	// Maze on inside
     double r3 = r2;
+    if (part < parts)
+      r3 += wallthickness;
     if (outersides && part + 1 >= parts)
       r3 /= cos ((double) M_PI / outersides);	// Bigger because of number of sides
+    else if (nextoutside)
+      r3 += mazethickness;
     printf ("// Part %d (%.2fmm to %.2fmm and %.2fmm/%.2fmm base)\n", part, r0, r1, r2, r3);
     double height = (coresolid ? coregap + baseheight : 0) + coreheight + basethickness + (basethickness + basegap) * (part - 1);
     if (part == 1)
@@ -623,8 +625,6 @@ main (int argc, const char *argv[])
       }
       {				// Maze
 	double margin = mazemargin;
-	if (!inside && part > 1)
-	  margin = 0;
 	// Make maze
 	int f = open ("/dev/urandom", O_RDONLY);
 	if (f < 0)
@@ -1174,25 +1174,25 @@ main (int argc, const char *argv[])
     // Base
     printf ("difference(){\n");
     if (part == parts)
-      printf ("outer(%f,%f);\n", height, (r2 - outerround) / cos ((double) M_PI / (outersides ? : 100)));
+      printf ("outer(%f,%f);\n", height, (r3 * cos ((double) M_PI / (outersides ? : 100)) - outerround) / cos ((double) M_PI / (outersides ? : 100)));
     else if (part + 1 >= parts)
-      printf ("mirror([1,0,0])outer(%f,%f);\n", baseheight, (r2 - outerround) / cos ((double) M_PI / (outersides ? : 100)));
+      printf ("mirror([1,0,0])outer(%f,%f);\n", baseheight, (r3 * cos ((double) M_PI / (outersides ? : 100)) - outerround) / cos ((double) M_PI / (outersides ? : 100)));
     else
-      printf ("hull(){cylinder(r=%f,h=%f,$fn=%d);translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);}\n", r3 - mazethickness, baseheight, W * 4, mazemargin, r3 - gripinset, baseheight - mazemargin, W * 4);
+      printf ("hull(){cylinder(r=%f,h=%f,$fn=%d);translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);}\n", r3 - mazethickness, baseheight, W * 4, mazemargin, r2, baseheight - mazemargin, W * 4);
     printf ("translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);\n", basethickness, r0 + (part > 1 && mazeinside ? mazethickness + clearance : 0) + (!mazeinside && part < parts ? clearance : 0), height, W * 4);	// Hole
     printf ("}\n");
     printf ("}\n");
     // Cut outs
     if (gripdepth && part + 1 < parts)
-      printf ("translate([0,0,%f])rotate_extrude(convexity=10,$fn=%d)translate([%f,0,0])circle(r=%f,$fn=24);\n", mazemargin + (baseheight - mazemargin) / 2, W * 4, r3 + gripdepth - gripinset, gripdepth * 2);
+      printf ("translate([0,0,%f])rotate_extrude(convexity=10,$fn=%d)translate([%f,0,0])circle(r=%f,$fn=24);\n", mazemargin + (baseheight - mazemargin) / 2, W * 4, r2 + gripdepth, gripdepth * 2);
     else if (gripdepth && part + 1 == parts)
       printf ("translate([0,0,%f])rotate_extrude(convexity=10,$fn=%d)translate([%f,0,0])circle(r=%f,$fn=24);\n", outerround + (baseheight - outerround) / 2, outersides ? : 100, r3 + gripdepth, gripdepth * 2);
     if (nextoutside && part + 1 < parts)	// Connect endpoints over base
       {
-	int W = ((int) ((r2 - mazethickness) * 2 * M_PI / mazestep)) / nubs * nubs;
-	double wi = 2 * (r2 - mazethickness) * 2 * M_PI / W / 4;
-	double wo = 2 * r2 * 2 * M_PI * 3 / W / 4;
-	printf ("for(a=[0:%f:359])rotate([0,0,a])translate([0,%f,0])hull(){cube([%f,%f,%f],center=true);cube([%f,0.01,%f],center=true);}\n", (double) 360 / nubs, r2, wi, mazethickness * 2, baseheight * 2 + clearance, wo, baseheight * 2 + clearance);
+	int W = ((int) ((r3 - mazethickness) * 2 * M_PI / mazestep)) / nubs * nubs;
+	double wi = 2 * (r3 - mazethickness) * 2 * M_PI / W / 4;
+	double wo = 2 * r3 * 2 * M_PI * 3 / W / 4;
+	printf ("for(a=[0:%f:359])rotate([0,0,a])translate([0,%f,0])hull(){cube([%f,%f,%f],center=true);cube([%f,0.01,%f],center=true);}\n", (double) 360 / nubs, r3, wi, mazethickness * 2, baseheight * 2 + clearance, wo, baseheight * 2 + clearance);
       }
     if (textend)
       {

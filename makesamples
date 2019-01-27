@@ -54,4 +54,13 @@ foreach w (0 1 2 3 4)
 end
 end
 
+setenv F all-test-six-outside
+./puzzlebox --parts=6 --core-gap=10 --core-diameter=12 --core-height=50 --logo $* > /tmp/$F.scad
+setenv F all-test-six-inside
+./puzzlebox --parts=6 --core-gap=10 --core-diameter=12 --core-height=50 --logo --inside $* > /tmp/$F.scad
+setenv F all-test-six-outside-flip
+./puzzlebox --parts=6 --core-gap=10 --core-diameter=12 --core-height=50 --logo --flip $* > /tmp/$F.scad
+setenv F all-test-six-inside-flip
+./puzzlebox --parts=6 --core-gap=10 --core-diameter=12 --core-height=50 --logo --flip --inside $* > /tmp/$F.scad
+
 parallel --bar openscad -o "{.}.stl" "{}" ::: /tmp/*.scad
