@@ -312,7 +312,6 @@ main (int argc, const char *argv[])
     }
 
   // Sanity checks and adjustments
-  double gripinset = mazethickness / 2;
   char *normalise (char *t)
   {				// Simple text normalise
     if (!t || !*t)
@@ -355,6 +354,8 @@ main (int argc, const char *argv[])
     nubs = helix;
   if (gripdepth > (baseheight - outerround) / 6)
     gripdepth = (baseheight - outerround) / 6;
+  if (gripdepth > mazethickness)
+    gripdepth = mazethickness;
   if (!logo && !textinside)
     logodepth = 0;
   if (!textsides && !textend && !textinside)
@@ -522,10 +523,9 @@ main (int argc, const char *argv[])
     if (part == parts)
       mazeoutside = 0;
     if (part + 1 >= parts)
-      {
-	nextinside = 0;
-	nextoutside = 0;
-      }
+      nextoutside = 0;
+    if (part == parts)
+      nextinside = 0;
     // Dimensions
     // r0 is inside of part+maze
     // r1 is outside of part+maze
@@ -536,28 +536,22 @@ main (int argc, const char *argv[])
       r1 -= wallthickness + mazethickness + clearance - (inside ? mazethickness : 0);	// Adjust to make part 2 the core diameter
     int W = ((int) (r1 * 2 * M_PI / mazestep)) / nubs * nubs;	// Default value
     double r0 = r1 - wallthickness;	// Inner
+    if (mazeinside && part > 1)
+      r0 -= mazethickness;	// Maze on inside
+    if (mazeoutside && part < parts)
+      r1 += mazethickness;	// Maze on outside
     double r2 = r1;		// Base outer
     if (part < parts)
       r2 += clearance;
-    if (nextinside || part + 1 == parts)
-      r2 += mazethickness;
     if (part + 1 >= parts && textsides && !textoutset)
       r2 += textdepth;
-    if (mazeoutside && part < parts)
-      {				// Allow for maze on outside
-	r1 += mazethickness;
-	if (part + 1 < parts)
-	  r2 += mazethickness;
-      }
-    if (mazeinside && part > 1)
-      r0 -= mazethickness;	// Maze on inside
+    if (nextinside)
+      r2 += mazethickness;
+    if (nextoutside || part + 1 == parts)
+      r2 += wallthickness;
     double r3 = r2;
-    if (part < parts)
-      r3 += wallthickness;
     if (outersides && part + 1 >= parts)
       r3 /= cos ((double) M_PI / outersides);	// Bigger because of number of sides
-    else if (nextoutside)
-      r3 += mazethickness;
     printf ("// Part %d (%.2fmm to %.2fmm and %.2fmm/%.2fmm base)\n", part, r0, r1, r2, r3);
     double height = (coresolid ? coregap + baseheight : 0) + coreheight + basethickness + (basethickness + basegap) * (part - 1);
     if (part == 1)
@@ -1174,11 +1168,11 @@ main (int argc, const char *argv[])
     // Base
     printf ("difference(){\n");
     if (part == parts)
-      printf ("outer(%f,%f);\n", height, (r3 * cos ((double) M_PI / (outersides ? : 100)) - outerround) / cos ((double) M_PI / (outersides ? : 100)));
+      printf ("outer(%f,%f);\n", height, (r2 - outerround) / cos ((double) M_PI / (outersides ? : 100)));
     else if (part + 1 >= parts)
-      printf ("mirror([1,0,0])outer(%f,%f);\n", baseheight, (r3 * cos ((double) M_PI / (outersides ? : 100)) - outerround) / cos ((double) M_PI / (outersides ? : 100)));
+      printf ("mirror([1,0,0])outer(%f,%f);\n", baseheight, (r2 - outerround) / cos ((double) M_PI / (outersides ? : 100)));
     else
-      printf ("hull(){cylinder(r=%f,h=%f,$fn=%d);translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);}\n", r3 - mazethickness, baseheight, W * 4, mazemargin, r2, baseheight - mazemargin, W * 4);
+      printf ("hull(){cylinder(r=%f,h=%f,$fn=%d);translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);}\n", r2 - mazethickness, baseheight, W * 4, mazemargin, r2, baseheight - mazemargin, W * 4);
     printf ("translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);\n", basethickness, r0 + (part > 1 && mazeinside ? mazethickness + clearance : 0) + (!mazeinside && part < parts ? clearance : 0), height, W * 4);	// Hole
     printf ("}\n");
     printf ("}\n");
@@ -1187,13 +1181,6 @@ main (int argc, const char *argv[])
       printf ("translate([0,0,%f])rotate_extrude(convexity=10,$fn=%d)translate([%f,0,0])circle(r=%f,$fn=24);\n", mazemargin + (baseheight - mazemargin) / 2, W * 4, r2 + gripdepth, gripdepth * 2);
     else if (gripdepth && part + 1 == parts)
       printf ("translate([0,0,%f])rotate_extrude(convexity=10,$fn=%d)translate([%f,0,0])circle(r=%f,$fn=24);\n", outerround + (baseheight - outerround) / 2, outersides ? : 100, r3 + gripdepth, gripdepth * 2);
-    if (nextoutside && part + 1 < parts)	// Connect endpoints over base
-      {
-	int W = ((int) ((r3 - mazethickness) * 2 * M_PI / mazestep)) / nubs * nubs;
-	double wi = 2 * (r3 - mazethickness) * 2 * M_PI / W / 4;
-	double wo = 2 * r3 * 2 * M_PI * 3 / W / 4;
-	printf ("for(a=[0:%f:359])rotate([0,0,a])translate([0,%f,0])hull(){cube([%f,%f,%f],center=true);cube([%f,0.01,%f],center=true);}\n", (double) 360 / nubs, r3, wi, mazethickness * 2, baseheight * 2 + clearance, wo, baseheight * 2 + clearance);
-      }
     if (textend)
       {
 	int n = 0;
