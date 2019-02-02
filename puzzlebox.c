@@ -1082,7 +1082,7 @@ main (int argc, const char *argv[])
 	  {			// Park ridge
 	    if (inside && mirrorinside)
 	      printf ("mirror([1,0,0])");
-	    printf ("polyhedron(points=[");
+	    printf ("rotate([0,0,-0.1])polyhedron(points=[");
 	    for (N = 0; N < W; N += W / nubs)
 	      for (Y = 0; Y < 4; Y++)
 		for (X = 0; X < 4; X++)
