@@ -32,7 +32,7 @@
 
 #define	SCALE 1000LL		// Scales used for some aspects of output
 #define	SCALEI "0.001"
-#define	scaled(x)	((long long)((x)*SCALE))
+#define	scaled(x)	((long long)round((x)*SCALE))
 
 int
 main (int argc, const char *argv[])
