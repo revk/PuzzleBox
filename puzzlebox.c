@@ -1178,9 +1178,9 @@ main (int argc, const char *argv[])
     printf ("}\n");
     // Cut outs
     if (gripdepth && part + 1 < parts)
-      printf ("translate([0,0,%f])rotate_extrude(convexity=10,$fn=%d)translate([%f,0,0])circle(r=%f,$fn=24);\n", mazemargin + (baseheight - mazemargin) / 2, W * 4, r2 + gripdepth, gripdepth * 2);
+      printf ("rotate([0,0,%f])translate([0,0,%f])rotate_extrude(convexity=10,$fn=%d)translate([%f,0,0])circle(r=%f,$fn=8);\n", (double) 360 / W / 4 / 2, mazemargin + (baseheight - mazemargin) / 2, W * 4, r2 + gripdepth, gripdepth * 2);
     else if (gripdepth && part + 1 == parts)
-      printf ("translate([0,0,%f])rotate_extrude(convexity=10,$fn=%d)translate([%f,0,0])circle(r=%f,$fn=24);\n", outerround + (baseheight - outerround) / 2, outersides ? : 100, r3 + gripdepth, gripdepth * 2);
+      printf ("translate([0,0,%f])rotate_extrude(convexity=10,$fn=%d)translate([%f,0,0])circle(r=%f,$fn=8);\n", outerround + (baseheight - outerround) / 2, outersides ? : 100, r3 + gripdepth, gripdepth * 2);
     if (textend)
       {
 	int n = 0;
