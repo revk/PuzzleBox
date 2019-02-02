@@ -30,6 +30,9 @@
 #define	BIASU	1
 #define	BIASD	4
 
+#define	SCALE 1000LL		// Scales used for some aspects of output
+#define	SCALEI "0.001"
+
 int
 main (int argc, const char *argv[])
 {
@@ -868,20 +871,20 @@ main (int argc, const char *argv[])
 	  }
 	if (inside && mirrorinside)
 	  printf ("mirror([1,0,0])");
-	printf ("polyhedron(");
+	printf ("scale(" SCALEI ")polyhedron(");
 	// Make points
 	printf ("points=[");
 	int P = 0;
 	void addpoint (int S, double x, double y, double z)
 	{
-	  printf ("[%f,%f,%f],", x, y, z);
+	  printf ("[%lld,%lld,%lld],", (long long) (x * SCALE), (long long) (y * SCALE), (long long) (z * SCALE));
 	  if (s[S].n >= MAXY)
 	    errx (1, "WTF points %d", S);
 	  s[S].p[s[S].n++] = P++;
 	}
 	void addpointr (int S, double x, double y, double z)
 	{
-	  printf ("[%f,%f,%f],", x, y, z);
+	  printf ("[%lld,%lld,%lld],", (long long) (x * SCALE), (long long) (y * SCALE), (long long) (z * SCALE));
 	  if (s[S].n >= MAXY)
 	    errx (1, "WTF points %d", S);
 	  s[S].p[s[S].n++] = -(P++);
@@ -1082,7 +1085,7 @@ main (int argc, const char *argv[])
 	  {			// Park ridge
 	    if (inside && mirrorinside)
 	      printf ("mirror([1,0,0])");
-	    printf ("rotate([0,0,-0.1])polyhedron(points=[");
+	    printf ("rotate([0,0,-0.1])scale("SCALEI")polyhedron(points=[");
 	    for (N = 0; N < W; N += W / nubs)
 	      for (Y = 0; Y < 4; Y++)
 		for (X = 0; X < 4; X++)
@@ -1098,8 +1101,8 @@ main (int argc, const char *argv[])
 		      }
 		    else if (parkvertical)
 		      z -= nubskew;
-		    printf ("[%f,%f,%f],", s[S].x[0], s[S].y[0], z);
-		    printf ("[%f,%f,%f],", x, y, z);
+		    printf ("[%lld,%lld,%lld],",(long long)( s[S].x[0]*SCALE),(long long)( s[S].y[0]*SCALE),(long long)( z*SCALE));
+		    printf ("[%lld,%lld,%lld],",(long long)( x*SCALE),(long long)( y*SCALE),(long long)( z*SCALE));
 		  }
 	    printf ("],faces=[");
 	    for (N = 0; N < nubs; N++)
@@ -1247,16 +1250,17 @@ main (int argc, const char *argv[])
 	my = -my;		// This is nub outside which is for inside maze
       double a = -da * 1.5;	// Centre A
       double z = height - mazestep / 2 - (parkvertical ? 0 : mazestep / 8) - dz * 1.5 - my * 1.5;	// Centre Z
-      printf ("rotate([0,0,%f])for(a=[0:%f:359])rotate([0,0,a])polyhedron(points=[", entrya, (double) 360 / nubs);
+      printf ("rotate([0,0,%f])for(a=[0:%f:359])rotate([0,0,a])scale(" SCALEI ")polyhedron(points=[", entrya, (double) 360 / nubs);
       r += (inside ? nubrclearance : -nubrclearance);	// Extra gap
       ri += (inside ? nubrclearance : -nubrclearance);	// Extra gap
       for (Z = 0; Z < 4; Z++)
 	for (X = 0; X < 4; X++)
-	  printf ("[%f,%f,%f],", ((X == 1 || X == 2) && (Z == 1 || Z == 2) ? ri : r) * sin (a + da * X), ((X == 1 || X == 2) && (Z == 1 || Z == 2) ? ri : r) * cos (a + da * X), z + Z * dz + X * my + (Z == 1 || Z == 2 ? nubskew : 0));
+	  printf ("[%lld,%lld,%lld],", (long long) (((X == 1 || X == 2) && (Z == 1 || Z == 2) ? ri : r) * sin (a + da * X) * SCALE), (long long) (((X == 1 || X == 2) && (Z == 1 || Z == 2) ? ri : r) * cos (a + da * X) * SCALE),
+		  (long long) ((z + Z * dz + X * my + (Z == 1 || Z == 2 ? nubskew : 0)) * SCALE));
       r += (inside ? clearance - nubrclearance : -clearance + nubrclearance);	// Back in to wall
       for (Z = 0; Z < 4; Z++)
 	for (X = 0; X < 4; X++)
-	  printf ("[%f,%f,%f],", r * sin (a + da * X), r * cos (a + da * X), z + Z * dz + X * my + (Z == 1 || Z == 2 ? nubskew : 0));
+	  printf ("[%lld,%lld,%lld],", (long long) (r * sin (a + da * X) * SCALE), (long long) (r * cos (a + da * X) * SCALE), (long long) ((z + Z * dz + X * my + (Z == 1 || Z == 2 ? nubskew : 0)) * SCALE));
       printf ("],faces=[");
       for (Z = 0; Z < 3; Z++)
 	for (X = 0; X < 3; X++)
