@@ -32,6 +32,7 @@
 
 #define	SCALE 1000LL		// Scales used for some aspects of output
 #define	SCALEI "0.001"
+#define	scaled(x)	((long long)((x)*SCALE))
 
 int
 main (int argc, const char *argv[])
@@ -474,9 +475,9 @@ main (int argc, const char *argv[])
     }
   {				// Modules
     if (textslow)
-      printf ("module cuttext(){translate([0,0,-1])minkowski(){rotate([0,0,22.5])cylinder(h=%f,d1=%f,d2=0,$fn=8);linear_extrude(height=1,convexity=10)mirror([1,0,0])children();}}\n", textdepth, textdepth);
+      printf ("module cuttext(){translate([0,0,-1])minkowski(){rotate([0,0,22.5])cylinder(h=%lld,d1=%lld,d2=0,$fn=8);linear_extrude(height=1,convexity=10)mirror([1,0,0])children();}}\n", scaled (textdepth), scaled (textdepth));
     else
-      printf ("module cuttext(){linear_extrude(height=%f,convexity=10,center=true)mirror([1,0,0])children();}\n", textdepth);
+      printf ("module cuttext(){linear_extrude(height=%lld,convexity=10,center=true)mirror([1,0,0])children();}\n", scaled (textdepth));
     // You can use the A&A logo on your maze print providing it is tasteful and not in any way derogatory to A&A or any staff/officers.
     if (logo)
       printf
@@ -490,7 +491,7 @@ main (int argc, const char *argv[])
     printf ("text(\"%s\"", t);
     printf (",halign=\"center\"");
     printf (",valign=\"center\"");
-    printf (",size=%f", s);
+    printf (",size=%lld", scaled (s));
     if (*t & 0x80)
       printf (",font=\"Noto Emoji\"");	// Assume emoji - not clean - TODO needs fontconfig stuff really
     else if (f)
@@ -498,7 +499,8 @@ main (int argc, const char *argv[])
     printf (");\n");
   }
   // The base
-  printf ("module outer(h,r){e=%f;minkowski(){cylinder(r1=0,r2=e,h=e,$fn=24);cylinder(h=h-e,r=r,$fn=%d);}}\n", outerround, outersides ? : 100);
+  printf ("module outer(h,r){e=%lld;minkowski(){cylinder(r1=0,r2=e,h=e,$fn=24);cylinder(h=h-e,r=r,$fn=%d);}}\n", scaled (outerround), outersides ? : 100);
+  // Start
   double x = 0;
   int box (int part)
   {				// Make the box - part 1 in inside
@@ -871,20 +873,20 @@ main (int argc, const char *argv[])
 	  }
 	if (inside && mirrorinside)
 	  printf ("mirror([1,0,0])");
-	printf ("scale(" SCALEI ")polyhedron(");
+	printf ("polyhedron(");
 	// Make points
 	printf ("points=[");
 	int P = 0;
 	void addpoint (int S, double x, double y, double z)
 	{
-	  printf ("[%lld,%lld,%lld],", (long long) (x * SCALE), (long long) (y * SCALE), (long long) (z * SCALE));
+	  printf ("[%lld,%lld,%lld],", scaled (x), scaled (y), scaled (z));
 	  if (s[S].n >= MAXY)
 	    errx (1, "WTF points %d", S);
 	  s[S].p[s[S].n++] = P++;
 	}
 	void addpointr (int S, double x, double y, double z)
 	{
-	  printf ("[%lld,%lld,%lld],", (long long) (x * SCALE), (long long) (y * SCALE), (long long) (z * SCALE));
+	  printf ("[%lld,%lld,%lld],", scaled (x), scaled (y), scaled (z));
 	  if (s[S].n >= MAXY)
 	    errx (1, "WTF points %d", S);
 	  s[S].p[s[S].n++] = -(P++);
@@ -1085,7 +1087,7 @@ main (int argc, const char *argv[])
 	  {			// Park ridge
 	    if (inside && mirrorinside)
 	      printf ("mirror([1,0,0])");
-	    printf ("rotate([0,0,-0.1])scale("SCALEI")polyhedron(points=[");
+	    printf ("polyhedron(points=[");
 	    for (N = 0; N < W; N += W / nubs)
 	      for (Y = 0; Y < 4; Y++)
 		for (X = 0; X < 4; X++)
@@ -1101,8 +1103,8 @@ main (int argc, const char *argv[])
 		      }
 		    else if (parkvertical)
 		      z -= nubskew;
-		    printf ("[%lld,%lld,%lld],",(long long)( s[S].x[0]*SCALE),(long long)( s[S].y[0]*SCALE),(long long)( z*SCALE));
-		    printf ("[%lld,%lld,%lld],",(long long)( x*SCALE),(long long)( y*SCALE),(long long)( z*SCALE));
+		    printf ("[%lld,%lld,%lld],", scaled (s[S].x[0]), scaled (s[S].y[0]), scaled (z));
+		    printf ("[%lld,%lld,%lld],", scaled (x), scaled (y), scaled (z));
 		  }
 	    printf ("],faces=[");
 	    for (N = 0; N < nubs; N++)
@@ -1132,7 +1134,7 @@ main (int argc, const char *argv[])
 	  }
       }
     }
-    printf ("translate([%f,0,0])\n", x + (outersides & 1 ? r3 : r2));
+    printf ("translate([%lld,0,0])\n", scaled (x + (outersides & 1 ? r3 : r2)));
     if (outersides)
       printf ("rotate([0,0,%f])", (double) 180 / outersides + (part + 1 == parts ? 180 : 0));
     printf ("{\n");
@@ -1154,7 +1156,7 @@ main (int argc, const char *argv[])
 	a = (mirrorinside ? 1 : -1) * entrya;
       if (part + 1 == parts && mazeoutside)
 	a = entrya;
-      printf ("rotate([0,0,%f])translate([0,%f,%f])cylinder(d=%f,h=%f,center=true,$fn=4);\n", a, r, height, t, mazestep / 2);
+      printf ("rotate([0,0,%f])translate([0,%lld,%lld])cylinder(d=%lld,h=%lld,center=true,$fn=4);\n", a, scaled (r), scaled (height), scaled (t), scaled (mazestep / 2));
     }
     // Maze
     printf ("difference(){union(){");
@@ -1165,25 +1167,25 @@ main (int argc, const char *argv[])
     if (!mazeinside && !mazeoutside && part < parts)
       {
 	printf ("difference(){\n");
-	printf ("translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);\n", basethickness / 2, r1, height - basethickness / 2, W * 4, basethickness, r0, height, W * 4);	// Non maze
+	printf ("translate([0,0,%lld])cylinder(r=%lld,h=%lld,$fn=%d);translate([0,0,%lld])cylinder(r=%lld,h=%lld,$fn=%d);\n", scaled (basethickness / 2), scaled (r1), scaled (height - basethickness / 2), W * 4, scaled (basethickness), scaled (r0), height, W * 4);	// Non maze
 	printf ("}\n");
       }
     // Base
     printf ("difference(){\n");
     if (part == parts)
-      printf ("outer(%f,%f);\n", height, (r2 - outerround) / cos ((double) M_PI / (outersides ? : 100)));
+      printf ("outer(%lld,%lld);\n", scaled (height), scaled ((r2 - outerround) / cos ((double) M_PI / (outersides ? : 100))));
     else if (part + 1 >= parts)
-      printf ("mirror([1,0,0])outer(%f,%f);\n", baseheight, (r2 - outerround) / cos ((double) M_PI / (outersides ? : 100)));
+      printf ("mirror([1,0,0])outer(%lld,%lld);\n", scaled (baseheight), scaled ((r2 - outerround) / cos ((double) M_PI / (outersides ? : 100))));
     else
-      printf ("hull(){cylinder(r=%f,h=%f,$fn=%d);translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);}\n", r2 - mazethickness, baseheight, W * 4, mazemargin, r2, baseheight - mazemargin, W * 4);
-    printf ("translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);\n", basethickness, r0 + (part > 1 && mazeinside ? mazethickness + clearance : 0) + (!mazeinside && part < parts ? clearance : 0), height, W * 4);	// Hole
+      printf ("hull(){cylinder(r=%lld,h=%lld,$fn=%d);translate([0,0,%lld])cylinder(r=%lld,h=%lld,$fn=%d);}\n", scaled (r2 - mazethickness), scaled (baseheight), W * 4, scaled (mazemargin), scaled (r2), scaled (baseheight - mazemargin), W * 4);
+    printf ("translate([0,0,%lld])cylinder(r=%lld,h=%lld,$fn=%d);\n", scaled (basethickness), scaled (r0 + (part > 1 && mazeinside ? mazethickness + clearance : 0) + (!mazeinside && part < parts ? clearance : 0)), scaled (height), W * 4);	// Hole
     printf ("}\n");
     printf ("}\n");
     // Cut outs
     if (gripdepth && part + 1 < parts)
-      printf ("rotate([0,0,%f])translate([0,0,%f])rotate_extrude(convexity=10,$fn=%d)translate([%f,0,0])circle(r=%f,$fn=9);\n", (double) 360 / W / 4 / 2, mazemargin + (baseheight - mazemargin) / 2, W * 4, r2 + gripdepth, gripdepth * 2);
+      printf ("rotate([0,0,%f])translate([0,0,%lld])rotate_extrude(convexity=10,$fn=%d)translate([%lld,0,0])circle(r=%lld,$fn=9);\n", (double) 360 / W / 4 / 2, scaled (mazemargin + (baseheight - mazemargin) / 2), W * 4, scaled (r2 + gripdepth), scaled (gripdepth * 2));
     else if (gripdepth && part + 1 == parts)
-      printf ("translate([0,0,%f])rotate_extrude(convexity=10,$fn=%d)translate([%f,0,0])circle(r=%f,$fn=9);\n", outerround + (baseheight - outerround) / 2, outersides ? : 100, r3 + gripdepth, gripdepth * 2);
+      printf ("translate([0,0,%lld])rotate_extrude(convexity=10,$fn=%d)translate([%lld,0,0])circle(r=%lld,$fn=9);\n", scaled (outerround + (baseheight - outerround) / 2), outersides ? : 100, scaled (r3 + gripdepth), scaled (gripdepth * 2));
     if (textend)
       {
 	int n = 0;
@@ -1214,7 +1216,7 @@ main (int argc, const char *argv[])
 	    *q++ = 0;
 	  if (*p)
 	    {
-	      printf ("rotate([0,0,%f])translate([0,-%f,%f])rotate([-90,-90,0])", a, r2, outerround + (height - outerround) / 2);
+	      printf ("rotate([0,0,%f])translate([0,-%lld,%lld])rotate([-90,-90,0])", a, scaled (r2), scaled (outerround + (height - outerround) / 2));
 	      cuttext (h, p, textfont, outset);
 	    }
 	  a -= 360 / outersides;
@@ -1224,16 +1226,16 @@ main (int argc, const char *argv[])
     if (textsides && part == parts && outersides && !textoutset)
       textside (0);
     if (logo && part == parts)
-      printf ("translate([0,0,%f])linear_extrude(height=%f,convexity=10)aa(%f,white=true);\n", basethickness - logodepth, logodepth * 2, r0 * 1.8);
+      printf ("translate([0,0,%lld])linear_extrude(height=%lld,convexity=10)aa(%lld,white=true);\n", scaled (basethickness - logodepth), scaled (logodepth * 2), scaled (r0 * 1.8));
     else if (textinside)
-      printf ("translate([0,0,%f])linear_extrude(height=%f,convexity=10)text(\"%s\",font=\"%s\",size=%f,halign=\"center\",valign=\"center\");\n", basethickness - logodepth, logodepth * 2, textinside, textfontend, r0);
+      printf ("translate([0,0,%lld])linear_extrude(height=%lld,convexity=10)text(\"%s\",font=\"%s\",size=%lld,halign=\"center\",valign=\"center\");\n", scaled (basethickness - logodepth), scaled (logodepth * 2), textinside, textfontend, scaled (r0));
     if (markpos0 && part + 1 >= parts)
       mark ();
     printf ("}\n");
     if (textsides && part == parts && outersides && textoutset)
       textside (1);
     if (coresolid && part == 1)
-      printf ("translate([0,0,%f])cylinder(r=%f,h=%f,$fn=%d);\n", basethickness, r0 + clearance + (!mazeinside && part < parts ? clearance : 0), height - basethickness, W * 4);	// Solid core
+      printf ("translate([0,0,%lld])cylinder(r=%lld,h=%lld,$fn=%d);\n", scaled (basethickness), scaled (r0 + clearance + (!mazeinside && part < parts ? clearance : 0)), scaled (height - basethickness), W * 4);	// Solid core
     if ((mazeoutside && !flip && part == parts) || (!mazeoutside && part + 1 == parts))
       entrya = 0;		// Has to line up for grooved lid to align
     // Nubs
@@ -1250,17 +1252,16 @@ main (int argc, const char *argv[])
 	my = -my;		// This is nub outside which is for inside maze
       double a = -da * 1.5;	// Centre A
       double z = height - mazestep / 2 - (parkvertical ? 0 : mazestep / 8) - dz * 1.5 - my * 1.5;	// Centre Z
-      printf ("rotate([0,0,%f])for(a=[0:%f:359])rotate([0,0,a])scale(" SCALEI ")polyhedron(points=[", entrya, (double) 360 / nubs);
+      printf ("rotate([0,0,%f])for(a=[0:%f:359])rotate([0,0,a])polyhedron(points=[", entrya, (double) 360 / nubs);
       r += (inside ? nubrclearance : -nubrclearance);	// Extra gap
       ri += (inside ? nubrclearance : -nubrclearance);	// Extra gap
       for (Z = 0; Z < 4; Z++)
 	for (X = 0; X < 4; X++)
-	  printf ("[%lld,%lld,%lld],", (long long) (((X == 1 || X == 2) && (Z == 1 || Z == 2) ? ri : r) * sin (a + da * X) * SCALE), (long long) (((X == 1 || X == 2) && (Z == 1 || Z == 2) ? ri : r) * cos (a + da * X) * SCALE),
-		  (long long) ((z + Z * dz + X * my + (Z == 1 || Z == 2 ? nubskew : 0)) * SCALE));
+	  printf ("[%lld,%lld,%lld],", scaled (((X == 1 || X == 2) && (Z == 1 || Z == 2) ? ri : r) * sin (a + da * X)), scaled (((X == 1 || X == 2) && (Z == 1 || Z == 2) ? ri : r) * cos (a + da * X)), scaled (z + Z * dz + X * my + (Z == 1 || Z == 2 ? nubskew : 0)));
       r += (inside ? clearance - nubrclearance : -clearance + nubrclearance);	// Back in to wall
       for (Z = 0; Z < 4; Z++)
 	for (X = 0; X < 4; X++)
-	  printf ("[%lld,%lld,%lld],", (long long) (r * sin (a + da * X) * SCALE), (long long) (r * cos (a + da * X) * SCALE), (long long) ((z + Z * dz + X * my + (Z == 1 || Z == 2 ? nubskew : 0)) * SCALE));
+	  printf ("[%lld,%lld,%lld],", scaled (r * sin (a + da * X)), scaled (r * cos (a + da * X)), scaled (z + Z * dz + X * my + (Z == 1 || Z == 2 ? nubskew : 0)));
       printf ("],faces=[");
       for (Z = 0; Z < 3; Z++)
 	for (X = 0; X < 3; X++)
@@ -1282,10 +1283,12 @@ main (int argc, const char *argv[])
     x += (outersides & 1 ? r3 : r2) + r2 + 5;
   }
 
+  printf ("scale(" SCALEI "){\n");
   if (part)
     box (part);
   else
     for (part = 1; part <= parts; part++)
       box (part);
+  printf ("}\n");
   return 0;
 }
