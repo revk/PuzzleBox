@@ -488,10 +488,11 @@ main (int argc, const char *argv[])
     if (outset)
       printf ("mirror([0,0,1])");
     printf ("cuttext()");
+    printf ("scale(%lld)", scaled (1));
     printf ("text(\"%s\"", t);
     printf (",halign=\"center\"");
     printf (",valign=\"center\"");
-    printf (",size=%lld", scaled (s));
+    printf (",size=%lf", s);
     if (*t & 0x80)
       printf (",font=\"Noto Emoji\"");	// Assume emoji - not clean - TODO needs fontconfig stuff really
     else if (f)
