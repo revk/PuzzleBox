@@ -1168,7 +1168,7 @@ main (int argc, const char *argv[])
     if (!mazeinside && !mazeoutside && part < parts)
       {
 	printf ("difference(){\n");
-	printf ("translate([0,0,%lld])cylinder(r=%lld,h=%lld,$fn=%d);translate([0,0,%lld])cylinder(r=%lld,h=%lld,$fn=%d);\n", scaled (basethickness / 2), scaled (r1), scaled (height - basethickness / 2), W * 4, scaled (basethickness), scaled (r0), height, W * 4);	// Non maze
+	printf ("translate([0,0,%lld])cylinder(r=%lld,h=%lld,$fn=%d);translate([0,0,%lld])cylinder(r=%lld,h=%lld,$fn=%d);\n", scaled (basethickness / 2 - clearance), scaled (r1), scaled (height - basethickness / 2 + clearance), W * 4, scaled (basethickness), scaled (r0), height, W * 4);	// Non maze
 	printf ("}\n");
       }
     // Base
