@@ -82,6 +82,10 @@ main (int argc, const char *argv[])
   int mirrorinside = 0;		// Clockwise lock on inside - may be unwise as more likely to come undone with outer.
   int noa = 0;
 
+  int f = open ("/dev/urandom", O_RDONLY);
+  if (f < 0)
+    err (1, "Open /dev/random");
+
   char pathsep = 0;
   char *path = getenv ("PATH_INFO");
   if (path)
@@ -626,9 +630,6 @@ main (int argc, const char *argv[])
       {				// Maze
 	double margin = mazemargin;
 	// Make maze
-	int f = open ("/dev/urandom", O_RDONLY);
-	if (f < 0)
-	  err (1, "Open /dev/random");
 	// Clear too high/low
 	for (Y = 0; Y < H; Y++)
 	  for (X = 0; X < W; X++)
@@ -821,7 +822,6 @@ main (int argc, const char *argv[])
 	      }
 	    printf ("// Path length %d\n", max);
 	  }
-	close (f);
 	entrya = (double) 360 *maxx / W;
 	// Entry point for maze
 	for (X = maxx % (W / nubs); X < W; X += W / nubs)
@@ -1238,7 +1238,14 @@ main (int argc, const char *argv[])
     if (coresolid && part == 1)
       printf ("translate([0,0,%lld])cylinder(r=%lld,h=%lld,$fn=%d);\n", scaled (basethickness), scaled (r0 + clearance + (!mazeinside && part < parts ? clearance : 0)), scaled (height - basethickness), W * 4);	// Solid core
     if ((mazeoutside && !flip && part == parts) || (!mazeoutside && part + 1 == parts))
-      entrya = 0;		// Has to line up for grooved lid to align
+      entrya = 0;		// Align for lid alignment
+    else if (part < parts)
+      { // We can position randomly
+	int v;
+	if (read (f, &v, sizeof (v)) != sizeof (v))
+	  err (1, "Read /dev/random");
+	entrya = v % 360;
+      }
     // Nubs
     void addnub (double r, int inside)
     {
@@ -1291,5 +1298,6 @@ main (int argc, const char *argv[])
     for (part = 1; part <= parts; part++)
       box (part);
   printf ("}\n");
+  close (f);
   return 0;
 }
