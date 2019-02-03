@@ -1178,7 +1178,7 @@ main (int argc, const char *argv[])
     else if (part + 1 >= parts)
       printf ("mirror([1,0,0])outer(%lld,%lld);\n", scaled (baseheight), scaled ((r2 - outerround) / cos ((double) M_PI / (outersides ? : 100))));
     else
-      printf ("hull(){cylinder(r=%lld,h=%lld,$fn=%d);translate([0,0,%lld])cylinder(r=%lld,h=%lld,$fn=%d);}\n", scaled (r2 - mazethickness), scaled (baseheight), W * 4, scaled (mazemargin), scaled (r2), scaled (baseheight - mazemargin + clearance), W * 4);
+      printf ("hull(){cylinder(r=%lld,h=%lld,$fn=%d);translate([0,0,%lld])cylinder(r=%lld,h=%lld,$fn=%d);}\n", scaled (r2 - mazethickness), scaled (baseheight), W * 4, scaled (mazemargin), scaled (r2), scaled (baseheight - mazemargin), W * 4);
     printf ("translate([0,0,%lld])cylinder(r=%lld,h=%lld,$fn=%d);\n", scaled (basethickness), scaled (r0 + (part > 1 && mazeinside ? mazethickness + clearance : 0) + (!mazeinside && part < parts ? clearance : 0)), scaled (height), W * 4);	// Hole
     printf ("}\n");
     printf ("}\n");
@@ -1240,7 +1240,7 @@ main (int argc, const char *argv[])
     if ((mazeoutside && !flip && part == parts) || (!mazeoutside && part + 1 == parts))
       entrya = 0;		// Align for lid alignment
     else if (part < parts)
-      { // We can position randomly
+      {				// We can position randomly
 	int v;
 	if (read (f, &v, sizeof (v)) != sizeof (v))
 	  err (1, "Read /dev/random");
