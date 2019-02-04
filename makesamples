@@ -62,5 +62,7 @@ setenv F all-test-six-outside-flip
 ./puzzlebox --parts=6 --core-gap=10 --core-diameter=12 --core-height=50 --logo --flip $* > /tmp/$F.scad
 setenv F all-test-six-inside-flip
 ./puzzlebox --parts=6 --core-gap=10 --core-diameter=12 --core-height=50 --logo --flip --inside $* > /tmp/$F.scad
+setenv F all-ten
+./puzzlebox --parts=10 --core-gap=10 --core-diameter=20 --core-height=50 --logo --text-slow --text-depth=1 --text-end='10\9\8\7\6\5\4\3\2\1' $* > /tmp/$F.scad
 
 parallel --bar openscad -o "{.}.stl" "{}" ::: /tmp/*.scad
