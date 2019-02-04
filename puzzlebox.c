@@ -506,7 +506,8 @@ main (int argc, const char *argv[])
   // The base
   printf ("module outer(h,r){e=%lld;minkowski(){cylinder(r1=0,r2=e,h=e,$fn=24);cylinder(h=h-e,r=r,$fn=%d);}}\n", scaled (outerround), outersides ? : 100);
   // Start
-  double x = 0;
+  double x = 0, y = 0;
+  int sq = sqrt (parts) + 0.5, n = sq * sq - parts;
   int box (int part)
   {				// Make the box - part 1 in inside
     int N, X, Y, Z, S;
@@ -1135,7 +1136,7 @@ main (int argc, const char *argv[])
 	  }
       }
     }
-    printf ("translate([%lld,0,0])\n", scaled (x + (outersides & 1 ? r3 : r2)));
+    printf ("translate([%lld,%lld,0])\n", scaled (x + (outersides & 1 ? r3 : r2)), scaled (y + (outersides & 1 ? r3 : r2)));
     if (outersides)
       printf ("rotate([0,0,%f])", (double) 180 / outersides + (part + 1 == parts ? 180 : 0));
     printf ("{\n");
@@ -1289,6 +1290,12 @@ main (int argc, const char *argv[])
       addnub (r1, 0);
     printf ("}\n");
     x += (outersides & 1 ? r3 : r2) + r2 + 5;
+    if (++n >= sq)
+      {
+	n = 0;
+	x = 0;
+	y += (outersides & 1 ? r3 : r2) * 2 + 5;
+      }
   }
 
   printf ("scale(" SCALEI "){\n");
