@@ -37,7 +37,6 @@
 int
 main (int argc, const char *argv[])
 {
-  double minbasethickness = 0.8;	// Between text and logo
   double basethickness = 1.6;
   double basegap = 0.4;
   double baseheight = 10;
@@ -368,8 +367,6 @@ main (int argc, const char *argv[])
     logodepth = 0;
   if (!textsides && !textend && !textinside)
     textdepth = 0;
-  if (basethickness < logodepth + (textend ? textdepth : 0) + minbasethickness)
-    basethickness = logodepth + (textend ? textdepth : 0) + minbasethickness;
   if (coresolid && coregap < mazestep * 2)
     coregap = mazestep * 2;
 
@@ -477,6 +474,10 @@ main (int argc, const char *argv[])
       printf ("// ** %s **\n", error);
       return 1;
     }
+
+  // Other adjustments
+  basethickness += logodepth;
+
   {				// Modules
     if (textslow)
       printf ("module cuttext(){translate([0,0,-1])minkowski(){rotate([0,0,22.5])cylinder(h=%lld,d1=%lld,d2=0,$fn=8);linear_extrude(height=1,convexity=10)mirror([1,0,0])children();}}\n", scaled (textdepth), scaled (textdepth));
