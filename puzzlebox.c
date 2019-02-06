@@ -776,7 +776,7 @@ main (int argc, const char *argv[])
 		  errx (1, "WTF");	// We should have picked a way we can go
 		// Entry
 		if (p->n > max && (test (X, Y + 1) & FLAGI)	//
-		    && (!flip || inside || !(X ^ (W / nubs))))
+		    && (!flip || inside || !(X % (W / nubs))))
 		  {		// Longest path that reaches top
 		    max = p->n;
 		    maxx = X;
