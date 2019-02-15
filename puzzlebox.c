@@ -80,6 +80,7 @@ main (int argc, const char *argv[])
   int mazecomplexity = 5;
   int mirrorinside = 0;		// Clockwise lock on inside - may be unwise as more likely to come undone with outer.
   int noa = 0;
+  int basewide = 0;
 
   int f = open ("/dev/urandom", O_RDONLY);
   if (f < 0)
@@ -106,6 +107,7 @@ main (int argc, const char *argv[])
     {"core-solid", 'q', POPT_ARG_NONE, &coresolid, 0, "Core solid (content is in part 2)"},
     {"base-thickness", 'B', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &basethickness, 0, "Base thickness", "mm"},
     {"base-gap", 'G', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &basegap, 0, "Base gap (Z clearance)", "mm"},
+    {"base-wide", 'W', POPT_ARG_NONE, &basewide, 0, "Inside base full width"},
     {"part-thickness", 'w', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &wallthickness, 0, "Wall thickness", "mm"},
     {"maze-thickness", 't', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &mazethickness, 0, "Maze thickness", "mm"},
     {"maze-step", 'z', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &mazestep, 0, "Maze spacing", "mm"},
@@ -561,6 +563,8 @@ main (int argc, const char *argv[])
       r2 += mazethickness;
     if (nextoutside || part + 1 == parts)
       r2 += wallthickness;
+    if (basewide && part + 1 < parts)
+      r2 += nextoutside ? mazethickness : wallthickness;
     double r3 = r2;
     if (outersides && part + 1 >= parts)
       r3 /= cos ((double) M_PI / outersides);	// Bigger because of number of sides
@@ -925,7 +929,7 @@ main (int argc, const char *argv[])
 	}
 	int top = P;
 	for (S = 0; S < W * 4; S++)
-	  addpoint (S, s[S].x[2], s[S].y[2], height - margin);	// lower
+	  addpoint (S, s[S].x[2], s[S].y[2], height - (basewide && !inside && part > 1 ? 0 : margin));	// lower
 	for (S = 0; S < W * 4; S++)
 	  addpoint (S, s[S].x[1], s[S].y[1], height);
 	for (S = 0; S < W * 4; S++)
@@ -1189,6 +1193,14 @@ main (int argc, const char *argv[])
       printf ("rotate([0,0,%f])translate([0,0,%lld])rotate_extrude(convexity=10,$fn=%d)translate([%lld,0,0])circle(r=%lld,$fn=9);\n", (double) 360 / W / 4 / 2, scaled (mazemargin + (baseheight - mazemargin) / 2), W * 4, scaled (r2 + gripdepth), scaled (gripdepth * 2));
     else if (gripdepth && part + 1 == parts)
       printf ("translate([0,0,%lld])rotate_extrude(convexity=10,$fn=%d)translate([%lld,0,0])circle(r=%lld,$fn=9);\n", scaled (outerround + (baseheight - outerround) / 2), outersides ? : 100, scaled (r3 + gripdepth), scaled (gripdepth * 2));
+    if (basewide && nextoutside && part + 1 < parts)	// Connect endpoints over base
+      {
+	int W = ((int) ((r2 - mazethickness) * 2 * M_PI / mazestep)) / nubs * nubs;
+	double wi = 2 * (r2 - mazethickness) * 2 * M_PI / W / 4;
+	double wo = 2 * r2 * 2 * M_PI * 3 / W / 4;
+	printf ("for(a=[0:%f:359])rotate([0,0,a])translate([0,%lld,0])hull(){cube([%lld,%lld,%lld],center=true);cube([%lld,0.01,%lld],center=true);}\n", (double) 360 / nubs, scaled (r2), scaled (wi), scaled (mazethickness * 2), scaled (baseheight * 2 + clearance), scaled (wo),
+		scaled (baseheight * 2 + clearance));
+      }
     if (textend)
       {
 	int n = 0;
@@ -1241,7 +1253,7 @@ main (int argc, const char *argv[])
       printf ("translate([0,0,%lld])cylinder(r=%lld,h=%lld,$fn=%d);\n", scaled (basethickness), scaled (r0 + clearance + (!mazeinside && part < parts ? clearance : 0)), scaled (height - basethickness), W * 4);	// Solid core
     if ((mazeoutside && !flip && part == parts) || (!mazeoutside && part + 1 == parts))
       entrya = 0;		// Align for lid alignment
-    else if (part < parts)
+    else if (part < parts && !basewide)
       {				// We can position randomly
 	int v;
 	if (read (f, &v, sizeof (v)) != sizeof (v))
