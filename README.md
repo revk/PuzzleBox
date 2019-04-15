@@ -11,3 +11,5 @@ And, for the avoidance of doubt, obviously, this is normally built using "make"
 When built, use --help for options, or see https://www.me.uk/puzzlebox
 
 On macOS, this requires gcc, so "brew install gcc", then should make with no problem.
+
+(c) Copyright 2019 Adrian Kennard. See LICENSE file (GPL)
