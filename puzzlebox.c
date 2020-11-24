@@ -428,9 +428,10 @@ main (int argc, const char *argv[])
                {
                   char *p = strdupa (*(char * *) optionsTable[o].arg),
                      *q;
-                  for (q = p; *q; q++)
+                  for (q = p; *q&&q<p+10; q++)
                      if (*q <= ' ' || *q == '/' || *q == '\\' || *q == '"' || *q == '\'' || *q == ':')
                         *q = '_';
+		  *q=0;
                   printf ("-%c%s", optionsTable[o].shortName, p);
                }
                break;
