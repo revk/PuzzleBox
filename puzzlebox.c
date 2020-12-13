@@ -442,7 +442,7 @@ main (int argc, const char *argv[])
    printf ("// Puzzlebox by RevK, @TheRealRevK www.me.uk\n");
    printf ("// Thingiverse examples and instructions https://www.thingiverse.com/thing:2410748\n");
    printf ("// GitHub source https://github.com/revk/PuzzleBox\n");
-   printf ("// Get new random customer maze gift boxes from https://www.me.uk/puzzlebox\n");
+   printf ("// Get new random custom maze gift boxes from https://www.me.uk/puzzlebox\n");
    {                            // Document args
       time_t now = time (0);
       struct tm t;
