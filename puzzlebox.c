@@ -429,7 +429,7 @@ main (int argc, const char *argv[])
                   char *p = strdupa (*(char * *) optionsTable[o].arg),
                      *q;
                   for (q = p; *q; q++)
-                     if (*q <= ' ' || *q == '/' || *q == '\\' || *q == '"' || *q == '\'' || *q == ':')
+                     if (*q <= ' ' || *q == '/' || *q == '\\' || *q == '"' || *q == '\'' || *q == ':' || *q == ';')
                         *q = '_';
                   printf ("-%c%s", optionsTable[o].shortName, p);
                }
