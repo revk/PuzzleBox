@@ -75,7 +75,6 @@ done
 # test maze complexity
 for m in $(seq -10 10);
 do
-	F=maze-complexity-$m
 	puzzlebox \
 	--base-height=5 \
 	--parts=2 \
@@ -83,8 +82,19 @@ do
 	--core-diameter=50 \
 	--text-end=" $m " \
 	--maze-complexity=$m \
-	> /tmp/$F.scad
+	> /tmp/maze-complexity-$m.scad
+done
 
+for t in $(seq 5);
+do
+	puzzlebox \
+	--base-height=5 \
+	--parts=2 \
+	--core-height=50 \
+	--core-diameter=50 \
+	--text-end=" $m " \
+	--maze-thickness=$t \
+	> /tmp/maze-thickness-$t.scad
 done
 
 F=all-test-six-outside
