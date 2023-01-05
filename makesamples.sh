@@ -2,9 +2,9 @@
 
 set -x
 
-rm -f /tmp/*.scad /tmp/*.stl
+OutputDir="/tmp"
 
-F=version
+rm -f $OutputDir/*.scad $OutputDir/*.stl
 
 puzzlebox \
 	--parts=2 \
@@ -20,7 +20,7 @@ puzzlebox \
 	--text-font-end=FiveByNineJTD \
 	--logo \
 	--text-side-scale=0.85 \
-	--maze-complexity=8 > /tmp/$F.scad
+	--maze-complexity=8 > $OutputDir/version.scad
 # Other boxes
 for h in 0 1 2 3 ;
 do
@@ -38,7 +38,7 @@ do
 		--part=$w \
 		--text-end="$h\$h" \
 		--helix=$h \
-		> /tmp/$F.scad
+		> $OutputDir/$F.scad
 	done
 done
 
@@ -50,24 +50,24 @@ do
 		PARTNAME="$w-of-3"
 	fi
 
-	F=test-hard-part-$PARTNAME
-	puzzlebox --parts=3 --core-height=30 --core-diameter=10 --outer-sides=5 --part=$w --inside > /tmp/$F.scad
+	puzzlebox --parts=3 --core-height=30 --core-diameter=10 --outer-sides=5 --part=$w --inside \
+	> $OutputDir/test-hard-part-$PARTNAME.scad
 
-	F=test-flip-part-$PARTNAME
-	puzzlebox --parts=3 --base-height=5 --core-height=20 --core-diameter=10 --outer-sides=5 --part=$w --flip --inside > /tmp/$F.scad
+	puzzlebox --parts=3 --base-height=5 --core-height=20 --core-diameter=10 --outer-sides=5 --part=$w --flip --inside \
+	> $OutputDir/test-flip-part-$PARTNAME.scad
 
-	F=five-pound-coins-part-$PARTNAME
-	puzzlebox --parts=3 --inside --flip --core-solid --core-gap=10 --core-height=14 --core-diameter=24 --outer-sides=12 --part=$w --text-slow --text-depth=1 --text-end=' £ ' > /tmp/$F.scad
+	puzzlebox --parts=3 --inside --flip --core-solid --core-gap=10 --core-height=14 --core-diameter=24 --outer-sides=12 --part=$w --text-slow --text-depth=1 --text-end=' £ ' \
+	> $OutputDir/five-pound-coins-part-$PARTNAME.scad
 
-	F=ten-pound-coins-part-$PARTNAME
-	puzzlebox --parts=3 --inside --flip --core-solid --core-gap=10 --core-height=28 --core-diameter=24 --outer-sides=12 --part=$w --text-slow --text-depth=1 --text-end=' £ ' > /tmp/$F.scad
+	puzzlebox --parts=3 --inside --flip --core-solid --core-gap=10 --core-height=28 --core-diameter=24 --outer-sides=12 --part=$w --text-slow --text-depth=1 --text-end=' £ ' \
+	> $OutputDir/F=ten-pound-coins-part-$PARTNAME.scad
 
 	if [[ $w -le 2 ]]; then
-		F=lottery-ticket-hard-part-$PARTNAME
-		puzzlebox --parts=2 --core-height=85 --core-gap=20 --core-diameter=10 --inside --outer-sides=4 --part=$w --text-slow --text-depth=1 --text-end=' £ ' --text-side="Good luck\\Prepare to\be amazed!" --text-font="Mountains of Christmas" --logo > /tmp/$F.scad
+		puzzlebox --parts=2 --core-height=85 --core-gap=20 --core-diameter=10 --inside --outer-sides=4 --part=$w --text-slow --text-depth=1 --text-end=' £ ' --text-side="Good luck\\Prepare to\be amazed!" --text-font="Mountains of Christmas" --logo \
+		> $OutputDir/lottery-ticket-hard-part-$PARTNAME.scad
 
-		F=lottery-ticket-easy-part-$PARTNAME
-		puzzlebox --parts=2 --core-height=85 --core-gap=20 --core-diameter=10 --outer-sides=4 --part=$w --text-slow --text-depth=1 --text-end=' £ ' --text-side="Good luck\\Prepare to\be amazed!" --text-font="Mountains of Christmas" --logo $* > /tmp/$F.scad
+		puzzlebox --parts=2 --core-height=85 --core-gap=20 --core-diameter=10 --outer-sides=4 --part=$w --text-slow --text-depth=1 --text-end=' £ ' --text-side="Good luck\\Prepare to\be amazed!" --text-font="Mountains of Christmas" --logo $* \
+		> $OutputDir/lottery-ticket-easy-part-$PARTNAME.scad
 	fi
 
 done
@@ -82,39 +82,43 @@ do
 	--core-diameter=50 \
 	--text-end=" $m " \
 	--maze-complexity=$m \
-	> /tmp/maze-complexity-$m.scad
+	> $OutputDir/maze-complexity-$m.scad
 done
 
-for t in $(seq 5);
+for z in $(seq 10);
 do
-	puzzlebox \
+	echo maze-step-$z \
+	; puzzlebox \
 	--base-height=5 \
 	--parts=2 \
 	--core-height=50 \
-	--core-diameter=50 \
-	--text-end=" $m " \
-	--maze-thickness=$t \
-	> /tmp/maze-thickness-$t.scad
+	--core-diameter=100 \
+	--maze-step=$z \
+	> maze-step-$z.scad
 done
 
-F=all-test-six-outside
-puzzlebox --parts=6 --core-gap=10 --core-diameter=12 --core-height=50 > /tmp/$F.scad
+puzzlebox --parts=6 --core-gap=10 --core-diameter=12 --core-height=50 > $OutputDir/all-test-six-outside.scad
 
-F=all-test-six-inside
-puzzlebox --parts=6 --core-gap=10 --core-diameter=12 --core-height=50 --logo --inside > /tmp/$F.scad
+puzzlebox --parts=6 --core-gap=10 --core-diameter=12 --core-height=50 --logo --inside > $OutputDir/all-test-six-inside.scad
 
-F=all-test-six-outside-flip
-puzzlebox --parts=6 --core-gap=10 --core-diameter=12 --core-height=50 --logo --flip > /tmp/$F.scad
+puzzlebox --parts=6 --core-gap=10 --core-diameter=12 --core-height=50 --logo --flip > $OutputDir/all-test-six-outside-flip.scad
 
-F=all-test-six-inside-flip
-puzzlebox --parts=6 --core-gap=10 --core-diameter=12 --core-height=50 --logo --flip --inside > /tmp/$F.scad
+puzzlebox --parts=6 --core-gap=10 --core-diameter=12 --core-height=50 --logo --flip --inside > $OutputDir/all-test-six-inside-flip.scad
 
-F=all-ten
-puzzlebox --parts=10 --core-gap=10 --core-diameter=20 --core-height=50 --logo --text-slow --text-depth=1 --text-end='10\9\8\7\6\5\4\3\2\1' > /tmp/$F.scad
+puzzlebox \
+	--parts=10 \
+	--core-gap=10 \
+	--core-diameter=20 \
+	--core-height=50 \
+	--logo \
+	--text-slow \
+	--text-depth=1 \
+	--text-end='10\9\8\7\6\5\4\3\2\1' \
+	> $OutputDir/all-ten.scad
 
-# for scad in $(ls /tmp/*.scad);
+# for scad in $(ls $OutputDir/*.scad);
 # 	do
 # 		echo $scad
-# 		openscad -o /tmp/$(basename -s .scad $scad).png  $scad
-# 		openscad -o /tmp/$(basename -s .scad $scad).stl  $scad
+# 		openscad -o $OutputDir/$(basename -s .scad $scad).png  $scad
+# 		openscad -o $OutputDir/$(basename -s .scad $scad).stl  $scad
 # 	done
