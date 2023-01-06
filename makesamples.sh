@@ -87,8 +87,7 @@ done
 
 for z in $(seq 10);
 do
-	echo maze-step-$z \
-	; puzzlebox \
+	puzzlebox \
 	--base-height=5 \
 	--parts=2 \
 	--core-height=50 \
