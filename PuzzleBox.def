@@ -28,7 +28,7 @@ Stage: spython-base
 
    cd /tmp/PuzzleBox \
    && make puzzlebox \
-   && mv -v puzzlebox entrypoint.sh /usr/local/bin/ \
+   && mv -v puzzlebox /usr/local/bin/ \
    && /bin/rm -rv /tmp/PuzzleBox
 
    mkdir -p /opt/
