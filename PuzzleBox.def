@@ -6,10 +6,10 @@ Stage: spython-base
    mkdir -vp /tmp/PuzzleBox/
 
 %files
-   *.h /tmp/PuzzleBox/
-   Makefile /tmp/PuzzleBox/
    *.c /tmp/PuzzleBox/
+   *.h /tmp/PuzzleBox/
    entrypoint.sh /usr/local/bin/
+   Makefile /tmp/PuzzleBox/
 
 %labels
    MAINTAINER="slash5toaster@gmail.com"

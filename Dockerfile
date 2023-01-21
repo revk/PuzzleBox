@@ -11,6 +11,7 @@ RUN apt-get update \
 WORKDIR /tmp/
 
 COPY . /tmp/PuzzleBox/
+
 RUN cd /tmp/PuzzleBox \
  && make puzzlebox \
  && mv -v puzzlebox entrypoint.sh /usr/local/bin/ \
