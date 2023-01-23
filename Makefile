@@ -19,7 +19,7 @@ else
 	cc -O -o $@ $< -lpopt -lm -g -D_GNU_SOURCE
 endif
 
-build-sif: ## Build the container
+sif: ## Build the container
 	mkdir -vp  source/logs/ ; \
 	apptainer build \
 		-F \
@@ -27,7 +27,7 @@ build-sif: ## Build the container
 		PuzzleBox.def \
 	| tee source/logs/apptainer-build-$(shell date +%F-%H%M).log
 
-build-docker: ## Build the container
+docker: ## Build the container
 	mkdir -vp  source/logs/ ; \
 	docker build \
 		-t $(CONTAINER_STRING) \
