@@ -27,6 +27,7 @@ Stage: spython-base
    && rm -rf /var/lib/apt/lists/*
 
    cd /tmp/PuzzleBox \
+   && make \
    && make puzzlebox \
    && mv -v puzzlebox /usr/local/bin/ \
    && /bin/rm -rv /tmp/PuzzleBox

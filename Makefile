@@ -27,7 +27,7 @@ build-sif: ## Build the container
 		PuzzleBox.def \
 	| tee source/logs/apptainer-build-$(shell date +%F-%H%M).log
 
-build-container: ## Build the container
+build-docker: ## Build the container
 	mkdir -vp  source/logs/ ; \
 	docker build \
 		-t $(CONTAINER_STRING) \
@@ -37,7 +37,7 @@ build-container: ## Build the container
     | tee source/logs/build-$(CONTAINER_PROJECT)-$(CONTAINER_NAME)_$(CONTAINER_TAG)-$(shell date +%F-%H%M).log && \
 	docker inspect $(CONTAINER_STRING) > source/logs/inspect-$(CONTAINER_PROJECT)-$(CONTAINER_NAME)_$(CONTAINER_TAG)-$(shell date +%F-%H%M).log
 
-run-container: ## launch shell into the container, with this directory mounted to /opt/source
+run-docker: ## launch shell into the container, with this directory mounted to /opt/source
 	docker run \
 		--rm \
 		-it \
