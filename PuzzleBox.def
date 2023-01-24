@@ -23,6 +23,7 @@ Stage: spython-base
       build-essential \
       gcc \
       libpopt-dev \
+      openscad \
    && apt-get clean \
    && rm -rf /var/lib/apt/lists/*
 
