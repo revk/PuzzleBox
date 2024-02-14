@@ -2,9 +2,11 @@
 
 set -x
 
-OutputDir="/tmp"
+OutputDir="/home/puzzle/samples"
 
-rm -f $OutputDir/*.scad $OutputDir/*.stl
+mdkir -vp $OutputDir
+
+rm -f $OutputDir/*.scad $OutputDir/*.stl $OutputDir/*.png
 
 puzzlebox \
     --parts=2 \
@@ -147,62 +149,9 @@ puzzlebox \
     --text-end='10\9\8\7\6\5\4\3\2\1' \
     > $OutputDir/all-ten.scad
 
-# for scad in $(ls $OutputDir/*.scad);
-# 	do
-# 		echo $scad
-# 		openscad -o $OutputDir/$(basename -s .scad $scad).png  $scad
-# 		openscad -o $OutputDir/$(basename -s .scad $scad).stl  $scad
-# 	done
-# Usage: puzzlebox [OPTION...]
-#   -m, --parts=N                         Total parts (default: 4)
-#   -n, --part=N (0 for all)              Part to make
-#   -i, --inside                          Maze on inside (hard)
-#   -f, --flip                            Alternating inside/outside maze
-#   -N, --nubs=N                          Nubs (default: 3)
-#   -H, --helix=N (0 for non helical)     Helix (default: 3)
-#   -b, --base-height=mm                  Base height (default: 10)
-#   -c, --core-diameter=mm                Core diameter for content (default: 10)
-#   -h, --core-height=mm                  Core height for content (default: 50)
-#   -C, --core-gap=mm                     Core gap to allow content to be
-#                                         removed (default: 0)
-#   -q, --core-solid                      Core solid (content is in part 2)
-#   -B, --base-thickness=mm               Base thickness (default: 1.6)
-#   -G, --base-gap=mm                     Base gap (Z clearance) (default: 0.4)
-#   -W, --base-wide                       Inside base full width
-#   -w, --part-thickness=mm               Wall thickness (default: 1.2)
-#   -t, --maze-thickness=mm               Maze thickness (default: 2)
-#   -z, --maze-step=mm                    Maze spacing (default: 3)
-#   -M, --maze-margin=mm                  Maze top margin (default: 1)
-#   -X, --maze-complexity=-10 to 10       Maze complexity (default: 5)
-#   -p, --park-thickness=mm               Thickness of park ridge to click
-#                                         closed (default: 0.7)
-#   -v, --park-vertical                   Park vertically
-#   -g, --clearance=mm                    General X/Y clearance (default: 0.4)
-#   -s, --outer-sides=N (0=round)         Number of outer sides (default: 7)
-#   -r, --outer-round=mm                  Outer rounding on ends (default: 2)
-#   -R, --grip-depth=mm                   Grip depth (default: 2)
-#   -D, --text-depth=mm                   Text depth (default: 0.5)
-#   -E, --text-end=X{\X...}               Text (initials) on end
-#   -S, --text-side=Text{\Text...}        Text on sides
-#   -F, --text-font=Font                  Text font (optional)
-#   -e, --text-font-end=Font              Text font for end (optional)
-#   -d, --text-slow                       Text has diagonal edges (very slow)
-#   -T, --text-side-scale=N               Scale side text (i.e. if too long)
-#   -O, --text-outset                     Text on sides is outset not embossed
-#   -I, --text-inside=X{\X...}            Text (initials) inside end
-#   -L, --logo-depth=mm                   Logo (and inside text) cut depth
-#                                         (default: 0.6)
-#   -V, --symmetric-cut                   Symmetric maze cut
-#   -y, --nub-r-clearance=mm              Extra clearance on radius for nub
-#                                         (default: 0.1)
-#   -Z, --nub-z-clearance=mm              Extra clearance on height of nub
-#                                         (default: 0.2)
-#   -A, --logo                            Include A&A logo in last lid
-#   -Q, --test                            Test pattern instead of maze
-#       --mime                            MIME Header
-#       --no-a                            No A
-#       --web-form                        Web form
-#
-# Help options:
-#   -?, --help                            Show this help message
-#       --usage                           Display brief usage message
+for scad in $(ls $OutputDir/*.scad);
+	do
+		echo $scad
+		openscad -o $OutputDir/$(basename -s .scad $scad).png  $scad
+		openscad -o $OutputDir/$(basename -s .scad $scad).stl  $scad
+	done
