@@ -31,6 +31,8 @@ WORKDIR /opt//
 
 FROM debian:unstable-slim
 
+RUN useradd puzzle -M -s /usr/sbin/nologin
+
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
     apt-get update \
@@ -40,13 +42,9 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
  && apt-get clean \
  && pwck -s
 
-# COPY --from=OpenSCAD /usr/local/bin/ /usr/local/bin/
-# COPY --from=OpenSCAD /usr/local/share/ /usr/local/share/
-# COPY --from=OpenSCAD /usr/local/share/ /usr/local/share/
-
 COPY --from=PuzzleBuilder /usr/local/bin/ /usr/local/bin/
 
-USER games
+USER puzzle
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 
