@@ -42,6 +42,7 @@ run-docker: ## launch shell into the container, with this directory mounted to /
 		--rm \
 		-it \
 		--name puzzlebox \
+		--user root \
 		--entrypoint /bin/bash \
 		-v $(shell pwd):/opt/source \
 		$(CONTAINER_STRING)
