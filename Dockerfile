@@ -1,7 +1,3 @@
-# get OpenSCAD from 
-
-# FROM openscad/openscad:2021.01 as OpenSCAD
-
 # build the puzzlebox binary
 FROM debian:unstable-slim as PuzzleBuilder
 
