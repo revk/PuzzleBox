@@ -11,7 +11,7 @@ elif [[ "${*}" == "bash" ]]; then
 
 elif [[ "$1" == "openscad" ]]; then
     shift
-    if [[ ${#@} -gt 0 ]]
+    if [[ ${#@} -gt 0 ]]; then
        openscad "${@}"
     else
        openscad --help
@@ -19,7 +19,7 @@ elif [[ "$1" == "openscad" ]]; then
 
 elif [[ "$1" == "puzzlebox" ]]; then
     shift
-    if [[ ${#@} -gt 0 ]]
+    if [[ ${#@} -gt 0 ]]; then
        puzzlebox "${@}"
     else
        puzzlebox --help
