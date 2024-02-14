@@ -2,6 +2,8 @@
 
 # if no parameter return help
 if [[ ${#@} -le 0 ]]; then
+    echo "Call openSCAD with openscad <parameters>"
+    echo "------------------"
     puzzlebox --help
 
 elif [[ "${*}" == "bash" ]]; then
@@ -9,7 +11,19 @@ elif [[ "${*}" == "bash" ]]; then
 
 elif [[ "$1" == "openscad" ]]; then
     shift
-    openscad "${@}"
+    if [[ ${#@} -gt 0 ]]
+       openscad "${@}"
+    else
+       openscad --help
+    fi 
+
+elif [[ "$1" == "puzzlebox" ]]; then
+    shift
+    if [[ ${#@} -gt 0 ]]
+       puzzlebox "${@}"
+    else
+       puzzlebox --help
+    fi 
 
 else
     puzzlebox "${@}"
