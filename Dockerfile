@@ -27,7 +27,7 @@ RUN cd /tmp/PuzzleBox \
  && make puzzlebox \
  && mv -v puzzlebox entrypoint.sh /usr/local/bin/
 
-WORKDIR /opt//
+WORKDIR /opt/
 
 FROM debian:unstable-slim
 
