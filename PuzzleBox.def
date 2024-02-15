@@ -14,8 +14,8 @@ Stage: spython-base
 %labels
    MAINTAINER="slash5toaster@gmail.com"
    NAME=puzzlebox
-   PROJECT=revk
-   VERSION=1.0.0
+   PROJECT=slash5toaster
+   VERSION=1.1.0
 
 %post
    apt-get update \
