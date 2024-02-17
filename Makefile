@@ -37,6 +37,14 @@ docker: ## Build the container
     | tee source/logs/build-$(CONTAINER_PROJECT)-$(CONTAINER_NAME)_$(CONTAINER_TAG)-$(shell date +%F-%H%M).log && \
 	docker inspect $(CONTAINER_STRING) > source/logs/inspect-$(CONTAINER_PROJECT)-$(CONTAINER_NAME)_$(CONTAINER_TAG)-$(shell date +%F-%H%M).log
 
+docker-multi: ## Build multiplatform
+	mkdir -vp  source/logs/ ; \
+	docker buildx build --no-cache --platform linux/amd64,linux/arm64/v8 \
+		-t $(CONTAINER_STRING) \
+		--label BUILDDATE=$(shell date +%F-%H%M) \
+		--progress plain \
+		-f Dockerfile .
+
 run-docker: ## launch shell into the container, with this directory mounted to /opt/source
 	docker run \
 		--rm \
