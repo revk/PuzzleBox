@@ -1,7 +1,7 @@
 # build the puzzlebox binary
 FROM debian:unstable-slim as PuzzleBuilder
 
-# Otherwize you will get an interactive setup session for gridengine
+# Otherwise you will get an interactive setup session for gridengine
 ENV DEBIAN_FRONTEND=noninteractive
 RUN rm -f /etc/apt/apt.conf.d/docker-clean; echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
 
@@ -31,6 +31,10 @@ WORKDIR /opt/
 
 FROM debian:unstable-slim
 
+# Otherwise you will get an interactive setup session for gridengine
+ENV DEBIAN_FRONTEND=noninteractive
+RUN rm -f /etc/apt/apt.conf.d/docker-clean; echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
+
 RUN useradd puzzle -s /usr/sbin/nologin
 
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
@@ -46,6 +50,9 @@ COPY --from=PuzzleBuilder /usr/local/bin/ /usr/local/bin/
 COPY makesamples.sh /usr/local/bin/
 
 USER puzzle
+
+VOLUME [ "/home/puzzle/samples" ]
+
 WORKDIR /home/puzzle
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
