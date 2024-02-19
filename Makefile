@@ -1,8 +1,9 @@
 # Get docker container information
-CONTAINER_PROJECT=$(shell grep LABEL Dockerfile | grep PROJECT | cut -d = -f2 | tr -d '"')
-CONTAINER_NAME=$(shell grep LABEL Dockerfile | grep NAME | cut -d = -f2 | tr -d '"')
-CONTAINER_TAG=$(shell grep LABEL Dockerfile | grep VERSION | cut -d = -f2| tr -d '"')
-CONTAINER_STRING=$(CONTAINER_PROJECT)/$(CONTAINER_NAME):$(CONTAINER_TAG)
+# pull the name from the docker file - these labels *MUST* be set
+CONTAINER_PROJECT ?= $(shell grep org.opencontainers.image.vendor Dockerfile | cut -d = -f2 |  tr -d '"\\ ')
+CONTAINER_NAME ?= $(shell grep org.opencontainers.image.ref.name Dockerfile  | cut -d = -f2 |  tr -d '"\\ ')
+CONTAINER_TAG ?= $(shell grep org.opencontainers.image.version Dockerfile    | cut -d = -f2 |  tr -d '"\\ ')
+CONTAINER_STRING ?= $(CONTAINER_PROJECT)/$(CONTAINER_NAME):$(CONTAINER_TAG)
 
 # HELP
 # https://marmelab.com/blog/2016/02/29/auto-documented-makefile.html
@@ -43,7 +44,10 @@ docker-multi: ## Build multiplatform
 		-t $(CONTAINER_STRING) \
 		--label BUILDDATE=$(shell date +%F-%H%M) \
 		--progress plain \
+		--push \
 		-f Dockerfile .
+setup-multi: ## setup docker multiplatform
+	docker buildx create --name buildx-multi-arch ; docker buildx use buildx-multi-arch
 
 run-docker: ## launch shell into the container, with this directory mounted to /opt/source
 	docker run \
