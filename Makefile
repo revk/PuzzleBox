@@ -45,7 +45,7 @@ sif: ## Build the container
 		PuzzleBox.def \
 	| tee source/logs/apptainer-build-$(shell date +%F-%H%M).log
 
-docker: ## Build the container
+docker: ## Build the docker image locally.
 	$(call run_hadolint)
 	git pull --recurse-submodules;\
 	mkdir -vp source/logs/ ; \
@@ -59,6 +59,9 @@ docker: ## Build the container
     | tee source/logs/build-$(CONTAINER_PROJECT)-$(CONTAINER_NAME)_$(CONTAINER_TAG)-$(shell date +%F-%H%M).log && \
 	docker inspect $(CONTAINER_STRING) > source/logs/inspect-$(CONTAINER_PROJECT)-$(CONTAINER_NAME)_$(CONTAINER_TAG)-$(shell date +%F-%H%M).log
 
+setup-multi: ## setup docker multiplatform
+	docker buildx create --name buildx-multi-arch ; docker buildx use buildx-multi-arch
+
 docker-multi: ## Multi-platform build.
 	$(call run_hadolint)
 	mkdir -vp  source/logs/ ; \
@@ -70,8 +73,6 @@ docker-multi: ## Multi-platform build.
 		--push 2>&1 \
 	| tee source/logs/build-multi-$(CONTAINER_PROJECT)-$(CONTAINER_NAME)_$(CONTAINER_TAG)-$(LOGDATE).log
 
-setup-multi: ## setup docker multiplatform
-	docker buildx create --name buildx-multi-arch ; docker buildx use buildx-multi-arch
 
 run-docker: ## launch shell into the container, with this directory mounted to /opt/source
 	docker run \
