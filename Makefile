@@ -37,6 +37,9 @@ else
 	cc -O -o $@ $< -lpopt -lm -g -D_GNU_SOURCE
 endif
 
+envs: ## show the environments
+	$(shell echo -e "${CONTAINER_STRING}\n\t${CONTAINER_PROJECT}\n\t${CONTAINER_NAME}\n\t${CONTAINER_TAG}")
+
 sif: ## Build the container
 	mkdir -vp  source/logs/ ; \
 	apptainer build \
@@ -68,7 +71,7 @@ docker-multi: ## Multi-platform build.
 	docker buildx build --platform linux/amd64,linux/arm64/v8 . \
 		--cache-from $(CONTAINER_STRING) \
 		-t $(CONTAINER_STRING) \
-		--label BUILDDATE=$(shell date +%F-%H%M) \
+		--label oci.opencontainers.image.created=$(shell date +%F-%H%M) \
 		--progress plain \
 		--push 2>&1 \
 	| tee source/logs/build-multi-$(CONTAINER_PROJECT)-$(CONTAINER_NAME)_$(CONTAINER_TAG)-$(LOGDATE).log
@@ -83,6 +86,10 @@ run-docker: ## launch shell into the container, with this directory mounted to /
 		--entrypoint /bin/bash \
 		-v $(shell pwd):/opt/source \
 		$(CONTAINER_STRING)
+pull: ## Pull Docker image
+	@echo 'pulling $(CONTAINER_STRING)'
+	docker pull $(CONTAINER_STRING)
+
 docker-lint: ## Check files for errors
 	$(call run_hadolint)
 
