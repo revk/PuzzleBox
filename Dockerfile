@@ -1,7 +1,7 @@
 # build the puzzlebox binary
 FROM debian:unstable-slim as PuzzleBuilder
 
-# Otherwise you will get an interactive setup session for gridengine
+# Otherwise you will get an interactive setup session
 ENV DEBIAN_FRONTEND=noninteractive
 RUN rm -f /etc/apt/apt.conf.d/docker-clean; echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
 
@@ -31,7 +31,7 @@ WORKDIR /opt/
 
 FROM debian:unstable-slim
 
-# Otherwise you will get an interactive setup session for gridengine
+# Otherwise you will get an interactive setup session
 ENV DEBIAN_FRONTEND=noninteractive
 RUN rm -f /etc/apt/apt.conf.d/docker-clean; echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
 
