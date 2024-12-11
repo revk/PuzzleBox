@@ -1,5 +1,5 @@
 # build the puzzlebox binary
-FROM debian:unstable-slim as PuzzleBuilder
+FROM debian:unstable-slim AS puzzlebuilder
 
 # Otherwise you will get an interactive setup session
 ENV DEBIAN_FRONTEND=noninteractive
@@ -46,7 +46,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
  && apt-get clean \
  && pwck -s
 
-COPY --from=PuzzleBuilder /usr/local/bin/ /usr/local/bin/
+COPY --from=puzzlebuilder /usr/local/bin/ /usr/local/bin/
 COPY makesamples.sh /usr/local/bin/
 
 USER puzzle
