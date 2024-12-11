@@ -12,10 +12,10 @@ Stage: spython-base
    Makefile /tmp/PuzzleBox/
 
 %labels
-   MAINTAINER="slash5toaster@gmail.com"
-   NAME=puzzlebox
-   PROJECT=slash5toaster
-   VERSION=1.1.0
+   org.opencontainers.image.authors="slash5toaster@gmail.com"
+   org.opencontainers.image.vendor=slash5toaster
+   org.opencontainers.image.ref.name=puzzlebox
+   org.opencontainers.image.version=1.1.1
 
 %post
    apt-get update \
@@ -28,7 +28,6 @@ Stage: spython-base
    && rm -rf /var/lib/apt/lists/*
 
    cd /tmp/PuzzleBox \
-   && make \
    && make puzzlebox \
    && mv -v puzzlebox /usr/local/bin/ \
    && /bin/rm -rv /tmp/PuzzleBox
