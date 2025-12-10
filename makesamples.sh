@@ -4,9 +4,9 @@ set -x
 
 OutputDir="/home/puzzle/samples"
 
-mdkir -vp $OutputDir
+mkdir -vp $OutputDir
 
-rm -f $OutputDir/*.scad $OutputDir/*.stl $OutputDir/*.png
+rm -f "$OutputDir/*.scad" "$OutputDir/*.stl" "$OutputDir/*.png"
 
 puzzlebox \
     --parts=2 \
@@ -38,7 +38,7 @@ do
         --core-height=15 \
         --core-diameter=10 \
         --part=$w \
-        --text-end="$h\$h" \
+        --text-end="$h\$w" \
         --helix=$h \
         > $OutputDir/$F.scad
     done
@@ -53,16 +53,16 @@ do
     fi
 
     puzzlebox --parts=3 --core-height=30 --core-diameter=10 --outer-sides=5 --part=$w --inside \
-    > $OutputDir/test-hard-part-$PARTNAME.scad
+    > "$OutputDir/test-hard-part-$PARTNAME.scad"
 
     puzzlebox --parts=3 --base-height=5 --core-height=20 --core-diameter=10 --outer-sides=5 --part=$w --flip --inside \
-    > $OutputDir/test-flip-part-$PARTNAME.scad
+    > "$OutputDir/test-flip-part-$PARTNAME.scad"
 
     puzzlebox --parts=3 --inside --flip --core-solid --core-gap=10 --core-height=14 --core-diameter=24 --outer-sides=12 --part=$w --text-slow --text-depth=1 --text-end=' £ ' \
-    > $OutputDir/five-pound-coins-part-$PARTNAME.scad
+    > "$OutputDir/five-pound-coins-part-$PARTNAME.scad"
 
     puzzlebox --parts=3 --inside --flip --core-solid --core-gap=10 --core-height=28 --core-diameter=24 --outer-sides=12 --part=$w --text-slow --text-depth=1 --text-end=' £ ' \
-    > $OutputDir/ten-pound-coins-part-$PARTNAME.scad
+    > "$OutputDir/ten-pound-coins-part-$PARTNAME.scad"
 
 done
 
@@ -87,7 +87,7 @@ do
         --text-side="Good luck\\Prepare to\be amazed!" \
         --text-font="Mountains of Christmas" \
         --logo \
-    > $OutputDir/lottery-ticket-hard-part-$PARTNAME.scad
+    > "$OutputDir/lottery-ticket-hard-part-$PARTNAME.scad"
 
     puzzlebox \
         --parts=2 \
@@ -102,7 +102,7 @@ do
         --text-side="Good luck\\Prepare to\be amazed!" \
         --text-font="Mountains of Christmas" \
         --logo \
-    > $OutputDir/lottery-ticket-easy-part-$PARTNAME.scad
+    > "$OutputDir/lottery-ticket-easy-part-$PARTNAME.scad"
 done
 
 # test maze complexity
@@ -114,8 +114,8 @@ do
     --core-height=50 \
     --core-diameter=50 \
     --text-end=" $m " \
-    --maze-complexity=$m \
-    > $OutputDir/maze-complexity-$m.scad
+    --maze-complexity="$m" \
+    > "$OutputDir/maze-complexity-$m.scad"
 done
 
 for z in $(seq 3 8 );
@@ -126,17 +126,17 @@ do
     --core-height=20 \
     --core-diameter=40 \
     --outer-sides=6 \
-    --maze-step=$z \
-    > $OutputDir/maze-step-$z.scad
+    --maze-step="$z" \
+    > "$OutputDir/maze-step-$z.scad"
 done
 
-puzzlebox --parts=6 --core-gap=10 --core-diameter=12 --core-height=50 > $OutputDir/all-test-six-outside.scad
+puzzlebox --parts=6 --core-gap=10 --core-diameter=12 --core-height=50 > "$OutputDir/all-test-six-outside.scad"
 
-puzzlebox --parts=6 --core-gap=10 --core-diameter=12 --core-height=50 --logo --inside > $OutputDir/all-test-six-inside.scad
+puzzlebox --parts=6 --core-gap=10 --core-diameter=12 --core-height=50 --logo --inside > "$OutputDir/all-test-six-inside.scad"
 
-puzzlebox --parts=6 --core-gap=10 --core-diameter=12 --core-height=50 --logo --flip > $OutputDir/all-test-six-outside-flip.scad
+puzzlebox --parts=6 --core-gap=10 --core-diameter=12 --core-height=50 --logo --flip > "$OutputDir/all-test-six-outside-flip.scad"
 
-puzzlebox --parts=6 --core-gap=10 --core-diameter=12 --core-height=50 --logo --flip --inside > $OutputDir/all-test-six-inside-flip.scad
+puzzlebox --parts=6 --core-gap=10 --core-diameter=12 --core-height=50 --logo --flip --inside > "$OutputDir/all-test-six-inside-flip.scad"
 
 puzzlebox \
     --parts=10 \
@@ -147,11 +147,12 @@ puzzlebox \
     --text-slow \
     --text-depth=1 \
     --text-end='10\9\8\7\6\5\4\3\2\1' \
-    > $OutputDir/all-ten.scad
+    > "$OutputDir/all-ten.scad"
 
-for scad in $(ls $OutputDir/*.scad);
-	do
-		echo $scad
-		openscad -o $OutputDir/$(basename -s .scad $scad).png  $scad
-		openscad -o $OutputDir/$(basename -s .scad $scad).stl  $scad
-	done
+while IFS= read -r -d '' file
+do
+    ((count++))
+    echo "Converting file number $count, $scad"
+    openscad -o "$OutputDir/$(basename -s .scad $scad)".png "$scad"
+    openscad -o "$OutputDir/$(basename -s .scad $scad)".stl "$scad"
+done <   <(find $OutputDir -name '*.scad' -print0)
