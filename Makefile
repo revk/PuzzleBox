@@ -1,5 +1,7 @@
 SHELL := /usr/bin/env bash
 # Get docker container information
+DOCKER_REPO ?= docker.io
+DOCKER_BIN := $(shell type -p docker || type -p nerdctl || type -p nerdctl.lima || exit)
 # Date for log files
 LOGDATE := $(shell date +%F-%H%M)
 
@@ -15,7 +17,7 @@ C_IMAGES = $(shell ${GET_IMAGES})
 define run_hadolint
 	@echo ''
 	@echo '> Dockerfile$(1) ==========='
-	docker run --rm -i \
+	$(DOCKER_BIN) run --rm -i \
 	-e HADOLINT_FAILURE_THRESHOLD=error \
 	-e HADOLINT_IGNORE=DL3042,DL3008,DL3015,DL3048 \
 	hadolint/hadolint < Dockerfile$(1)
@@ -53,32 +55,33 @@ docker: ## Build the docker image locally.
 	git pull --recurse-submodules;\
 	mkdir -vp source/logs/ ; \
 	DOCKER_BUILDKIT=1 \
-	docker build \
-		--cache-from $(CONTAINER_STRING) \
+	$(DOCKER_BIN) build . \
 		-t $(CONTAINER_STRING) \
-		--label oci.opencontainers.image.created=$(shell date +%F-%H%M) \
+		--cache-from $(CONTAINER_STRING) \
 		--progress plain \
+		--label org.opencontainers.image.created=$(shell date +%F-%H%M) 2>&1 \
 		-f Dockerfile . \
     | tee source/logs/build-$(CONTAINER_PROJECT)-$(CONTAINER_NAME)_$(CONTAINER_TAG)-$(shell date +%F-%H%M).log && \
-	docker inspect $(CONTAINER_STRING) > source/logs/inspect-$(CONTAINER_PROJECT)-$(CONTAINER_NAME)_$(CONTAINER_TAG)-$(shell date +%F-%H%M).log
+	$(DOCKER_BIN) inspect $(CONTAINER_STRING) > source/logs/inspect-$(CONTAINER_PROJECT)-$(CONTAINER_NAME)_$(CONTAINER_TAG)-$(shell date +%F-%H%M).log
 
-setup-multi: ## setup docker multiplatform
-	docker buildx create --name buildx-multi-arch ; docker buildx use buildx-multi-arch
+setup-multi: ## setup $(DOCKER_BIN) multiplatform
+	$(DOCKER_BIN) buildx create --name buildx-multi-arch ; $(DOCKER_BIN) buildx use buildx-multi-arch
 
 docker-multi: ## Multi-platform build.
 	$(call run_hadolint)
+	git pull --recurse-submodules; \
 	mkdir -vp  source/logs/ ; \
-	docker buildx build --platform linux/amd64,linux/arm64/v8 . \
+	$(DOCKER_BIN) build --platform linux/amd64,linux/arm64/v8 . \
 		--cache-from $(CONTAINER_STRING) \
 		-t $(CONTAINER_STRING) \
-		--label oci.opencontainers.image.created=$(shell date +%F-%H%M) \
+		--label org.opencontainers.image.created=$(shell date +%F-%H%M) 2>&1 \
 		--progress plain \
 		--push 2>&1 \
 	| tee source/logs/build-multi-$(CONTAINER_PROJECT)-$(CONTAINER_NAME)_$(CONTAINER_TAG)-$(LOGDATE).log
 
 
 run-docker: ## launch shell into the container, with this directory mounted to /opt/source
-	docker run \
+	$(DOCKER_BIN) run \
 		--rm \
 		-it \
 		--name puzzlebox \
@@ -88,13 +91,13 @@ run-docker: ## launch shell into the container, with this directory mounted to /
 		$(CONTAINER_STRING)
 pull: ## Pull Docker image
 	@echo 'pulling $(CONTAINER_STRING)'
-	docker pull $(CONTAINER_STRING)
+	$(DOCKER_BIN) pull $(CONTAINER_STRING)
 
 docker-lint: ## Check files for errors
 	$(call run_hadolint)
 
 # Commands for extracting information on the running container
-GET_IMAGES := docker images ${CONTAINER_STRING} --format "{{.ID}}"
-GET_CONTAINER := docker ps -a --filter "name=${CONTAINER_NAME}" --no-trunc
+GET_IMAGES := $(DOCKER_BIN) images ${CONTAINER_STRING} --format "{{.ID}}"
+GET_CONTAINER := $(DOCKER_BIN) ps -a --filter "name=${CONTAINER_NAME}" --no-trunc
 GET_ID := ${GET_CONTAINER} --format {{.ID}}
 GET_STATUS := ${GET_CONTAINER} --format {{.Status}} | cut -d " " -f1
