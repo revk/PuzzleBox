@@ -149,7 +149,7 @@ puzzlebox \
     --text-end='10\9\8\7\6\5\4\3\2\1' \
     > "$OutputDir/all-ten.scad"
 
-while IFS= read -r -d '' file
+while IFS= read -r -d '' scad
 do
     ((count++))
     echo "Converting file number $count, $scad"
