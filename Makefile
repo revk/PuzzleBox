@@ -55,7 +55,7 @@ docker: ## Build the docker image locally.
 	git pull --recurse-submodules;\
 	mkdir -vp source/logs/ ; \
 	DOCKER_BUILDKIT=1 \
-	$(DOCKER_BIN) build . \
+	$(DOCKER_BIN) build \
 		-t $(CONTAINER_STRING) \
 		--cache-from $(CONTAINER_STRING) \
 		--progress plain \
