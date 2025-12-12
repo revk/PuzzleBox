@@ -68,6 +68,7 @@ setup-multi: ## setup $(DOCKER_BIN) multiplatform
 	$(DOCKER_BIN) buildx create --name buildx-multi-arch ; $(DOCKER_BIN) buildx use buildx-multi-arch
 
 docker-multi: ## Multi-platform build.
+	$(call setup-multi)
 	$(call run_hadolint)
 	git pull --recurse-submodules; \
 	mkdir -vp  source/logs/ ; \
@@ -80,7 +81,7 @@ docker-multi: ## Multi-platform build.
 	| tee source/logs/build-multi-$(CONTAINER_PROJECT)-$(CONTAINER_NAME)_$(CONTAINER_TAG)-$(LOGDATE).log
 
 
-run-docker: ## launch shell into the container, with this directory mounted to /opt/source
+run: ## launch shell into the container, with this directory mounted to /opt/source
 	$(DOCKER_BIN) run \
 		--rm \
 		-it \
@@ -93,11 +94,18 @@ pull: ## Pull Docker image
 	@echo 'pulling $(CONTAINER_STRING)'
 	$(DOCKER_BIN) pull $(CONTAINER_STRING)
 
+publish: ## Push server image to remote
+	[ "${C_IMAGES}" ] || \
+		make docker
+	@echo 'pushing $(CONTAINER_STRING) to $(DOCKER_REPO)'
+	$(DOCKER_BIN) push $(CONTAINER_STRING)
+
+
 docker-lint: ## Check files for errors
 	$(call run_hadolint)
 
 # Commands for extracting information on the running container
-GET_IMAGES := $(DOCKER_BIN) images ${CONTAINER_STRING} --format "{{.ID}}"
+_IMAGES := $(DOCKER_BIN) images ${CONTAINER_STRING} --format "{{.ID}}"
 GET_CONTAINER := $(DOCKER_BIN) ps -a --filter "name=${CONTAINER_NAME}" --no-trunc
 GET_ID := ${GET_CONTAINER} --format {{.ID}}
 GET_STATUS := ${GET_CONTAINER} --format {{.Status}} | cut -d " " -f1
