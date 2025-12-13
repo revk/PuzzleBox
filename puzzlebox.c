@@ -71,7 +71,8 @@ main (int argc, const char *argv[])
    int testmaze = 0;
    int helix = 3;
    int nubs = helix;
-   int logo = 0;
+   int aalogo = 0;
+   int ajklogo = 0;
    int textslow = 0;
    int textoutset = 0;
    int symmectriccut = 0;
@@ -147,7 +148,8 @@ main (int argc, const char *argv[])
        "mm"},
       {"nub-z-clearance", 'Z', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &nubzclearance, 0, "Extra clearance on height of nub",
        "mm"},
-      {"logo", 'A', POPT_ARG_NONE, &logo, 0, "Include A&A logo in last lid"},
+      {"aa-logo", 'a', POPT_ARG_NONE, &aalogo, 0, "Include A&A logo in last lid (on tasteful designs)"},
+      {"ajk-logo", 'A', POPT_ARG_NONE, &ajklogo, 0, "Include AJK logo in last lid (on tasteful designs)"},
       {"test", 'Q', POPT_ARG_NONE, &testmaze, 0, "Test pattern instead of maze"},
       {"mime", 0, POPT_ARG_NONE | (mime ? POPT_ARGFLAG_DOC_HIDDEN : 0), &mime, 0, "MIME Header"},
       {"no-a", 0, POPT_ARG_NONE | (noa ? POPT_ARGFLAG_DOC_HIDDEN : 0), &noa, 0, "No A"},
@@ -386,7 +388,7 @@ main (int argc, const char *argv[])
       gripdepth = (baseheight - outerround) / 6;
    if (gripdepth > mazethickness)
       gripdepth = mazethickness;
-   if (!logo && !textinside)
+   if (!aalogo && !ajklogo && !textinside)
       logodepth = 0;
    if (!textsides && !textend && !textinside)
       textdepth = 0;
@@ -527,11 +529,12 @@ main (int argc, const char *argv[])
       else
          fprintf (out, "module cuttext(){linear_extrude(height=%lld,convexity=10,center=true)mirror([1,0,0])children();}\n",
                   scaled (textdepth));
-      // You can use the A&A logo on your maze print providing it is tasteful and not in any way derogatory to A&A or any staff/officers.
-      if (logo)
+      if (ajklogo)
+         fprintf (out, "module logo(w=100,$fn=120){scale(w/25){ hull(){translate([-10,-7])sphere(1);translate([0,7])sphere(1);} hull(){translate([0,7])sphere(1);translate([0,-7])sphere(1);} hull(){translate([0,0])sphere(1);translate([6,7])sphere(1);} hull(){translate([0,0])sphere(1);translate([6,-7])sphere(1);} hull(){translate([0,0])sphere(1);translate([-5,0])sphere(1);} translate([-2.5,-7])rotate_extrude(angle=180,start=180)translate([2.5,0])rotate(180/$fn)circle(1); translate([-5,-7])sphere(1); translate([0,-7])sphere(1);}}");        // You can use the AJK logo on your maze print providing it is not for sale, and tasteful.
+      else if (aalogo)          // You can use the A&A logo on your maze print providing it is no for sale, and tasteful and not in any way derogatory to A&A or any staff/officers.
          fprintf
             (out,
-             "module aa(w=100,white=0,$fn=100){scale(w/100){if(!white)difference(){circle(d=100.5);circle(d=99.5);}difference(){if(white)circle(d=100);difference(){circle(d=92);for(m=[0,1])mirror([m,0,0]){difference(){translate([24,0,0])circle(r=22.5);translate([24,0,0])circle(r=15);}polygon([[1.5,22],[9,22],[9,-18.5],[1.5,-22]]);}}}}} // A&A Logo is copyright (c) 2013 and trademark Andrews & Arnold Ltd\n");
+             "module logo(w=100,white=0,$fn=100){scale(w/100){if(!white)difference(){circle(d=100.5);circle(d=99.5);}difference(){if(white)circle(d=100);difference(){circle(d=92);for(m=[0,1])mirror([m,0,0]){difference(){translate([24,0,0])circle(r=22.5);translate([24,0,0])circle(r=15);}polygon([[1.5,22],[9,22],[9,-18.5],[1.5,-22]]);}}}}} // A&A Logo is copyright (c) 2013 and trademark Andrews & Arnold Ltd\n");
    }
    void cuttext (double s, char *t, char *f, int outset)
    {
@@ -1313,8 +1316,10 @@ main (int argc, const char *argv[])
 
       if (textsides && part == parts && outersides && !textoutset)
          textside (0);
-      if (logo && part == parts)
-         fprintf (out, "translate([0,0,%lld])linear_extrude(height=%lld,convexity=10)aa(%lld,white=true);\n",
+      if (ajklogo && part == parts)
+         fprintf (out, "translate([0,0,%lld])logo(%lld);\n", scaled (basethickness), scaled (r0 * 1.8));
+      else if (aalogo && part == parts)
+         fprintf (out, "translate([0,0,%lld])linear_extrude(height=%lld,convexity=10)logo(%lld,white=true);\n",
                   scaled (basethickness - logodepth), scaled (logodepth * 2), scaled (r0 * 1.8));
       else if (textinside)
          fprintf
