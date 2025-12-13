@@ -26,13 +26,13 @@ a {color: white;}
 <p>See <a href='https://www.thingiverse.com/thing:2410748'>https://www.thingiverse.com/thing:2410748</a> for examples.</p>
 <p>Do click <i>like</i> on thingiverse. Gifts <a href='https://monzo.me/adriankennard'>accepted</a> (just because people have asked how they can do this).</p>
 <form method=get action='puzzlebox.cgi'>
-	<input type=submit value='Get file'>
+	<input type=submit value='Get file'> (OpenSCAD or STL)
 	<table>
 END
 ./puzzlebox.cgi --web-form
 cat << END
 	</table>
-	<input type=submit value='Get file'>
+	<input type=submit value='Get file'> (OpenSCAD or STL)
 </form>
 <p><i>Some parameters are subject to sanity checks, e.g. nubs set to helix if greater than 1, etc. See comments at top of output for parameters actually used.</i></p>
 <p>Source code at <a href='https://github.com/revk/PuzzleBox'>https://github.com/revk/PuzzleBox</a></p>
