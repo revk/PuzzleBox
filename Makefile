@@ -2,6 +2,7 @@ SHELL := /usr/bin/env bash
 # Get docker container information
 DOCKER_REPO ?= docker.io
 DOCKER_BIN := $(shell type -p docker || type -p nerdctl || type -p nerdctl.lima || exit)
+APPTAINER_BIN := $(shell type -p apptainer || type -p apptainer.lima || type -p singularity || exit)
 # Date for log files
 LOGDATE := $(shell date +%F-%H%M)
 
@@ -44,11 +45,11 @@ envs: ## show the environments
 
 sif: ## Build the container
 	mkdir -vp  source/logs/ ; \
-	apptainer build \
+	$(APPTAINER_BIN) build \
 		-F \
 		/tmp/PuzzleBox.sif \
 		PuzzleBox.def \
-	| tee source/logs/apptainer-build-$(shell date +%F-%H%M).log
+	| tee source/logs/sif-build-$(shell date +%F-%H%M).log
 
 docker: ## Build the docker image locally.
 	$(call run_hadolint)
