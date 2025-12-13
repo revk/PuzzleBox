@@ -22,17 +22,17 @@ a {color: white;}
 </head>
 <body>
 	<h1><img src='puzzlebox.jpg' style='float:right'>Puzzle Box</h1>
-<p>This makes a customised puzzle box with random maze. Use <a href='https://www.openscad.org'>OpenSCAD</a> to render to an STL for 3D printing.</p>
+<p>This makes a customised puzzle box with random maze.</p>
 <p>See <a href='https://www.thingiverse.com/thing:2410748'>https://www.thingiverse.com/thing:2410748</a> for examples.</p>
 <p>Do click <i>like</i> on thingiverse. Gifts <a href='https://monzo.me/adriankennard'>accepted</a> (just because people have asked how they can do this).</p>
 <form method=get action='puzzlebox.cgi'>
-	<input type=submit value='Get OpenSCAD file'>
+	<input type=submit value='Get file'>
 	<table>
 END
 ./puzzlebox.cgi --web-form
 cat << END
 	</table>
-	<input type=submit value='Get OpenSCAD file'>
+	<input type=submit value='Get file'>
 </form>
 <p><i>Some parameters are subject to sanity checks, e.g. nubs set to helix if greater than 1, etc. See comments at top of output for parameters actually used.</i></p>
 <p>Source code at <a href='https://github.com/revk/PuzzleBox'>https://github.com/revk/PuzzleBox</a></p>
