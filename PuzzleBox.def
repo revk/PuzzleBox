@@ -1,0 +1,46 @@
+Bootstrap: docker
+From: debian:unstable-slim
+Stage: spython-base
+
+%setup
+   mkdir -vp /tmp/PuzzleBox/
+
+%files
+   *.c /tmp/PuzzleBox/
+   *.h /tmp/PuzzleBox/
+   entrypoint.sh /usr/local/bin/
+   Makefile /tmp/PuzzleBox/
+
+%labels
+   org.opencontainers.image.authors="slash5toaster@gmail.com"
+   org.opencontainers.image.vendor=slash5toaster
+   org.opencontainers.image.ref.name=puzzlebox
+   org.opencontainers.image.version=1.1.1
+
+%post
+   apt-get update \
+   && apt-get install -y \
+      build-essential \
+      gcc \
+      libpopt-dev \
+      openscad \
+   && apt-get clean \
+   && rm -rf /var/lib/apt/lists/*
+
+   cd /tmp/PuzzleBox \
+   && make puzzlebox \
+   && mv -v puzzlebox /usr/local/bin/ \
+   && /bin/rm -rv /tmp/PuzzleBox
+
+   mkdir -p /opt/
+   cd /opt/
+
+%runscript
+   cd /opt/
+   exec /usr/local/bin/entrypoint.sh "$@"
+
+%startscript
+   cd /opt/
+   exec /usr/local/bin/entrypoint.sh "$@"
+
+#### End of File, if this is missing the file has been truncated
