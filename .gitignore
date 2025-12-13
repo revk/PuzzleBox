@@ -1,4 +1,8 @@
 *.o
-*~
+*.scad
+*.stl
 *.swp
+*~
+.vscode/
 puzzlebox
+settings.json
