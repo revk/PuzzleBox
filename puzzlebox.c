@@ -275,7 +275,8 @@ main (int argc, const char *argv[])
             switch (optionsTable[o].argInfo & POPT_ARG_MASK)
             {
             case POPT_ARG_NONE:        // Checkbox
-               printf ("<input type=checkbox id='%c' name='%c'/>", optionsTable[o].shortName, optionsTable[o].shortName);
+               printf ("<input type=checkbox id='%c' name='%c'%s/>", optionsTable[o].shortName, optionsTable[o].shortName,
+                       strchr ("ldA", optionsTable[o].shortName) ? " checked" : "");
                break;
             case POPT_ARG_INT: // Select
                {
