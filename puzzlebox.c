@@ -1229,11 +1229,11 @@ main (int argc, const char *argv[])
       // Cut outs
       if (gripdepth && part + 1 < parts)
          printf
-            ("rotate([0,0,%f])translate([0,0,%lld])rotate_extrude(convexity=10,$fn=%d)translate([%lld,0,0])circle(r=%lld,$fn=9);\n",
+            ("rotate([0,0,%f])translate([0,0,%lld])rotate_extrude(angle=360,convexity=10,$fn=%d)translate([%lld,0,0])circle(r=%lld,$fn=9);\n",
              (double) 360 / W / 4 / 2, scaled (mazemargin + (baseheight - mazemargin) / 2), W * 4, scaled (r2 + gripdepth),
              scaled (gripdepth * 2));
       else if (gripdepth && part + 1 == parts)
-         printf ("translate([0,0,%lld])rotate_extrude(convexity=10,$fn=%d)translate([%lld,0,0])circle(r=%lld,$fn=9);\n",
+         printf ("translate([0,0,%lld])rotate_extrude(angle=360,convexity=10,$fn=%d)translate([%lld,0,0])circle(r=%lld,$fn=9);\n",
                  scaled (outerround + (baseheight - outerround) / 2), outersides ? : 100, scaled (r3 + gripdepth),
                  scaled (gripdepth * 2));
       if (basewide && nextoutside && part + 1 < parts)  // Connect endpoints over base
