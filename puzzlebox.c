@@ -540,7 +540,7 @@ main (int argc, const char *argv[])
          fprintf (out, "module cuttext(){linear_extrude(height=%lld,convexity=10,center=true)mirror([1,0,0])children();}\n",
                   scaled (textdepth));
       if (ajklogo)
-         fprintf (out, "module logo(w=100,$fn=120){scale(w/25){ hull(){translate([-10,-7])sphere(1);translate([0,7])sphere(1);} hull(){translate([0,7])sphere(1);translate([0,-7])sphere(1);} hull(){translate([0,0])sphere(1);translate([6,7])sphere(1);} hull(){translate([0,0])sphere(1);translate([6,-7])sphere(1);} hull(){translate([0,0])sphere(1);translate([-5,0])sphere(1);} translate([-2.5,-7])rotate_extrude(angle=180,start=180)translate([2.5,0])rotate(180/$fn)circle(1); translate([-5,-7])sphere(1); translate([0,-7])sphere(1);}}"); // You can use the AJK logo on your maze print providing it is not for sale, and tasteful.
+         fprintf (out, "module logo(w=100,$fn=120){scale(w/25)translate([0,0,0.5]){ hull(){translate([-10,-7])sphere(0.5);translate([0,7])sphere(0.5);} hull(){translate([0,7])sphere(0.5);translate([0,-7])sphere(0.5);} hull(){translate([0,0])sphere(0.5);translate([6,7])sphere(0.5);} hull(){translate([0,0])sphere(0.5);translate([6,-7])sphere(0.5);} hull(){translate([0,0])sphere(0.5);translate([-5,0])sphere(0.5);} translate([-2.5,-7])rotate_extrude(angle=180,start=180)translate([2.5,0])rotate(180/$fn)circle(0.5); translate([-5,-7])sphere(0.5); translate([0,-7])sphere(0.5);}}");     // You can use the AJK logo on your maze print providing it is not for sale, and tasteful.
       else if (aalogo)          // You can use the A&A logo on your maze print providing it is no for sale, and tasteful and not in any way derogatory to A&A or any staff/officers.
          fprintf
             (out,
@@ -1327,7 +1327,7 @@ main (int argc, const char *argv[])
       if (textsides && part == parts && outersides && !textoutset)
          textside (0);
       if (ajklogo && part == parts)
-         fprintf (out, "translate([0,0,%lld])logo(%lld);\n", scaled (basethickness), scaled (r0 * 1.8));
+         fprintf (out, "translate([0,0,%lld])logo(%lld);\n", scaled (basethickness - logodepth), scaled (r0 * 1.8));
       else if (aalogo && part == parts)
          fprintf (out, "translate([0,0,%lld])linear_extrude(height=%lld,convexity=10)logo(%lld,white=true);\n",
                   scaled (basethickness - logodepth), scaled (logodepth * 2), scaled (r0 * 1.8));
