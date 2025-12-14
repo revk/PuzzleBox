@@ -85,6 +85,7 @@ main (int argc, const char *argv[])
    int noa = 0;
    int basewide = 0;
    int stl = 0;
+   int resin = 0;
    const char *outfile = NULL;
 
    int f = open ("/dev/urandom", O_RDONLY);
@@ -100,6 +101,7 @@ main (int argc, const char *argv[])
 
    const struct poptOption optionsTable[] = {
       {"stl", 'l', POPT_ARG_NONE, &stl, 0, "Run output through openscad to make stl (may take a few seconds)"},
+      {"resin", 'R', POPT_ARG_NONE, &resin, 0, "Half all specified clearances for resin printing"},
       {"parts", 'm', POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT, &parts, 0, "Total parts", "N"},
       {"part", 'n', POPT_ARG_INT, &part, 0, "Part to make", "N (0 for all)"},
       {"inside", 'i', POPT_ARG_NONE, &inside, 0, "Maze on inside (hard)"},
@@ -111,9 +113,6 @@ main (int argc, const char *argv[])
       {"core-height", 'h', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &coreheight, 0, "Core height for content", "mm"},
       {"core-gap", 'C', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &coregap, 0, "Core gap to allow content to be removed", "mm"},
       {"core-solid", 'q', POPT_ARG_NONE, &coresolid, 0, "Core solid (content is in part 2)"},
-      {"base-thickness", 'B', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &basethickness, 0, "Base thickness", "mm"},
-      {"base-gap", 'G', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &basegap, 0, "Base gap (Z clearance)", "mm"},
-      {"base-wide", 'W', POPT_ARG_NONE, &basewide, 0, "Inside base full width"},
       {"part-thickness", 'w', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &wallthickness, 0, "Wall thickness", "mm"},
       {"maze-thickness", 't', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &mazethickness, 0, "Maze thickness", "mm"},
       {"maze-step", 'z', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &mazestep, 0, "Maze spacing", "mm"},
@@ -123,11 +122,18 @@ main (int argc, const char *argv[])
       {"park-thickness", 'p', POPT_ARG_DOUBLE | (parkthickness ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &parkthickness, 0,
        "Thickness of park ridge to click closed", "mm"},
       {"park-vertical", 'v', POPT_ARG_NONE, &parkvertical, 0, "Park vertically"},
+      {"base-thickness", 'B', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &basethickness, 0, "Base thickness", "mm"},
+      {"base-wide", 'W', POPT_ARG_NONE, &basewide, 0, "Inside base full width"},
+      {"base-gap", 'G', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &basegap, 0, "Base gap (Z clearance)", "mm"},
       {"clearance", 'g', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &clearance, 0, "General X/Y clearance", "mm"},
+      {"nub-r-clearance", 'y', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &nubrclearance, 0, "Extra clearance on radius for nub",
+       "mm"},
+      {"nub-z-clearance", 'Z', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &nubzclearance, 0, "Extra clearance on height of nub",
+       "mm"},
       {"outer-sides", 's', POPT_ARG_INT | (outersides ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &outersides, 0, "Number of outer sides",
        "N (0=round)"},
       {"outer-round", 'r', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &outerround, 0, "Outer rounding on ends", "mm"},
-      {"grip-depth", 'R', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &gripdepth, 0, "Grip depth", "mm"},
+      {"grip-depth", 'G', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &gripdepth, 0, "Grip depth", "mm"},
       {"text-depth", 'D', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &textdepth, 0, "Text depth", "mm"},
       {"text-end", 'E', POPT_ARG_STRING | (textend ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &textend, 0, "Text (initials) on end",
        "X{\\X...}"},
@@ -144,10 +150,6 @@ main (int argc, const char *argv[])
        "Text (initials) inside end", "X{\\X...}"},
       {"logo-depth", 'L', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &logodepth, 0, "Logo (and inside text) cut depth", "mm"},
       {"symmetric-cut", 'V', POPT_ARG_NONE, &symmectriccut, 0, "Symmetric maze cut"},
-      {"nub-r-clearance", 'y', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &nubrclearance, 0, "Extra clearance on radius for nub",
-       "mm"},
-      {"nub-z-clearance", 'Z', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &nubzclearance, 0, "Extra clearance on height of nub",
-       "mm"},
       {"ajk-logo", 'A', POPT_ARG_NONE, &ajklogo, 0, "Include AJK logo in last lid (not for sale, on tasteful designs)"},
       {"aa-logo", 'a', POPT_ARG_NONE, &aalogo, 0, "Include A&A logo in last lid (not for sale, on tasteful designs)"},
       {"test", 'Q', POPT_ARG_NONE, &testmaze, 0, "Test pattern instead of maze"},
@@ -174,6 +176,14 @@ main (int argc, const char *argv[])
          return -1;
       }
       poptFreeContext (optCon);
+   }
+
+   if (resin)
+   {                            // Lower clearances for resin print
+      basegap /= 2;
+      clearance /= 2;
+      nubrclearance /= 2;
+      nubzclearance /= 2;
    }
 
    char *error = NULL;
