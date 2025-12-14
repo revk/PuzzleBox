@@ -57,7 +57,7 @@ main (int argc, const char *argv[])
    double textdepth = 0.5;
    double logodepth = 0.6;
    double gripdepth = 2;
-   double textsidescale = 1;
+   double textsidescale = 100;
    char *textinside = NULL;
    char *textend = NULL;
    char *textsides = NULL;
@@ -103,14 +103,20 @@ main (int argc, const char *argv[])
       {"stl", 'l', POPT_ARG_NONE, &stl, 0, "Run output through openscad to make stl (may take a few seconds)"},
       {"resin", 'R', POPT_ARG_NONE, &resin, 0, "Half all specified clearances for resin printing"},
       {"parts", 'm', POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT, &parts, 0, "Total parts", "N"},
-      {"part", 'n', POPT_ARG_INT, &part, 0, "Part to make", "N (0 for all)"},
+      {"core-diameter", 'c', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &corediameter, 0, "Core diameter for content", "mm"},
+      {"core-height", 'h', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &coreheight, 0, "Core height for content", "mm"},
+      {"text-end", 'E', POPT_ARG_STRING | (textend ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &textend, 0, "Text (initials) on end",
+       "X{\\X...}"},
+      {"text-inside", 'I', POPT_ARG_STRING | (textinside ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &textinside, 0,
+       "Text (initials) inside end", "X{\\X...}"},
+      {"text-side", 'S', POPT_ARG_STRING | (textsides ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &textsides, 0, "Text on sides",
+       "Text{\\Text...}"},
+      {"part", 'n', POPT_ARG_INT, &part, 0, "Which part to make", "N (0 for all)"},
       {"inside", 'i', POPT_ARG_NONE, &inside, 0, "Maze on inside (hard)"},
       {"flip", 'f', POPT_ARG_NONE, &flip, 0, "Alternating inside/outside maze"},
       {"nubs", 'N', POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT, &nubs, 0, "Nubs", "N"},
       {"helix", 'H', POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT, &helix, 0, "Helix", "N (0 for non helical)"},
       {"base-height", 'b', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &baseheight, 0, "Base height", "mm"},
-      {"core-diameter", 'c', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &corediameter, 0, "Core diameter for content", "mm"},
-      {"core-height", 'h', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &coreheight, 0, "Core height for content", "mm"},
       {"core-gap", 'C', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &coregap, 0, "Core gap to allow content to be removed", "mm"},
       {"core-solid", 'q', POPT_ARG_NONE, &coresolid, 0, "Core solid (content is in part 2)"},
       {"part-thickness", 'w', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &wallthickness, 0, "Wall thickness", "mm"},
@@ -135,19 +141,13 @@ main (int argc, const char *argv[])
       {"outer-round", 'r', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &outerround, 0, "Outer rounding on ends", "mm"},
       {"grip-depth", 'G', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &gripdepth, 0, "Grip depth", "mm"},
       {"text-depth", 'D', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &textdepth, 0, "Text depth", "mm"},
-      {"text-end", 'E', POPT_ARG_STRING | (textend ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &textend, 0, "Text (initials) on end",
-       "X{\\X...}"},
-      {"text-side", 'S', POPT_ARG_STRING | (textsides ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &textsides, 0, "Text on sides",
-       "Text{\\Text...}"},
       {"text-font", 'F', POPT_ARG_STRING | (textfont ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &textfont, 0, "Text font (optional)",
        "Font"},
       {"text-font-end", 'e', POPT_ARG_STRING | (textfontend ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &textfontend, 0,
        "Text font for end (optional)", "Font"},
       {"text-slow", 'd', POPT_ARG_NONE, &textslow, 0, "Text has diagonal edges"},
-      {"text-side-scale", 'T', POPT_ARG_DOUBLE, &textsidescale, 0, "Scale side text (i.e. if too long)", "N"},
+      {"text-side-scale", 'T', POPT_ARG_DOUBLE, &textsidescale, 0, "Scale side text (i.e. if too long)", "%"},
       {"text-outset", 'O', POPT_ARG_NONE, &textoutset, 0, "Text on sides is outset not embossed"},
-      {"text-inside", 'I', POPT_ARG_STRING | (textinside ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &textinside, 0,
-       "Text (initials) inside end", "X{\\X...}"},
       {"logo-depth", 'L', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &logodepth, 0, "Logo (and inside text) cut depth", "mm"},
       {"symmetric-cut", 'V', POPT_ARG_NONE, &symmectriccut, 0, "Symmetric maze cut"},
       {"ajk-logo", 'A', POPT_ARG_NONE, &ajklogo, 0, "Include AJK logo in last lid (not for sale, on tasteful designs)"},
@@ -336,7 +336,7 @@ main (int argc, const char *argv[])
                {
                   char *v = *(char **) optionsTable[o].arg;
                   printf ("<input name='%c' id='%c'", optionsTable[o].shortName, optionsTable[o].shortName);
-                  if (optionsTable[o].shortName == 'E')
+                  if (optionsTable[o].shortName == 'E' || optionsTable[o].shortName == 'I')
                      printf (" size='2'");      // Initials
                   if (v)
                      printf (" value='%s'", v);
@@ -540,7 +540,7 @@ main (int argc, const char *argv[])
          fprintf (out, "module cuttext(){linear_extrude(height=%lld,convexity=10,center=true)mirror([1,0,0])children();}\n",
                   scaled (textdepth));
       if (ajklogo)
-         fprintf (out, "module logo(w=100,$fn=120){scale(w/25)translate([0,0,0.5]){ hull(){translate([-10,-7])sphere(0.5);translate([0,7])sphere(0.5);} hull(){translate([0,7])sphere(0.5);translate([0,-7])sphere(0.5);} hull(){translate([0,0])sphere(0.5);translate([6,7])sphere(0.5);} hull(){translate([0,0])sphere(0.5);translate([6,-7])sphere(0.5);} hull(){translate([0,0])sphere(0.5);translate([-5,0])sphere(0.5);} translate([-2.5,-7])rotate_extrude(angle=180,start=180)translate([2.5,0])rotate(180/$fn)circle(0.5); translate([-5,-7])sphere(0.5); translate([0,-7])sphere(0.5);}}");     // You can use the AJK logo on your maze print providing it is not for sale, and tasteful.
+         fprintf (out, "module logo(w=100,$fn=120){scale(w/25)translate([0,0,0.5]){ hull(){translate([-10,-7])sphere(0.5);translate([0,7])sphere(0.5);} hull(){translate([0,7])sphere(0.5);translate([0,-7])sphere(0.5);} hull(){translate([0,0])sphere(0.5);translate([6,7])sphere(0.5);} hull(){translate([0,0])sphere(0.5);translate([6,-7])sphere(0.5);} hull(){translate([0,0])sphere(0.5);translate([-5,0])sphere(0.5);} translate([-2.5,-7])rotate_extrude(angle=180,start=180)translate([2.5,0])rotate(180/$fn)circle(0.5); translate([-5,-7])sphere(0.5); translate([0,-7])sphere(0.5);}}");   // You can use the AJK logo on your maze print providing it is not for sale, and tasteful.
       else if (aalogo)          // You can use the A&A logo on your maze print providing it is no for sale, and tasteful and not in any way derogatory to A&A or any staff/officers.
          fprintf
             (out,
@@ -1306,7 +1306,7 @@ main (int argc, const char *argv[])
       void textside (int outset)
       {
          double a = 90 + (double) 180 / outersides;
-         double h = r3 * sin (M_PI / outersides) * textsidescale;
+         double h = r3 * sin (M_PI / outersides) * textsidescale / 100;
          char *p = strdupa (textsides);
          while (p)
          {
