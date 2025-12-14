@@ -42,7 +42,7 @@ main (int argc, const char *argv[])
    double basethickness = 1.6;
    double basegap = 0.4;
    double baseheight = 10;
-   double corediameter = 10;
+   double corediameter = 30;
    double coreheight = 50;
    double wallthickness = 1.2;
    double mazethickness = 2;
@@ -63,13 +63,13 @@ main (int argc, const char *argv[])
    char *textsides = NULL;
    char *textfont = NULL;
    char *textfontend = NULL;
-   int parts = 4;
+   int parts = 2;
    int part = 0;
    int inside = 0;
    int flip = 0;
    int outersides = 7;
    int testmaze = 0;
-   int helix = 3;
+   int helix = 2;
    int nubs = helix;
    int aalogo = 0;
    int ajklogo = 0;
