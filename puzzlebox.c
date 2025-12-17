@@ -105,6 +105,7 @@ main (int argc, const char *argv[])
       {"parts", 'm', POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT, &parts, 0, "Total parts", "N"},
       {"core-diameter", 'c', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &corediameter, 0, "Core diameter for content", "mm"},
       {"core-height", 'h', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &coreheight, 0, "Core height for content", "mm"},
+      {"core-gap", 'C', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &coregap, 0, "Core gap to allow content to be removed", "mm"},
       {"text-end", 'E', POPT_ARG_STRING | (textend ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &textend, 0, "Text (initials) on end",
        "X{\\X...}"},
       {"text-inside", 'I', POPT_ARG_STRING | (textinside ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &textinside, 0,
@@ -117,7 +118,6 @@ main (int argc, const char *argv[])
       {"nubs", 'N', POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT, &nubs, 0, "Nubs", "N"},
       {"helix", 'H', POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT, &helix, 0, "Helix", "N (0 for non helical)"},
       {"base-height", 'b', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &baseheight, 0, "Base height", "mm"},
-      {"core-gap", 'C', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &coregap, 0, "Core gap to allow content to be removed", "mm"},
       {"core-solid", 'q', POPT_ARG_NONE, &coresolid, 0, "Core solid (content is in part 2)"},
       {"part-thickness", 'w', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &wallthickness, 0, "Wall thickness", "mm"},
       {"maze-thickness", 't', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &mazethickness, 0, "Maze thickness", "mm"},
@@ -643,7 +643,7 @@ main (int argc, const char *argv[])
          double base = (inside ? basethickness : baseheight);
          if (inside && part > 2)
             base += baseheight; // Nubs don' t go all the way to the end if (inside && part == 2)
-         base += (coresolid ? coreheight : coregap);    // First one is short...
+         base += (coresolid ? coreheight : 0);    // First one is short...
          if (inside)
             base += basegap;
          double h = height - base - mazemargin - (parkvertical ? mazestep / 4 : 0) - mazestep / 8;
