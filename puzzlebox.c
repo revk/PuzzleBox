@@ -56,7 +56,7 @@ main (int argc, const char *argv[])
    double mazemargin = 1;
    double textdepth = 0.5;
    double logodepth = 0.6;
-   double gripdepth = 2;
+   double gripdepth = 1.5;
    double textsidescale = 100;
    char *textinside = NULL;
    char *textend = NULL;
@@ -394,8 +394,8 @@ main (int argc, const char *argv[])
    }
    if (helix && nubs > helix)
       nubs = helix;
-   if (gripdepth > (baseheight - outerround) / 6)
-      gripdepth = (baseheight - outerround) / 6;
+   if (gripdepth > (baseheight - outerround) / 5)
+      gripdepth = (baseheight - outerround) / 5;
    if (gripdepth > mazethickness)
       gripdepth = mazethickness;
    if (!aalogo && !ajklogo && !textinside)
@@ -643,7 +643,7 @@ main (int argc, const char *argv[])
          double base = (inside ? basethickness : baseheight);
          if (inside && part > 2)
             base += baseheight; // Nubs don' t go all the way to the end if (inside && part == 2)
-         base += (coresolid ? coreheight : 0);    // First one is short...
+         base += (coresolid ? coreheight : 0);  // First one is short...
          if (inside)
             base += basegap;
          double h = height - base - mazemargin - (parkvertical ? mazestep / 4 : 0) - mazestep / 8;
@@ -1267,8 +1267,8 @@ main (int argc, const char *argv[])
          fprintf
             (out,
              "rotate([0,0,%f])translate([0,0,%lld])rotate_extrude(angle=360,convexity=10,$fn=%d)translate([%lld,0,0])circle(r=%lld,$fn=9);\n",
-             (double) 360 / W / 4 / 2, scaled (mazemargin + (baseheight - mazemargin) / 2), W * 4, scaled (r2 + gripdepth),
-             scaled (gripdepth * 2));
+             (double) 360 / W / 4 / 2, scaled (mazemargin + (baseheight - mazemargin - outerround) / 2 + outerround), W * 4,
+             scaled (r2 + gripdepth), scaled (gripdepth * 2));
       else if (gripdepth && part + 1 == parts)
          fprintf (out,
                   "translate([0,0,%lld])rotate_extrude(angle=360,convexity=10,$fn=%d)translate([%lld,0,0])circle(r=%lld,$fn=9);\n",
