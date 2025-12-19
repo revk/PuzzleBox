@@ -1262,18 +1262,20 @@ main (int argc, const char *argv[])
       fprintf (out, "translate([0,0,%lld])cylinder(r=%lld,h=%lld,$fn=%d);\n", scaled (basethickness), scaled (r0 + (part > 1 && mazeinside ? mazethickness + clearance : 0) + (!mazeinside && part < parts ? clearance : 0)), scaled (height), W * 4);  // Hole
       fprintf (out, "}\n");
       fprintf (out, "}\n");
-      // Cut outs
-      if (gripdepth && part + 1 < parts)
+      if(gripdepth)
+      { // Cut outs
+      if (part + 1 < parts)
          fprintf
             (out,
-             "rotate([0,0,%f])translate([0,0,%lld])rotate_extrude(angle=360,convexity=10,$fn=%d)translate([%lld,0,0])circle(r=%lld,$fn=9);\n",
-             (double) 360 / W / 4 / 2, scaled (mazemargin + (baseheight - mazemargin - outerround) / 2 + outerround), W * 4,
+             "rotate([0,0,%f])translate([0,0,%lld])rotate_extrude(start=180,angle=360,convexity=10,$fn=%d)translate([%lld,0,0])circle(r=%lld,$fn=9);\n",
+             (double) 360 / W / 4 / 2, scaled (mazemargin + (baseheight - mazemargin) / 2), W * 4,
              scaled (r2 + gripdepth), scaled (gripdepth * 2));
-      else if (gripdepth && part + 1 == parts)
+      else if (part + 1 == parts)
          fprintf (out,
-                  "translate([0,0,%lld])rotate_extrude(angle=360,convexity=10,$fn=%d)translate([%lld,0,0])circle(r=%lld,$fn=9);\n",
+                  "translate([0,0,%lld])rotate_extrude(start=180,angle=360,convexity=10,$fn=%d)translate([%lld,0,0])circle(r=%lld,$fn=9);\n",
                   scaled (outerround + (baseheight - outerround) / 2), outersides ? : 100, scaled (r3 + gripdepth),
                   scaled (gripdepth * 2));
+      }
       if (basewide && nextoutside && part + 1 < parts)  // Connect endpoints over base
       {
          int W = ((int) ((r2 - mazethickness) * 2 * M_PI / mazestep)) / nubs * nubs;
