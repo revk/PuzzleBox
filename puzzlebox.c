@@ -130,7 +130,7 @@ main (int argc, const char *argv[])
       {"park-vertical", 'v', POPT_ARG_NONE, &parkvertical, 0, "Park vertically"},
       {"base-thickness", 'B', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &basethickness, 0, "Base thickness", "mm"},
       {"base-wide", 'W', POPT_ARG_NONE, &basewide, 0, "Inside base full width"},
-      {"base-gap", 'G', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &basegap, 0, "Base gap (Z clearance)", "mm"},
+      {"base-gap", 'Z', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &basegap, 0, "Base gap (Z clearance)", "mm"},
       {"clearance", 'g', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &clearance, 0, "General X/Y clearance", "mm"},
       {"nub-r-clearance", 'y', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &nubrclearance, 0, "Extra clearance on radius for nub",
        "mm"},
