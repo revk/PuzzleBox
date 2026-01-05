@@ -2,7 +2,7 @@
 
 set -x
 
-OutputDir="/home/puzzle/samples"
+OutputDir=${1:-"/home/puzzle/samples"}
 
 mkdir -vp $OutputDir
 
