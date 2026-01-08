@@ -1449,15 +1449,18 @@ main (int argc, const char *argv[])
       }
       int status = 0;
       waitpid (pid, &status, 0);
-      if (!WIFEXITED (status) || WEXITSTATUS (status))
-         errx (1, "openscad failed");
       unlink (tmp);
+      if (!WIFEXITED (status) || WEXITSTATUS (status))
+      {
+         unlink (tmp2);
+         errx (1, "openscad failed");
+      }
       if (!outfile)
       {                         // To stdout
          int i = open (tmp2, O_RDONLY);
+         unlink (tmp2);
          if (i < 0)
             err (1, "Cannot open %s", tmp2);
-         unlink (tmp2);
          char buf[1024];
          int l;
          while ((l = read (i, buf, sizeof (buf))) > 0)
