@@ -1,5 +1,5 @@
 # build the puzzlebox binary
-FROM --platform=$BUILDPLATFORM debian:unstable-slim AS base-build
+FROM --platform=$BUILDPLATFORM debian:unstable-slim AS puzzlebuilder
 
 # Otherwise you will get an interactive setup session
 ENV DEBIAN_FRONTEND=noninteractive
@@ -29,7 +29,7 @@ RUN cd /tmp/PuzzleBox \
 
 WORKDIR /opt/
 
-FROM debian:unstable-slim
+FROM --platform=$BUILDPLATFORM debian:unstable-slim
 
 # Otherwise you will get an interactive setup session
 ENV DEBIAN_FRONTEND=noninteractive

@@ -77,8 +77,7 @@ docker-multi: ## Multi-platform build.
 		--cache-from $(CONTAINER_STRING) \
 		-t $(CONTAINER_STRING) \
 		--label org.opencontainers.image.created=$(shell date +%F-%H%M) 2>&1 \
-		--progress plain \
-		--push 2>&1 \
+		--progress plain 2>&1 \
 	| tee source/logs/build-multi-$(CONTAINER_PROJECT)-$(CONTAINER_NAME)_$(CONTAINER_TAG)-$(LOGDATE).log
 
 
