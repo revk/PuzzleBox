@@ -13,6 +13,7 @@ CONTAINER_TAG ?= $(shell grep org.opencontainers.image.version Dockerfile    | c
 CONTAINER_STRING ?= $(CONTAINER_PROJECT)/$(CONTAINER_NAME):$(CONTAINER_TAG)
 
 C_ID = $(shell ${GET_ID})
+C_STATUS = $(shell ${GET_STATUS})
 C_IMAGES = $(shell ${GET_IMAGES})
 
 define run_hadolint
@@ -43,7 +44,7 @@ endif
 envs: ## show the environments
 	$(shell echo -e "${CONTAINER_STRING}\n\t${CONTAINER_PROJECT}\n\t${CONTAINER_NAME}\n\t${CONTAINER_TAG}")
 
-sif: ## Build the container
+sif: ## Build a sif image directly
 	mkdir -vp  source/logs/ ; \
 	$(APPTAINER_BIN) build \
 		-F \
@@ -65,7 +66,7 @@ docker: ## Build the docker image locally.
     | tee source/logs/build-$(CONTAINER_PROJECT)-$(CONTAINER_NAME)_$(CONTAINER_TAG)-$(shell date +%F-%H%M).log && \
 	$(DOCKER_BIN) inspect $(CONTAINER_STRING) > source/logs/inspect-$(CONTAINER_PROJECT)-$(CONTAINER_NAME)_$(CONTAINER_TAG)-$(shell date +%F-%H%M).log
 
-setup-multi: ## setup $(DOCKER_BIN) multiplatform
+setup-multi: ## setup docker multiplatform
 	$(DOCKER_BIN) buildx create --name buildx-multi-arch ; $(DOCKER_BIN) buildx use buildx-multi-arch
 
 docker-multi: ## Multi-platform build.
@@ -91,6 +92,7 @@ run: ## launch shell into the container, with this directory mounted to /opt/sou
 		-v $(shell pwd):/opt/source \
 		-v $(shell pwd)/source:/home/puzzle/samples/ \
 		$(CONTAINER_STRING)
+
 pull: ## Pull Docker image
 	@echo 'pulling $(CONTAINER_STRING)'
 	$(DOCKER_BIN) pull $(CONTAINER_STRING)
@@ -99,14 +101,14 @@ publish: ## Push server image to remote
 	[ "${C_IMAGES}" ] || \
 		make docker
 	@echo 'pushing $(CONTAINER_STRING) to $(DOCKER_REPO)'
-	$(DOCKER_BIN) push $(CONTAINER_STRING)
+	$(DOCKER_BIN) push --all-platforms $(CONTAINER_STRING)
 
 
 docker-lint: ## Check files for errors
 	$(call run_hadolint)
 
 # Commands for extracting information on the running container
-_IMAGES := $(DOCKER_BIN) images ${CONTAINER_STRING} --format "{{.ID}}"
+GET_IMAGES := $(DOCKER_BIN) images ${CONTAINER_STRING} --format "{{.ID}}"
 GET_CONTAINER := $(DOCKER_BIN) ps -a --filter "name=${CONTAINER_NAME}" --no-trunc
 GET_ID := ${GET_CONTAINER} --format {{.ID}}
 GET_STATUS := ${GET_CONTAINER} --format {{.Status}} | cut -d " " -f1
