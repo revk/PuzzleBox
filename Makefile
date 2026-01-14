@@ -35,7 +35,7 @@ help: ## This help.
 
 puzzlebox: puzzlebox.c ## Build the puzzlebox binary
 ifeq ($(shell uname),Darwin)
-	/usr/local/opt/gcc/bin/gcc-8 -L/usr/local/lib -I/usr/local/include -O -o $@ $< -lpopt -lm -g -D_GNU_SOURCE
+	gcc -L/usr/local/lib -I/usr/local/include -O -o $@ $< -lpopt -lm -g -D_GNU_SOURCE
 else
 	cc -O -o $@ $< -lpopt -lm -g -D_GNU_SOURCE
 endif
@@ -90,6 +90,7 @@ run: ## launch shell into the container, with this directory mounted to /opt/sou
 		--user root \
 		--entrypoint /bin/bash \
 		-v $(shell pwd):/opt/source \
+		-v $(shell pwd)/source:/home/puzzle/samples/ \
 		$(CONTAINER_STRING)
 pull: ## Pull Docker image
 	@echo 'pulling $(CONTAINER_STRING)'

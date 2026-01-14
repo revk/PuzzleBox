@@ -1,5 +1,5 @@
 # build the puzzlebox binary
-FROM debian:unstable-slim AS puzzlebuilder
+FROM --platform=$BUILDPLATFORM debian:unstable-slim AS base-build
 
 # Otherwise you will get an interactive setup session
 ENV DEBIAN_FRONTEND=noninteractive
