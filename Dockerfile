@@ -3,7 +3,8 @@ FROM --platform=$BUILDPLATFORM debian:unstable-slim AS puzzlebuilder
 
 # Otherwise you will get an interactive setup session
 ENV DEBIAN_FRONTEND=noninteractive
-RUN rm -f /etc/apt/apt.conf.d/docker-clean; echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
+RUN rm -f /etc/apt/apt.conf.d/docker-clean; \
+    echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
 
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
@@ -29,11 +30,13 @@ RUN cd /tmp/PuzzleBox \
 
 WORKDIR /opt/
 
+# Build the final container
 FROM --platform=$BUILDPLATFORM debian:unstable-slim
 
 # Otherwise you will get an interactive setup session
 ENV DEBIAN_FRONTEND=noninteractive
-RUN rm -f /etc/apt/apt.conf.d/docker-clean; echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
+RUN rm -f /etc/apt/apt.conf.d/docker-clean; \
+    echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
 
 RUN useradd puzzle -s /usr/sbin/nologin
 
