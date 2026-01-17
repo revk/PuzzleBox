@@ -47,12 +47,12 @@ envs: ## show the environments
 	$(info Name             - ${CONTAINER_NAME})
 	$(info Tag is           - ${CONTAINER_TAG})
 
-sif: ## Build a sif image directly
+sif: ## pull the docker container as a sif
 	mkdir -vp  source/logs/ ; \
-	$(APPTAINER_BIN) build \
+	$(APPTAINER_BIN) pull  \
 		-F \
-		/tmp/PuzzleBox.sif \
-		PuzzleBox.def \
+		source/$(CONTAINER_NAME)_$(CONTAINER_TAG).sif \
+		docker://$(CONTAINER_STRING) \
 	| tee source/logs/sif-build-$(shell date +%F-%H%M).log
 
 docker: ## Build the docker image locally.
