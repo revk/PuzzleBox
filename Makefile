@@ -42,7 +42,10 @@ else
 endif
 
 envs: ## show the environments
-	$(shell echo -e "${CONTAINER_STRING}\n\t${CONTAINER_PROJECT}\n\t${CONTAINER_NAME}\n\t${CONTAINER_TAG}")
+	$(info Container String - ${CONTAINER_STRING}) 
+	$(info Project          - ${CONTAINER_PROJECT})
+	$(info Name             - ${CONTAINER_NAME})
+	$(info Tag is           - ${CONTAINER_TAG})
 
 sif: ## Build a sif image directly
 	mkdir -vp  source/logs/ ; \
