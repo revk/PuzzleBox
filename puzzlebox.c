@@ -13,6 +13,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/file.h>
 #include <stdlib.h>
 #include <sys/wait.h>
 #include <fcntl.h>
@@ -42,7 +43,7 @@ main (int argc, const char *argv[])
    double basethickness = 1.6;
    double basegap = 0.4;
    double baseheight = 10;
-   double corediameter = 10;
+   double corediameter = 30;
    double coreheight = 50;
    double wallthickness = 1.2;
    double mazethickness = 2;
@@ -56,20 +57,20 @@ main (int argc, const char *argv[])
    double mazemargin = 1;
    double textdepth = 0.5;
    double logodepth = 0.6;
-   double gripdepth = 2;
-   double textsidescale = 1;
+   double gripdepth = 1.5;
+   double textsidescale = 100;
    char *textinside = NULL;
    char *textend = NULL;
    char *textsides = NULL;
    char *textfont = NULL;
    char *textfontend = NULL;
-   int parts = 4;
+   int parts = 2;
    int part = 0;
    int inside = 0;
    int flip = 0;
    int outersides = 7;
    int testmaze = 0;
-   int helix = 3;
+   int helix = 2;
    int nubs = helix;
    int aalogo = 0;
    int ajklogo = 0;
@@ -85,6 +86,7 @@ main (int argc, const char *argv[])
    int noa = 0;
    int basewide = 0;
    int stl = 0;
+   int resin = 0;
    const char *outfile = NULL;
 
    int f = open ("/dev/urandom", O_RDONLY);
@@ -100,20 +102,24 @@ main (int argc, const char *argv[])
 
    const struct poptOption optionsTable[] = {
       {"stl", 'l', POPT_ARG_NONE, &stl, 0, "Run output through openscad to make stl (may take a few seconds)"},
+      {"resin", 'R', POPT_ARG_NONE, &resin, 0, "Half all specified clearances for resin printing"},
       {"parts", 'm', POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT, &parts, 0, "Total parts", "N"},
-      {"part", 'n', POPT_ARG_INT, &part, 0, "Part to make", "N (0 for all)"},
+      {"core-diameter", 'c', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &corediameter, 0, "Core diameter for content", "mm"},
+      {"core-height", 'h', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &coreheight, 0, "Core height for content", "mm"},
+      {"core-gap", 'C', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &coregap, 0, "Core gap to allow content to be removed", "mm"},
+      {"text-end", 'E', POPT_ARG_STRING | (textend ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &textend, 0, "Text (initials) on end",
+       "X{\\X...}"},
+      {"text-inside", 'I', POPT_ARG_STRING | (textinside ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &textinside, 0,
+       "Text (initials) inside end", "X{\\X...}"},
+      {"text-side", 'S', POPT_ARG_STRING | (textsides ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &textsides, 0, "Text on sides",
+       "Text{\\Text...}"},
+      {"part", 'n', POPT_ARG_INT, &part, 0, "Which part to make", "N (0 for all)"},
       {"inside", 'i', POPT_ARG_NONE, &inside, 0, "Maze on inside (hard)"},
       {"flip", 'f', POPT_ARG_NONE, &flip, 0, "Alternating inside/outside maze"},
       {"nubs", 'N', POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT, &nubs, 0, "Nubs", "N"},
       {"helix", 'H', POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT, &helix, 0, "Helix", "N (0 for non helical)"},
       {"base-height", 'b', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &baseheight, 0, "Base height", "mm"},
-      {"core-diameter", 'c', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &corediameter, 0, "Core diameter for content", "mm"},
-      {"core-height", 'h', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &coreheight, 0, "Core height for content", "mm"},
-      {"core-gap", 'C', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &coregap, 0, "Core gap to allow content to be removed", "mm"},
       {"core-solid", 'q', POPT_ARG_NONE, &coresolid, 0, "Core solid (content is in part 2)"},
-      {"base-thickness", 'B', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &basethickness, 0, "Base thickness", "mm"},
-      {"base-gap", 'G', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &basegap, 0, "Base gap (Z clearance)", "mm"},
-      {"base-wide", 'W', POPT_ARG_NONE, &basewide, 0, "Inside base full width"},
       {"part-thickness", 'w', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &wallthickness, 0, "Wall thickness", "mm"},
       {"maze-thickness", 't', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &mazethickness, 0, "Maze thickness", "mm"},
       {"maze-step", 'z', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &mazestep, 0, "Maze spacing", "mm"},
@@ -123,31 +129,28 @@ main (int argc, const char *argv[])
       {"park-thickness", 'p', POPT_ARG_DOUBLE | (parkthickness ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &parkthickness, 0,
        "Thickness of park ridge to click closed", "mm"},
       {"park-vertical", 'v', POPT_ARG_NONE, &parkvertical, 0, "Park vertically"},
+      {"base-thickness", 'B', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &basethickness, 0, "Base thickness", "mm"},
+      {"base-wide", 'W', POPT_ARG_NONE, &basewide, 0, "Inside base full width"},
+      {"base-gap", 'Z', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &basegap, 0, "Base gap (Z clearance)", "mm"},
       {"clearance", 'g', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &clearance, 0, "General X/Y clearance", "mm"},
+      {"nub-r-clearance", 'y', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &nubrclearance, 0, "Extra clearance on radius for nub",
+       "mm"},
+      {"nub-z-clearance", 'Z', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &nubzclearance, 0, "Extra clearance on height of nub",
+       "mm"},
       {"outer-sides", 's', POPT_ARG_INT | (outersides ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &outersides, 0, "Number of outer sides",
        "N (0=round)"},
       {"outer-round", 'r', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &outerround, 0, "Outer rounding on ends", "mm"},
-      {"grip-depth", 'R', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &gripdepth, 0, "Grip depth", "mm"},
+      {"grip-depth", 'G', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &gripdepth, 0, "Grip depth", "mm"},
       {"text-depth", 'D', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &textdepth, 0, "Text depth", "mm"},
-      {"text-end", 'E', POPT_ARG_STRING | (textend ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &textend, 0, "Text (initials) on end",
-       "X{\\X...}"},
-      {"text-side", 'S', POPT_ARG_STRING | (textsides ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &textsides, 0, "Text on sides",
-       "Text{\\Text...}"},
       {"text-font", 'F', POPT_ARG_STRING | (textfont ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &textfont, 0, "Text font (optional)",
        "Font"},
       {"text-font-end", 'e', POPT_ARG_STRING | (textfontend ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &textfontend, 0,
        "Text font for end (optional)", "Font"},
       {"text-slow", 'd', POPT_ARG_NONE, &textslow, 0, "Text has diagonal edges"},
-      {"text-side-scale", 'T', POPT_ARG_DOUBLE, &textsidescale, 0, "Scale side text (i.e. if too long)", "N"},
+      {"text-side-scale", 'T', POPT_ARG_DOUBLE, &textsidescale, 0, "Scale side text (i.e. if too long)", "%"},
       {"text-outset", 'O', POPT_ARG_NONE, &textoutset, 0, "Text on sides is outset not embossed"},
-      {"text-inside", 'I', POPT_ARG_STRING | (textinside ? POPT_ARGFLAG_SHOW_DEFAULT : 0), &textinside, 0,
-       "Text (initials) inside end", "X{\\X...}"},
       {"logo-depth", 'L', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &logodepth, 0, "Logo (and inside text) cut depth", "mm"},
       {"symmetric-cut", 'V', POPT_ARG_NONE, &symmectriccut, 0, "Symmetric maze cut"},
-      {"nub-r-clearance", 'y', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &nubrclearance, 0, "Extra clearance on radius for nub",
-       "mm"},
-      {"nub-z-clearance", 'Z', POPT_ARG_DOUBLE | POPT_ARGFLAG_SHOW_DEFAULT, &nubzclearance, 0, "Extra clearance on height of nub",
-       "mm"},
       {"ajk-logo", 'A', POPT_ARG_NONE, &ajklogo, 0, "Include AJK logo in last lid (not for sale, on tasteful designs)"},
       {"aa-logo", 'a', POPT_ARG_NONE, &aalogo, 0, "Include A&A logo in last lid (not for sale, on tasteful designs)"},
       {"test", 'Q', POPT_ARG_NONE, &testmaze, 0, "Test pattern instead of maze"},
@@ -174,6 +177,14 @@ main (int argc, const char *argv[])
          return -1;
       }
       poptFreeContext (optCon);
+   }
+
+   if (resin)
+   {                            // Lower clearances for resin print
+      basegap /= 2;
+      clearance /= 2;
+      nubrclearance /= 2;
+      nubzclearance /= 2;
    }
 
    char *error = NULL;
@@ -326,7 +337,7 @@ main (int argc, const char *argv[])
                {
                   char *v = *(char **) optionsTable[o].arg;
                   printf ("<input name='%c' id='%c'", optionsTable[o].shortName, optionsTable[o].shortName);
-                  if (optionsTable[o].shortName == 'E')
+                  if (optionsTable[o].shortName == 'E' || optionsTable[o].shortName == 'I')
                      printf (" size='2'");      // Initials
                   if (v)
                      printf (" value='%s'", v);
@@ -384,8 +395,8 @@ main (int argc, const char *argv[])
    }
    if (helix && nubs > helix)
       nubs = helix;
-   if (gripdepth > (baseheight - outerround) / 6)
-      gripdepth = (baseheight - outerround) / 6;
+   if (gripdepth > (baseheight - outerround) / 5)
+      gripdepth = (baseheight - outerround) / 5;
    if (gripdepth > mazethickness)
       gripdepth = mazethickness;
    if (!aalogo && !ajklogo && !textinside)
@@ -530,7 +541,7 @@ main (int argc, const char *argv[])
          fprintf (out, "module cuttext(){linear_extrude(height=%lld,convexity=10,center=true)mirror([1,0,0])children();}\n",
                   scaled (textdepth));
       if (ajklogo)
-         fprintf (out, "module logo(w=100,$fn=120){scale(w/25){ hull(){translate([-10,-7])sphere(1);translate([0,7])sphere(1);} hull(){translate([0,7])sphere(1);translate([0,-7])sphere(1);} hull(){translate([0,0])sphere(1);translate([6,7])sphere(1);} hull(){translate([0,0])sphere(1);translate([6,-7])sphere(1);} hull(){translate([0,0])sphere(1);translate([-5,0])sphere(1);} translate([-2.5,-7])rotate_extrude(angle=180,start=180)translate([2.5,0])rotate(180/$fn)circle(1); translate([-5,-7])sphere(1); translate([0,-7])sphere(1);}}"); // You can use the AJK logo on your maze print providing it is not for sale, and tasteful.
+         fprintf (out, "module logo(w=100,$fn=120){scale(w/25)translate([0,0,0.5]){ hull(){translate([-10,-7])sphere(0.5);translate([0,7])sphere(0.5);} hull(){translate([0,7])sphere(0.5);translate([0,-7])sphere(0.5);} hull(){translate([0,0])sphere(0.5);translate([6,7])sphere(0.5);} hull(){translate([0,0])sphere(0.5);translate([6,-7])sphere(0.5);} hull(){translate([0,0])sphere(0.5);translate([-5,0])sphere(0.5);} translate([-2.5,-7])rotate_extrude(angle=180,start=180)translate([2.5,0])rotate(180/$fn)circle(0.5); translate([-5,-7])sphere(0.5); translate([0,-7])sphere(0.5);}}");   // You can use the AJK logo on your maze print providing it is not for sale, and tasteful.
       else if (aalogo)          // You can use the A&A logo on your maze print providing it is no for sale, and tasteful and not in any way derogatory to A&A or any staff/officers.
          fprintf
             (out,
@@ -633,7 +644,7 @@ main (int argc, const char *argv[])
          double base = (inside ? basethickness : baseheight);
          if (inside && part > 2)
             base += baseheight; // Nubs don' t go all the way to the end if (inside && part == 2)
-         base += (coresolid ? coreheight : coregap);    // First one is short...
+         base += (coresolid ? coreheight : 0);  // First one is short...
          if (inside)
             base += basegap;
          double h = height - base - mazemargin - (parkvertical ? mazestep / 4 : 0) - mazestep / 8;
@@ -1252,18 +1263,20 @@ main (int argc, const char *argv[])
       fprintf (out, "translate([0,0,%lld])cylinder(r=%lld,h=%lld,$fn=%d);\n", scaled (basethickness), scaled (r0 + (part > 1 && mazeinside ? mazethickness + clearance : 0) + (!mazeinside && part < parts ? clearance : 0)), scaled (height), W * 4);  // Hole
       fprintf (out, "}\n");
       fprintf (out, "}\n");
-      // Cut outs
-      if (gripdepth && part + 1 < parts)
-         fprintf
-            (out,
-             "rotate([0,0,%f])translate([0,0,%lld])rotate_extrude(angle=360,convexity=10,$fn=%d)translate([%lld,0,0])circle(r=%lld,$fn=9);\n",
-             (double) 360 / W / 4 / 2, scaled (mazemargin + (baseheight - mazemargin) / 2), W * 4, scaled (r2 + gripdepth),
-             scaled (gripdepth * 2));
-      else if (gripdepth && part + 1 == parts)
-         fprintf (out,
-                  "translate([0,0,%lld])rotate_extrude(angle=360,convexity=10,$fn=%d)translate([%lld,0,0])circle(r=%lld,$fn=9);\n",
-                  scaled (outerround + (baseheight - outerround) / 2), outersides ? : 100, scaled (r3 + gripdepth),
-                  scaled (gripdepth * 2));
+      if (gripdepth)
+      {                         // Cut outs
+         if (part + 1 < parts)
+            fprintf
+               (out,
+                "rotate([0,0,%f])translate([0,0,%lld])rotate_extrude(start=180,angle=360,convexity=10,$fn=%d)translate([%lld,0,0])circle(r=%lld,$fn=9);\n",
+                (double) 360 / W / 4 / 2, scaled (mazemargin + (baseheight - mazemargin) / 2), W * 4,
+                scaled (r2 + gripdepth), scaled (gripdepth * 2));
+         else if (part + 1 == parts)
+            fprintf (out,
+                     "translate([0,0,%lld])rotate_extrude(start=180,angle=360,convexity=10,$fn=%d)translate([%lld,0,0])circle(r=%lld,$fn=9);\n",
+                     scaled (outerround + (baseheight - outerround) / 2), outersides ? : 100, scaled (r3 + gripdepth),
+                     scaled (gripdepth * 2));
+      }
       if (basewide && nextoutside && part + 1 < parts)  // Connect endpoints over base
       {
          int W = ((int) ((r2 - mazethickness) * 2 * M_PI / mazestep)) / nubs * nubs;
@@ -1296,7 +1309,7 @@ main (int argc, const char *argv[])
       void textside (int outset)
       {
          double a = 90 + (double) 180 / outersides;
-         double h = r3 * sin (M_PI / outersides) * textsidescale;
+         double h = r3 * sin (M_PI / outersides) * textsidescale / 100;
          char *p = strdupa (textsides);
          while (p)
          {
@@ -1317,7 +1330,7 @@ main (int argc, const char *argv[])
       if (textsides && part == parts && outersides && !textoutset)
          textside (0);
       if (ajklogo && part == parts)
-         fprintf (out, "translate([0,0,%lld])logo(%lld);\n", scaled (basethickness), scaled (r0 * 1.8));
+         fprintf (out, "translate([0,0,%lld])logo(%lld);\n", scaled (basethickness - logodepth), scaled (r0 * 1.8));
       else if (aalogo && part == parts)
          fprintf (out, "translate([0,0,%lld])linear_extrude(height=%lld,convexity=10)logo(%lld,white=true);\n",
                   scaled (basethickness - logodepth), scaled (logodepth * 2), scaled (r0 * 1.8));
@@ -1416,6 +1429,8 @@ main (int argc, const char *argv[])
 
    if (stl)
    {
+      // OpenSCAD is a resource hog, so one at a time. Lock releases on file close on exit
+      flock (open ("/var/lock/puzzlebox", O_CREAT, 0666), LOCK_EX);
       char tmp2[] = "/tmp/XXXXXX.stl";
       if (!outfile)
       {
@@ -1434,15 +1449,18 @@ main (int argc, const char *argv[])
       }
       int status = 0;
       waitpid (pid, &status, 0);
-      if (!WIFEXITED (status) || WEXITSTATUS (status))
-         errx (1, "openscad failed");
       unlink (tmp);
+      if (!WIFEXITED (status) || WEXITSTATUS (status))
+      {
+         unlink (tmp2);
+         errx (1, "openscad failed");
+      }
       if (!outfile)
       {                         // To stdout
          int i = open (tmp2, O_RDONLY);
+         unlink (tmp2);
          if (i < 0)
             err (1, "Cannot open %s", tmp2);
-         unlink (tmp2);
          char buf[1024];
          int l;
          while ((l = read (i, buf, sizeof (buf))) > 0)
