@@ -27,6 +27,7 @@ elif [[ "$1" == "puzzlebox" ]]; then
     shift
     if [[ ${#@} -gt 0 ]]; then
        puzzlebox "${@}"
+       exit
     fi 
 
 else

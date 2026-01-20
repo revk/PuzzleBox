@@ -16,12 +16,14 @@ On macOS, this requires gcc, so "brew install gcc", then should make with no pro
 
 ------------------
 
-N.B. 
+N.B.
 
 I (Clyde) have added support for building an OCI image (aka docker) to the make file.  You have the option to build locally, or push to a registry.
 
 ```
 make 
+=======
+make
 help                      This help.
 puzzlebox                 Build the puzzlebox binary
 envs                      show the environments
