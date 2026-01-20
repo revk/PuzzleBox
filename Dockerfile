@@ -64,6 +64,6 @@ ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 LABEL org.opencontainers.image.authors="slash5toaster@gmail.com" \
       org.opencontainers.image.vendor=slash5toaster \
       org.opencontainers.image.ref.name=puzzlebox \
-      org.opencontainers.image.version=1.1.0
+      org.opencontainers.image.version=1.2.0
 
 #### End of File, if this is missing the file has been truncated
