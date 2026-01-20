@@ -69,8 +69,8 @@ docker: ## Build the docker image locally.
     | tee source/logs/build-$(CONTAINER_PROJECT)-$(CONTAINER_NAME)_$(CONTAINER_TAG)-$(shell date +%F-%H%M).log && \
 	$(DOCKER_BIN) inspect $(CONTAINER_STRING) > source/logs/inspect-$(CONTAINER_PROJECT)-$(CONTAINER_NAME)_$(CONTAINER_TAG)-$(shell date +%F-%H%M).log
 
-setup-multi: ## setup docker multiplatform
-	$(DOCKER_BIN) buildx create --name buildx-multi-arch ; $(DOCKER_BIN) buildx use buildx-multi-arch
+# setup-multi: ## setup docker multiplatform
+# 	$(DOCKER_BIN) buildx create --name buildx-multi-arch ; $(DOCKER_BIN) buildx use buildx-multi-arch
 
 docker-multi: ## Multi-platform build.
 	$(call setup-multi)
