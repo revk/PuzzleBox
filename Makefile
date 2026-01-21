@@ -25,8 +25,19 @@ define run_hadolint
 	hadolint/hadolint < Dockerfile$(1)
 endef
 
+# Define a different build call for docker
+#
+ifeq ($(shell basename $(DOCKER_BIN)), docker)
+    # Commands/definitions if true (no tab at the start of these lines)
+    BUILD_CMD = buildx build
+else
+    # Commands/definitions if false
+    BUILD_CMD = build
+endif
+
+
 # HELP
-# https://marmelab.com/blog/2016/02/29/auto-documented-makefile.html
+# http s://marmelab.com/blog/2016/02/29/auto-documented-makefile.html
 .PHONY: help
 
 help: ## This help.
@@ -34,6 +45,8 @@ help: ## This help.
 
 .DEFAULT_GOAL := help
 
+# The basic build !!
+#
 puzzlebox: puzzlebox.c ## Build the puzzlebox binary
 ifeq ($(shell uname),Darwin)
 	gcc -L/usr/local/lib -I/usr/local/include -O -o $@ $< -lpopt -lm -g -D_GNU_SOURCE
@@ -41,12 +54,16 @@ else
 	cc -O -o $@ $< -lpopt -lm -g -D_GNU_SOURCE
 endif
 
+# just show the details
+#
 envs: ## show the environments
-	$(info Container String - ${CONTAINER_STRING}) 
+	$(info Container String - ${CONTAINER_STRING})
 	$(info Project          - ${CONTAINER_PROJECT})
 	$(info Name             - ${CONTAINER_NAME})
 	$(info Tag is           - ${CONTAINER_TAG})
 
+# Build apptainer/singularity
+#
 sif: ## pull the docker container as a sif
 	mkdir -vp  source/logs/ ; \
 	$(APPTAINER_BIN) pull  \
@@ -55,12 +72,14 @@ sif: ## pull the docker container as a sif
 		docker://$(CONTAINER_STRING) \
 	| tee source/logs/sif-build-$(shell date +%F-%H%M).log
 
+# Build docker/OCI container locally
+#
 docker: ## Build the docker image locally.
 	$(call run_hadolint)
 	git pull --recurse-submodules;\
 	mkdir -vp source/logs/ ; \
 	DOCKER_BUILDKIT=1 \
-	$(DOCKER_BIN) build \
+	$(DOCKER_BIN) $(BUILD_CMD) \
 		-t $(CONTAINER_STRING) \
 		--cache-from $(CONTAINER_STRING) \
 		--progress plain \
@@ -77,10 +96,12 @@ docker-multi: ## Multi-platform build.
 	$(call run_hadolint)
 	git pull --recurse-submodules; \
 	mkdir -vp  source/logs/ ; \
-	$(DOCKER_BIN) build --platform linux/amd64,linux/arm64/v8 . \
+	$(DOCKER_BIN) $(BUILD_CMD) \
+                --platform linux/amd64,linux/arm64/v8 \
 		--cache-from $(CONTAINER_STRING) \
 		-t $(CONTAINER_STRING) \
 		--label org.opencontainers.image.created=$(shell date +%F-%H%M) 2>&1 \
+		-f Dockerfile . \
 		--progress plain 2>&1 \
 	| tee source/logs/build-multi-$(CONTAINER_PROJECT)-$(CONTAINER_NAME)_$(CONTAINER_TAG)-$(LOGDATE).log
 
