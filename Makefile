@@ -37,7 +37,7 @@ endif
 
 
 # HELP
-# http s://marmelab.com/blog/2016/02/29/auto-documented-makefile.html
+# https://marmelab.com/blog/2016/02/29/auto-documented-makefile.html
 .PHONY: help
 
 help: ## This help.
@@ -100,7 +100,7 @@ docker-multi: ## Multi-platform build.
                 --platform linux/amd64,linux/arm64/v8 \
 		--cache-from $(CONTAINER_STRING) \
 		-t $(CONTAINER_STRING) \
-		--label org.opencontainers.image.created=$(shell date +%F-%H%M) 2>&1 \
+		--label org.opencontainers.image.created=$(shell date +%F-%H%M) \
 		-f Dockerfile . \
 		--progress plain 2>&1 \
 	| tee source/logs/build-multi-$(CONTAINER_PROJECT)-$(CONTAINER_NAME)_$(CONTAINER_TAG)-$(LOGDATE).log
@@ -126,7 +126,6 @@ publish: ## Push server image to remote
 		make docker
 	@echo 'pushing $(CONTAINER_STRING) to $(DOCKER_REPO)'
 	$(DOCKER_BIN) push --all-platforms $(CONTAINER_STRING)
-
 
 docker-lint: ## Check files for errors
 	$(call run_hadolint)
