@@ -13,6 +13,7 @@ CONTAINER_TAG ?= $(shell grep org.opencontainers.image.version Dockerfile    | c
 CONTAINER_STRING ?= $(CONTAINER_PROJECT)/$(CONTAINER_NAME):$(CONTAINER_TAG)
 
 C_ID = $(shell ${GET_ID})
+C_STATUS = $(shell ${GET_STATUS})
 C_IMAGES = $(shell ${GET_IMAGES})
 
 define run_hadolint
@@ -24,6 +25,17 @@ define run_hadolint
 	hadolint/hadolint < Dockerfile$(1)
 endef
 
+# Define a different build call for docker
+#
+ifeq ($(shell basename $(DOCKER_BIN)), docker)
+    # Commands/definitions if true (no tab at the start of these lines)
+    BUILD_CMD = buildx build
+else
+    # Commands/definitions if false
+    BUILD_CMD = build
+endif
+
+
 # HELP
 # https://marmelab.com/blog/2016/02/29/auto-documented-makefile.html
 .PHONY: help
@@ -33,30 +45,41 @@ help: ## This help.
 
 .DEFAULT_GOAL := help
 
+# The basic build !!
+#
 puzzlebox: puzzlebox.c ## Build the puzzlebox binary
 ifeq ($(shell uname),Darwin)
-	/usr/local/opt/gcc/bin/gcc-8 -L/usr/local/lib -I/usr/local/include -O -o $@ $< -lpopt -lm -g -D_GNU_SOURCE
+	gcc -L/usr/local/lib -I/usr/local/include -O -o $@ $< -lpopt -lm -g -D_GNU_SOURCE
 else
 	cc -O -o $@ $< -lpopt -lm -g -D_GNU_SOURCE
 endif
 
+# just show the details
+#
 envs: ## show the environments
-	$(shell echo -e "${CONTAINER_STRING}\n\t${CONTAINER_PROJECT}\n\t${CONTAINER_NAME}\n\t${CONTAINER_TAG}")
+	$(info Container String - ${CONTAINER_STRING})
+	$(info Project          - ${CONTAINER_PROJECT})
+	$(info Name             - ${CONTAINER_NAME})
+	$(info Tag is           - ${CONTAINER_TAG})
 
-sif: ## Build the container
+# Build apptainer/singularity
+#
+sif: ## pull the docker container as a sif
 	mkdir -vp  source/logs/ ; \
-	$(APPTAINER_BIN) build \
+	$(APPTAINER_BIN) pull  \
 		-F \
-		/tmp/PuzzleBox.sif \
-		PuzzleBox.def \
+		source/$(CONTAINER_NAME)_$(CONTAINER_TAG).sif \
+		docker://$(CONTAINER_STRING) \
 	| tee source/logs/sif-build-$(shell date +%F-%H%M).log
 
+# Build docker/OCI container locally
+#
 docker: ## Build the docker image locally.
 	$(call run_hadolint)
 	git pull --recurse-submodules;\
 	mkdir -vp source/logs/ ; \
 	DOCKER_BUILDKIT=1 \
-	$(DOCKER_BIN) build \
+	$(DOCKER_BIN) $(BUILD_CMD) \
 		-t $(CONTAINER_STRING) \
 		--cache-from $(CONTAINER_STRING) \
 		--progress plain \
@@ -65,20 +88,21 @@ docker: ## Build the docker image locally.
     | tee source/logs/build-$(CONTAINER_PROJECT)-$(CONTAINER_NAME)_$(CONTAINER_TAG)-$(shell date +%F-%H%M).log && \
 	$(DOCKER_BIN) inspect $(CONTAINER_STRING) > source/logs/inspect-$(CONTAINER_PROJECT)-$(CONTAINER_NAME)_$(CONTAINER_TAG)-$(shell date +%F-%H%M).log
 
-setup-multi: ## setup $(DOCKER_BIN) multiplatform
-	$(DOCKER_BIN) buildx create --name buildx-multi-arch ; $(DOCKER_BIN) buildx use buildx-multi-arch
+# setup-multi: ## setup docker multiplatform
+# 	$(DOCKER_BIN) buildx create --name buildx-multi-arch ; $(DOCKER_BIN) buildx use buildx-multi-arch
 
 docker-multi: ## Multi-platform build.
 	$(call setup-multi)
 	$(call run_hadolint)
 	git pull --recurse-submodules; \
 	mkdir -vp  source/logs/ ; \
-	$(DOCKER_BIN) build --platform linux/amd64,linux/arm64/v8 . \
+	$(DOCKER_BIN) $(BUILD_CMD) \
+                --platform linux/amd64,linux/arm64/v8 \
 		--cache-from $(CONTAINER_STRING) \
 		-t $(CONTAINER_STRING) \
-		--label org.opencontainers.image.created=$(shell date +%F-%H%M) 2>&1 \
-		--progress plain \
-		--push 2>&1 \
+		--label org.opencontainers.image.created=$(shell date +%F-%H%M) \
+		-f Dockerfile . \
+		--progress plain 2>&1 \
 	| tee source/logs/build-multi-$(CONTAINER_PROJECT)-$(CONTAINER_NAME)_$(CONTAINER_TAG)-$(LOGDATE).log
 
 
@@ -90,7 +114,9 @@ run: ## launch shell into the container, with this directory mounted to /opt/sou
 		--user root \
 		--entrypoint /bin/bash \
 		-v $(shell pwd):/opt/source \
+		-v $(shell pwd)/source:/home/puzzle/samples/ \
 		$(CONTAINER_STRING)
+
 pull: ## Pull Docker image
 	@echo 'pulling $(CONTAINER_STRING)'
 	$(DOCKER_BIN) pull $(CONTAINER_STRING)
@@ -99,14 +125,13 @@ publish: ## Push server image to remote
 	[ "${C_IMAGES}" ] || \
 		make docker
 	@echo 'pushing $(CONTAINER_STRING) to $(DOCKER_REPO)'
-	$(DOCKER_BIN) push $(CONTAINER_STRING)
-
+	$(DOCKER_BIN) push --all-platforms $(CONTAINER_STRING)
 
 docker-lint: ## Check files for errors
 	$(call run_hadolint)
 
 # Commands for extracting information on the running container
-_IMAGES := $(DOCKER_BIN) images ${CONTAINER_STRING} --format "{{.ID}}"
+GET_IMAGES := $(DOCKER_BIN) images ${CONTAINER_STRING} --format "{{.ID}}"
 GET_CONTAINER := $(DOCKER_BIN) ps -a --filter "name=${CONTAINER_NAME}" --no-trunc
 GET_ID := ${GET_CONTAINER} --format {{.ID}}
 GET_STATUS := ${GET_CONTAINER} --format {{.Status}} | cut -d " " -f1

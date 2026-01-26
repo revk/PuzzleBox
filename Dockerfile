@@ -1,9 +1,10 @@
 # build the puzzlebox binary
-FROM debian:unstable-slim AS puzzlebuilder
+FROM --platform=$BUILDPLATFORM debian:unstable-slim AS puzzlebuilder
 
 # Otherwise you will get an interactive setup session
 ENV DEBIAN_FRONTEND=noninteractive
-RUN rm -f /etc/apt/apt.conf.d/docker-clean; echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
+RUN rm -f /etc/apt/apt.conf.d/docker-clean; \
+    echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
 
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
@@ -29,11 +30,13 @@ RUN cd /tmp/PuzzleBox \
 
 WORKDIR /opt/
 
-FROM debian:unstable-slim
+# Build the final container
+FROM --platform=$BUILDPLATFORM debian:unstable-slim
 
 # Otherwise you will get an interactive setup session
 ENV DEBIAN_FRONTEND=noninteractive
-RUN rm -f /etc/apt/apt.conf.d/docker-clean; echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
+RUN rm -f /etc/apt/apt.conf.d/docker-clean; \
+    echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
 
 RUN useradd puzzle -s /usr/sbin/nologin
 
@@ -61,6 +64,6 @@ ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 LABEL org.opencontainers.image.authors="slash5toaster@gmail.com" \
       org.opencontainers.image.vendor=slash5toaster \
       org.opencontainers.image.ref.name=puzzlebox \
-      org.opencontainers.image.version=1.1.0
+      org.opencontainers.image.version=1.2.0
 
 #### End of File, if this is missing the file has been truncated
