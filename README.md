@@ -19,6 +19,12 @@ On macOS, this requires gcc, so "brew install gcc", then should make with no pro
 N.B.
 
 I (Clyde) have added support for building an OCI image (aka docker) to the make file.  You have the option to build locally, or push to a registry.
+N.B. If you want to push to a registry, you'll need to change the vendor and author labels in the dockerfile, 
+```
+      org.opencontainers.image.vendor=slash5toaster \
+      org.opencontainers.image.authors="slash5toaster@gmail.com" \
+
+```
 
 ```
 make 
@@ -26,14 +32,14 @@ make
 make
 help                      This help.
 puzzlebox                 Build the puzzlebox binary
-envs                      show the environments
-sif                       pull the docker container as a sif
-docker                    Build the docker image locally.
-docker-multi              Multi-platform build.
-run                       launch shell into the container, with this directory mounted to /opt/source
+envs                      Show the environments
+sif                       Pull the docker container as a sif
+docker                    Build the docker image locally
+docker-multi              Multi-platform build
+run                       Launch shell into the container, with this directory mounted to /opt/source
 pull                      Pull Docker image
-publish                   Push server image to remote
-docker-lint               Check files for errors
+publish                   Push ldocal image to remote server
+docker-lint               Check Dockerfile for errors
 ```
 
 For Example, to run locally
